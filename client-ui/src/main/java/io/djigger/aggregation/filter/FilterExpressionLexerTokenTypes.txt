@@ -1,0 +1,10 @@
+// $ANTLR 2.7.7 (20060906): FilterExpression.g -> FilterExpressionLexerTokenTypes.txt$
+FilterExpressionLexer    // output token vocab name
+WORD=4
+LEFT_PAREN=5
+RIGHT_PAREN=6
+WHITESPACE=7
+OPERATOR=8
+LITERAL_or="or"=9
+LITERAL_and="and"=10
+LITERAL_not="not"=11

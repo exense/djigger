@@ -1,0 +1,46 @@
+<Collector>
+	<servicePort>80</servicePort>
+	<dataTTL>60</dataTTL>
+	<db host="localhost" collection="djigger" />
+	<connectionGroup>
+		<attributes />
+		<groups>
+			<Group>
+				<attributes>
+					<entry>
+						<string>attributeKey1</string>
+						<string>attributeValue1</string>
+					</entry>
+				</attributes>
+				<groups>
+					<Group>
+						<attributes>
+							<entry>
+								<string>attributeKey2</string>
+								<string>attributeValue2</string>
+							</entry>
+						</attributes>
+						<groups>
+							<Connection connectionClass="io.djigger.client.JMXClientFacade">
+								<samplingParameters samplingRate="100" />
+								<connectionProperties>
+									<property name="host" value="<hostname>" />
+									<property name="port" value="<port>" />
+									<property name="username" value="<username>" />
+									<property name="password" value="<pwd>" />
+								</connectionProperties>
+								<attributes>
+									<entry>
+										<string>attributeKey3</string>
+										<string>attributeValue3</string>
+									</entry>
+								</attributes>
+							</Connection>
+						</groups>
+					</Group>
+				</groups>
+			</Group>
+		</groups>
+	</connectionGroup>
+
+</Collector>
