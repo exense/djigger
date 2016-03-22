@@ -14,6 +14,7 @@
  *
  *  Contributors:
  *    - Jérôme Comte
+ *    - Dorian Cransac (dcransac)
  *******************************************************************************/
 package io.djigger.client;
 
@@ -89,6 +90,13 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 
 	@Override
 	protected void startSampling() {
+
+		/* @author dcransac
+		 * @since 22.03.2016
+		 * NPE
+		 * 
+		 */
+		
 		sampler.setInterval(getSamplingInterval());
 		sampler.setRun(true);
 	}
