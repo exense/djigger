@@ -107,7 +107,9 @@ public class Configurator {
 		ConnectionGroup cg = new ConnectionGroup();
 		List<ConnectionGroupNode> cgnList = new ArrayList<ConnectionGroupNode>();
 
-		while (line != null)
+		// @bugfix (cosmetic, since exception gets caught anyway)
+	    // empty line bug : test if line contains something
+		while (line != null && !line.trim().isEmpty())
 		{
 			try {
 				cgnList.add(parseAndBuildConnection(line));
