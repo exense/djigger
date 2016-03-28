@@ -148,8 +148,8 @@ public class Configurator {
 			return cc;
 			
 		} catch (Exception e) {
-			logger.error("Unable to load " + connectionsConfigFilename + " from ClassLoader.", e);
-			throw new RuntimeException("Unable to load " + connectionsConfigFilename + " from ClassLoader.", e);
+			logger.error("Unable to load " + connectionsConfigFilename, e);
+			throw new RuntimeException("Unable to load " + connectionsConfigFilename, e);
 		}
 	}
 

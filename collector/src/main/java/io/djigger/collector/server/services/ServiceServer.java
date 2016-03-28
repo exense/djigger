@@ -20,31 +20,44 @@ package io.djigger.collector.server.services;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 public class ServiceServer {
 
+	private final io.djigger.collector.server.Server collectorServer;
+	
 	private int serverPort;
+
+	public ServiceServer(io.djigger.collector.server.Server collectorServer) {
+		super();
+		this.collectorServer = collectorServer;
+	}
 
 	public void start(int serverPort) throws Exception {
 		this.serverPort = serverPort;
 
-		Server server = configureServer();
-		server.start();
-		server.join();
+		Server webServer = configureServer();
+		webServer.start();
+		webServer.join();
 	}
-
+	
 	private Server configureServer() {
 		ResourceConfig resourceConfig = new ResourceConfig();
 		resourceConfig.packages(Services.class.getPackage().getName());
 		resourceConfig.register(JacksonFeature.class);
+		resourceConfig.register(new AbstractBinder() {	
+			@Override
+			protected void configure() {
+				bind(collectorServer).to(io.djigger.collector.server.Server.class);
+			}
+		});
 		ServletContainer servletContainer = new ServletContainer(resourceConfig);
 		ServletHolder sh = new ServletHolder(servletContainer);
 		Server server = new Server(serverPort);
-		ServletContextHandler context = new ServletContextHandler(
-				ServletContextHandler.SESSIONS);
+		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
 		context.setContextPath("/");
 		context.addServlet(sh, "/*");
 		server.setHandler(context);

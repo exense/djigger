@@ -17,6 +17,14 @@
  *******************************************************************************/
 package io.djigger.collector.server.services;
 
+import io.djigger.client.Facade;
+import io.djigger.collector.server.Server;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+
+import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -27,14 +35,47 @@ import javax.ws.rs.core.MediaType;
 @Path("/services")
 public class Services {
 
+	@Inject
+	Server server;
+	
 	@Context
 	ServletContext context;
 	
+	public class FacadeStatus {
+		Properties properties;
+		
+		boolean connected;
+
+		public FacadeStatus(Properties properties, boolean connected) {
+			super();
+			this.properties = properties;
+			this.connected = connected;
+		}
+
+		public Properties getProperties() {
+			return properties;
+		}
+
+		public boolean isConnected() {
+			return connected;
+		}
+	}
+
 	@GET
 	@Path("/status")
 	@Produces(MediaType.APPLICATION_JSON)
-	public String getStatus() {
-		return "status";
+	public List<FacadeStatus> getStatus() {
+		List<FacadeStatus> result = new ArrayList<>();
+		for(Facade facade:server.getClients()) {
+			//TODO do this in a more generic way
+			Properties newProperties = new Properties();
+			newProperties.putAll(facade.getProperties());
+			if(newProperties.get("password")!=null) {
+				newProperties.put("password", "*****");	
+			}
+			result.add(new FacadeStatus(newProperties, facade.isConnected()));
+		}
+		return result;
 	}
 
 }

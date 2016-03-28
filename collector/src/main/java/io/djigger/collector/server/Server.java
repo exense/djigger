@@ -71,7 +71,7 @@ public class Server {
 
 			processGroup(null, cc.getConnectionGroup());
 
-			serviceServer = new ServiceServer();
+			serviceServer = new ServiceServer(this);
 			serviceServer.start(config.getServicePort()!=null?Integer.parseInt(config.getServicePort()):80);
 		} catch (Exception e) {
 			logger.error("A fatal error occurred while starting collector.",e);
@@ -106,7 +106,9 @@ public class Server {
 			Connection connectionParam = (Connection) groupNode;
 			try {
 				Facade client = createClient(attributes, connectionParam);
-				clients.add(client);
+				synchronized (clients) {
+					clients.add(client);
+				}
 			} catch (Exception e) {
 				logger.error("An error occurred while creating client " + connectionParam.toString(), e);
 			}
@@ -127,7 +129,7 @@ public class Server {
 
 	private Facade createClient(final Map<String, String> attributes, Connection connectionConfig) throws Exception {
 		Constructor<?> c = Class.forName(connectionConfig.getConnectionClass()).getConstructors()[0];
-		Facade client = (Facade) c.newInstance(connectionConfig.getConnectionProperties());
+		Facade client = (Facade) c.newInstance(connectionConfig.getConnectionProperties(), true);
 
 		client.addListener(new FacadeListener() {
 
@@ -153,34 +155,15 @@ public class Server {
 			public void connectionClosed() {}
 		});
 
-		/* @author dcransac
-		 * @bug
-		 * @since 22.03.2016
-		 *
-		 * the call to the Sampler's constructor is made within the "connect()" method
-		 * this means that if the connection attempt to the first monitored host fails,
-		 * the sampler does not get instanciated
-		 * Hence, under the current implementation, this is a fatal error that can not be
-		 * recovered from. I'm turning this temporarilly into an uncaught exception.
-		 *	
-		 * Ideally, the initialization of the sampler (object and thread) needs to be done
-		 * independently from the activation of the connections.
-		 */
-
-		// try {
-		client.connect();
-		//} catch (Exception e) {
-		//	logger.error("An error occurred while connecting client " + connectionConfig.toString());
-		//}
-
 		client.setSamplingInterval(connectionConfig.getSamplingParameters().getSamplingRate());
 		client.setSampling(true);
 
 		return client;
 	}
 
-
-
-
-
+	public List<Facade> getClients() {
+		synchronized (clients) {
+			return new ArrayList<Facade>(clients);
+		}
+	}
 }

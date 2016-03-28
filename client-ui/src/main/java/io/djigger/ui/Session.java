@@ -175,7 +175,7 @@ public class Session extends JPanel implements FacadeListener {
         	prop.put("port", config.getParameters().get(SessionParameter.PORT));
         	prop.put("username", config.getParameters().get(SessionParameter.USERNAME));
         	prop.put("password", config.getParameters().get(SessionParameter.PASSWORD));
-			facade = new JMXClientFacade(prop);
+			facade = new JMXClientFacade(prop, true);
 			facade.addListener(this);
     		try {
 				facade.connect();
