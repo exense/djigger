@@ -66,7 +66,7 @@ public class InstrumentationStatisticsCache {
 
 		for (InstrumentationSample sample : samples) {
 			if(sample.getAtributesHolder().getStacktrace()!=null) {
-				RealNodePath path = RealNodePath.fromStackTrace(sample.getAtributesHolder().getStacktrace().getStackTrace());
+				RealNodePath path = RealNodePath.fromStackTrace(sample.getAtributesHolder().getStacktrace().getStackTrace(), false);
 				if (path != null) {
 					// samples by RealNodePath
 					if (!instrumentationSamples.containsKey(path)) {

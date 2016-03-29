@@ -219,9 +219,7 @@ public class Session extends JPanel implements FacadeListener {
         	storeBrowserPane = null;
         }
         
-        if(config.getType() == SessionType.AGENT || config.getType() == SessionType.JMX) {
-        	add(new SessionControlPane(this),BorderLayout.PAGE_END);
-        }
+        add(new SessionControlPane(this),BorderLayout.PAGE_END);
 
         threadSelectionPane.initialize();
         analyzerGroupPane.initialize();
@@ -344,6 +342,10 @@ public class Session extends JPanel implements FacadeListener {
     	threadSelectionPane.refresh();
     	analyzerGroupPane.refresh();
     	instrumentationPane.refresh();
+    }
+    
+    public void showLineNumbers(boolean show) {
+    	analyzerGroupPane.showLineNumbers(show);
     }
 
     public void onThreadSelection(StoreFilter filter) {

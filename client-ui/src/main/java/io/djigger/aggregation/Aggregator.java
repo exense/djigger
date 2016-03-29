@@ -38,6 +38,8 @@ public class Aggregator {
 	private final Store store;
 
 	private StoreFilter filter;
+	
+	boolean includeLineNumbers = false;
 
 	public Aggregator(Store store) {
 		super();
@@ -45,9 +47,17 @@ public class Aggregator {
 		this.store = store;
 	}
 
+	public boolean isIncludeLineNumbers() {
+		return includeLineNumbers;
+	}
+
+	public void setIncludeLineNumbers(boolean includeLineNumbers) {
+		this.includeLineNumbers = includeLineNumbers;
+	}
+
 	private void aggregate(List<ThreadInfo> threadDumps) {
 		for(ThreadInfo thread:threadDumps) {
-			RealNodePath nodePath = RealNodePath.fromStackTrace(thread.getStackTrace());
+			RealNodePath nodePath = RealNodePath.fromStackTrace(thread.getStackTrace(), includeLineNumbers);
 			//
 			if(nodePath.getFullPath().size()>0) {
 				Aggregation aggregation = aggregations.get(nodePath);

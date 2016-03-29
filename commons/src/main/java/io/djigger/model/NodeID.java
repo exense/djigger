@@ -42,17 +42,21 @@ public class NodeID implements Serializable, Poolable {
 		return pool.getInstance(new NodeID(className, methodName));
 	}
 
-	public static NodeID getInstance(io.djigger.monitoring.java.model.StackTraceElement element) {
-		return pool.getInstance(new NodeID(element));
+	public static NodeID getInstance(io.djigger.monitoring.java.model.StackTraceElement element, boolean includeLineNumbers) {
+		return pool.getInstance(new NodeID(element, includeLineNumbers));
 	}
 	
-	public static NodeID getNewInstance(io.djigger.monitoring.java.model.StackTraceElement element) {
-		return new NodeID(element);
+	public static NodeID getNewInstance(io.djigger.monitoring.java.model.StackTraceElement element, boolean includeLineNumbers) {
+		return new NodeID(element, includeLineNumbers);
 	}
 
-	private NodeID(io.djigger.monitoring.java.model.StackTraceElement element) {
+	private NodeID(io.djigger.monitoring.java.model.StackTraceElement element, boolean includeLineNumbers) {
 		this.className = element.getClassName();
-		this.methodName = element.getMethodName();
+		if(includeLineNumbers) {
+			this.methodName = element.getMethodName()+"("+element.getLineNumber()+")";
+		} else {
+			this.methodName = element.getMethodName();
+		}
 		this.hashcode = calculateHashCode();
 	}
 

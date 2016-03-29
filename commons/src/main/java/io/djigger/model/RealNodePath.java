@@ -34,10 +34,10 @@ public class RealNodePath implements Serializable, Poolable {
 
 	private static final InstancePool<RealNodePath> pool = new InstancePool<RealNodePath>();
 	
-	public static RealNodePath fromStackTrace(StackTraceElement[] stacktrace) {
+	public static RealNodePath fromStackTrace(StackTraceElement[] stacktrace, boolean includeLineNumbers) {
 		ArrayList<NodeID> nodeIDs = new ArrayList<NodeID>(stacktrace.length);
 		for(int i=stacktrace.length-1;i>=0;i--) {
-			nodeIDs.add(NodeID.getNewInstance(stacktrace[i]));
+			nodeIDs.add(NodeID.getNewInstance(stacktrace[i], includeLineNumbers));
 		}
 		return getInstance(nodeIDs);
 		

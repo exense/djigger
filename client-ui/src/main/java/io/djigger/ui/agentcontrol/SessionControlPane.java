@@ -19,6 +19,7 @@
 package io.djigger.ui.agentcontrol;
 
 import io.djigger.ui.Session;
+import io.djigger.ui.Session.SessionType;
 import io.djigger.ui.common.CommandButton;
 import io.djigger.ui.common.FileChooserHelper;
 import io.djigger.ui.common.MonitoredExecution;
@@ -51,8 +52,10 @@ public class SessionControlPane extends JPanel implements ActionListener {
 
 	private final JPanel samplerSettingPanel;
 	
-	private final CommandButton startButton;
-	private final CommandButton stopButton;
+	private CommandButton startButton;
+	private CommandButton stopButton;
+	private CommandButton showLinenumbers;
+	private CommandButton hideLinenumbers;
 	
 	public SessionControlPane(final Session parent) {
 		super();
@@ -64,37 +67,44 @@ public class SessionControlPane extends JPanel implements ActionListener {
 		this.parent = parent;
 
 		JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		startButton = new CommandButton("play.png", "Start capture", new Runnable() {
-			@Override
-			public void run() {
-				parent.setSamplingInterval(Integer.decode(samplerRateTextField.getText()));
-				parent.setSampling(true);
-				startButton.setEnabled(false);
-				stopButton.setEnabled(true);
-			}
-		});
-		stopButton = new CommandButton("stop.png", "Stop capture", new Runnable() {
-			@Override
-			public void run() {
-				parent.setSampling(false);
-        		startButton.setEnabled(true);
-        		stopButton.setEnabled(false);
-			}
-		});
-		stopButton.setEnabled(false);
-
-		controlPanel.add(startButton);
-		controlPanel.add(stopButton);
+		
+		boolean realTimeSession = parent.getConfig().getType() == SessionType.AGENT || parent.getConfig().getType() == SessionType.JMX;
+        	
+		if(realTimeSession) {
+			startButton = new CommandButton("play.png", "Start capture", new Runnable() {
+				@Override
+				public void run() {
+					parent.setSamplingInterval(Integer.decode(samplerRateTextField.getText()));
+					parent.setSampling(true);
+					startButton.setEnabled(false);
+					stopButton.setEnabled(true);
+				}
+			});
+			stopButton = new CommandButton("stop.png", "Stop capture", new Runnable() {
+				@Override
+				public void run() {
+					parent.setSampling(false);
+	        		startButton.setEnabled(true);
+	        		stopButton.setEnabled(false);
+				}
+			});
+			stopButton.setEnabled(false);
+	
+			controlPanel.add(startButton);
+			controlPanel.add(stopButton);
+		}
 		
 		JSeparator separator = new JSeparator(SwingConstants.VERTICAL);
 		controlPanel.add(separator);
 
-		controlPanel.add(new CommandButton("refresh.png", "Refresh", new Runnable() {
-			@Override
-			public void run() {
-				parent.refreshAll();
-			}
-		}));
+		if(realTimeSession) {
+			controlPanel.add(new CommandButton("refresh.png", "Refresh", new Runnable() {
+				@Override
+				public void run() {
+					parent.refreshAll();
+				}
+			}));
+		}
 		controlPanel.add(new CommandButton("saveas.png", "Save capture as", new Runnable() {
 			@Override
 			public void run() {
@@ -131,6 +141,30 @@ public class SessionControlPane extends JPanel implements ActionListener {
 		}));
 
 		add(controlPanel);
+		
+		showLinenumbers = new CommandButton("numbered-list.png", "Show line numbers", new Runnable() {
+			@Override
+			public void run() {
+				parent.showLineNumbers(true);
+				hideLinenumbers.setVisible(true);
+				showLinenumbers.setVisible(false);
+			}
+		});
+		
+		hideLinenumbers = new CommandButton("list.png", "Hide line numbers", new Runnable() {
+			@Override
+			public void run() {
+				parent.showLineNumbers(false);
+				hideLinenumbers.setVisible(false);
+				showLinenumbers.setVisible(true);
+			}
+		});
+		hideLinenumbers.setVisible(false);
+		
+		controlPanel.add(showLinenumbers);
+		controlPanel.add(hideLinenumbers);
+
+		
 
 		samplerSettingPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		samplerSettingPanel.add(new JLabel("Sampler interval (ms)"));
@@ -140,7 +174,7 @@ public class SessionControlPane extends JPanel implements ActionListener {
 
 		add(samplerSettingPanel);
 		
-		stopButton.setEnabled(false);
+
 	}
 
 	@Override

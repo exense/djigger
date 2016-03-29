@@ -18,12 +18,6 @@
 
 package io.djigger.ui.analyzer;
 
-import io.djigger.aggregation.Aggregator;
-import io.djigger.store.filter.StoreFilter;
-import io.djigger.ui.Session;
-import io.djigger.ui.common.NodePresentationHelper;
-import io.djigger.ui.model.Node;
-
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +25,12 @@ import java.util.List;
 import javax.swing.JTabbedPane;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
+import io.djigger.aggregation.Aggregator;
+import io.djigger.store.filter.StoreFilter;
+import io.djigger.ui.Session;
+import io.djigger.ui.common.NodePresentationHelper;
+import io.djigger.ui.model.Node;
 
 
 public class AnalyzerGroupPane extends JTabbedPane implements ChangeListener {
@@ -140,6 +140,11 @@ public class AnalyzerGroupPane extends JTabbedPane implements ChangeListener {
 
 	public NodePresentationHelper getPresentationHelper() {
 		return presentationHelper;
+	}
+	
+	public void showLineNumbers(boolean show) {
+		aggregator.setIncludeLineNumbers(show);
+		refresh();
 	}
 
 
