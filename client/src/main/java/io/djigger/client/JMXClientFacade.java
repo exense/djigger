@@ -14,6 +14,7 @@
  *
  *  Contributors:
  *    - Jérôme Comte
+ *    - Dorian Cransac (dcransac)
  *******************************************************************************/
 package io.djigger.client;
 
@@ -46,19 +47,35 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 	
 	JMXConnector connector;
 	
-	ThreadMXBean bean;
+	volatile ThreadMXBean bean;
 	
-	Sampler sampler;
+	final Sampler sampler;
 	
-	public JMXClientFacade(Properties properties) {
-		super(properties, true);
+	public JMXClientFacade(Properties properties, boolean autoReconnect) {
+		super(properties, autoReconnect);
+		
+		final JMXClientFacade me = this;
+		
+		sampler = new Sampler(new Runnable() {
+			@Override
+			public void run() {
+				if(me.isConnected() && bean!=null) {
+					ThreadInfo[] infos = bean.dumpAllThreads(false, false);
+					
+					List<io.djigger.monitoring.java.model.ThreadInfo> dumps = ThreadDumpHelper.toThreadDump(infos);
+					
+					for(FacadeListener listener:listeners) {
+						listener.threadInfosReceived(dumps);
+					}
+				}
+			}
+		});
+		sampler.start();
 	}
 
 	@Override
-	protected synchronized void close_() {
-		if(sampler!=null) {
-			sampler.destroy();
-		}
+	protected synchronized void destroy_() {
+		sampler.destroy();
 
 		if(connector!=null) {
 			try {
@@ -70,9 +87,8 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 	@Override
 	public void handleNotification(Notification notification, Object handback) {
 		if(notification.getType().equals("jmx.remote.connection.closed") && isConnected()) {
-			close();
+			handleConnectionClosed();
 		}
-		System.out.println(notification.getType());
 	}
 
 
@@ -120,21 +136,6 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 		connector.addConnectionNotificationListener(this, null, null);
 		MBeanServerConnection connection = connector.getMBeanServerConnection();
 		
-		bean = newPlatformMXBeanProxy(connection, THREAD_MXBEAN_NAME,
-				ThreadMXBean.class);
-		
-		sampler = new Sampler(new Runnable() {
-			@Override
-			public void run() {
-				ThreadInfo[] infos = bean.dumpAllThreads(false, false);
-				
-				List<io.djigger.monitoring.java.model.ThreadInfo> dumps = ThreadDumpHelper.toThreadDump(infos);
-				
-				for(FacadeListener listener:listeners) {
-					listener.threadInfosReceived(dumps);
-				}
-			}
-		});
-		sampler.start();
+		bean = newPlatformMXBeanProxy(connection, THREAD_MXBEAN_NAME, ThreadMXBean.class);
 	}
 }

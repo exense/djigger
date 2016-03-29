@@ -14,6 +14,7 @@
  *
  *  Contributors:
  *    - Jérôme Comte
+ *    - Dorian Cransac
  *******************************************************************************/
 package io.djigger.collector.server.conf;
 
@@ -26,22 +27,12 @@ public class CollectorConfig {
 	
 	Long dataTTL;
 	
-	ConnectionGroup connectionGroup;
-
 	public MongoDBParameters getDb() {
 		return db;
 	}
 
 	public void setDb(MongoDBParameters db) {
 		this.db = db;
-	}
-
-	public ConnectionGroup getConnectionGroup() {
-		return connectionGroup;
-	}
-
-	public void setConnectionGroup(ConnectionGroup connectionGroup) {
-		this.connectionGroup = connectionGroup;
 	}
 
 	public String getServicePort() {

@@ -19,10 +19,18 @@
 package io.djigger.ui.analyzer;
 
 import java.awt.Component;
+import java.awt.MouseInfo;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.AbstractAction;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JTabbedPane;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -57,15 +65,79 @@ public class AnalyzerGroupPane extends JTabbedPane implements ChangeListener {
 	}
 
     public void addTab(Component analyzer, String name) {
-        add(name, analyzer);
+    	insertTab(name, null, analyzer, null, Math.max(0, getTabCount()-1));
+    }
+    
+    @SuppressWarnings("serial")
+	private class AddTab extends JPanel implements TabSelectionListener {
+
+		@Override
+		public void tabSelected(Component c, AnalyzerGroupPane p) {
+			Point p1 = MouseInfo.getPointerInfo().getLocation();
+			SwingUtilities.convertPointFromScreen(p1, p);
+			
+			AddTabPopUp popup = new AddTabPopUp(p);
+			popup.show(p, p1.x, p1.y);
+		}
     }
 
-    public AnalyzerPane getCurrentTab() {
-        Component _component = getSelectedComponent();
-        if(_component instanceof AnalyzerPane) {
-            return (AnalyzerPane) _component;
+	private void createAddTab() {
+		addTab(new AddTab(), "+");
+	}
+    
+    @SuppressWarnings("serial")
+	private class AddTabPopUp extends JPopupMenu {
+    	    	
+		public AddTabPopUp(final AnalyzerGroupPane groupPane){
+        	
+        	final AddTabPopUp me = this;
+        	
+            add(new JMenuItem(new AbstractAction("Tree View") {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+			        TreeView normalAnalyzer = new TreeView(groupPane, TreeType.NORMAL);
+			        me.addTab(groupPane, normalAnalyzer, e.getActionCommand());
+				}
+
+			}));
+            add(new JMenuItem(new AbstractAction("Reverse Tree View") {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+			        TreeView normalAnalyzer = new TreeView(groupPane, TreeType.REVERSE);
+			        me.addTab(groupPane, normalAnalyzer, e.getActionCommand());
+				}
+
+			}));
+            add(new JMenuItem(new AbstractAction("Block View") {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					BlockView normalAnalyzer = new BlockView(groupPane, TreeType.NORMAL);
+			        me.addTab(groupPane, normalAnalyzer, e.getActionCommand());
+				}
+
+			}));
+            add(new JMenuItem(new AbstractAction("Reverse Block View") {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					BlockView normalAnalyzer = new BlockView(groupPane, TreeType.REVERSE);
+			        me.addTab(groupPane, normalAnalyzer, e.getActionCommand());
+				}
+
+			}));
         }
-        return null;
+		
+        private void addTab(final AnalyzerGroupPane groupPane, AnalyzerPane normalAnalyzer, String title) {
+        	// set selected index to 0 in order to avoid stateChangedEvent to be thrown for AddTab
+        	groupPane.setSelectedIndex(0);
+        	groupPane.addTab(normalAnalyzer, title);
+        	groupPane.setSelectedComponent(normalAnalyzer);
+        	setVisible(false);
+        }
+    }
+
+    public Component getCurrentTab() {
+        Component _component = getSelectedComponent();
+        return _component;
     }
     
     public void setStoreFilter(StoreFilter storeFilter) {
@@ -82,6 +154,7 @@ public class AnalyzerGroupPane extends JTabbedPane implements ChangeListener {
     }
 
     public void initialize() {
+    	createAddTab();
         TreeView normalAnalyzer = new TreeView(this, TreeType.NORMAL);
         addTab(normalAnalyzer, "Tree view");
         TreeView reverseAnalyzer = new TreeView(this, TreeType.REVERSE);
@@ -92,10 +165,22 @@ public class AnalyzerGroupPane extends JTabbedPane implements ChangeListener {
         addTab(testPane, "Reverse block view");
         setSelectedIndex(0);
     }
+    
+    private interface TabSelectionListener {
+    	
+    	public void tabSelected(Component c, AnalyzerGroupPane p);
+    }
 
 	@Override
 	public void stateChanged(ChangeEvent e) {
-		AnalyzerPane selection = getCurrentTab();
+		AnalyzerGroupPane p = (AnalyzerGroupPane) e.getSource();
+
+		Component selection = getCurrentTab();
+		if(p.isShowing()) {
+			if(selection instanceof TabSelectionListener) {
+				((TabSelectionListener)selection).tabSelected(selection, p);
+			}
+		}
 		/*
 		// This feature seems to disturb more than it helps
 		if(selection!=null && currentSelection!=null) {
@@ -117,7 +202,9 @@ public class AnalyzerGroupPane extends JTabbedPane implements ChangeListener {
 			}
 		}
 		currentSelection = selection; */
-		selection.resetFocus();
+		if(selection!=null && selection instanceof AnalyzerPane) {
+			((AnalyzerPane)selection).resetFocus();
+		}
 	}
 
 	public void addListener(AnalyzerPaneListener listener) {

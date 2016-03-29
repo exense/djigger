@@ -28,7 +28,12 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public abstract class Facade {
+	
+	private static final Logger logger = LoggerFactory.getLogger(Facade.class);
 	
 	private boolean connected;
 	
@@ -47,13 +52,10 @@ public abstract class Facade {
     private final Set<InstrumentSubscription> subscriptions = new HashSet<InstrumentSubscription>();
     
     private Timer timer;
-    
-    private boolean autoReconnect;
-        
-    public Facade(Properties properties, boolean autoReconnect) {
+            
+    public Facade(final Properties properties, boolean autoReconnect) {
 		super();
 		this.properties = properties;
-		this.autoReconnect = autoReconnect;
 		
 		this.connected = false;
 		this.samplingRate = DEFAULT_RATE;
@@ -69,7 +71,7 @@ public abstract class Facade {
 								restoreSession();
 						}
 					} catch (Exception e) {
-						e.printStackTrace();
+						logger.debug("Unable to reconnect facade " + properties.toString(), e);
 					}
 				}
 				
@@ -77,7 +79,11 @@ public abstract class Facade {
 		}
 	}
     
-    public void connect() throws Exception {
+    public Properties getProperties() {
+		return properties;
+	}
+
+	public void connect() throws Exception {
     	connect_();
     	connected = true;
     	fireConnectionEvent();
@@ -89,21 +95,18 @@ public abstract class Facade {
 		return connected;
 	}
 	
-	public void close() {
+	protected void handleConnectionClosed() {
 		connected = false;
-		try {
-			close_();
-		} catch(Exception e) {};
 		fireCaptureStopped();
 		fireConnectionEvent();
 	}
 	
 	public void destroy() {
-		close();
+		destroy_();
 		timer.cancel();
 	}
 	
-	protected abstract void close_();
+	protected abstract void destroy_();
     
 	public void addListener(FacadeListener listener) {
 		listeners.add(listener);

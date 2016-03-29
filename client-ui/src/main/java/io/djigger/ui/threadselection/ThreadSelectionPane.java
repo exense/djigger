@@ -26,7 +26,6 @@ import io.djigger.store.filter.IdStoreFilter;
 import io.djigger.store.filter.StoreFilter;
 import io.djigger.store.filter.TimeStoreFilter;
 import io.djigger.ui.Session;
-import io.djigger.ui.analyzer.AnalyzerPane;
 import io.djigger.ui.analyzer.AnalyzerPaneListener;
 import io.djigger.ui.analyzer.TreeView;
 import io.djigger.ui.instrumentation.InstrumentationPaneListener;
@@ -36,6 +35,7 @@ import io.djigger.ui.model.NodeAggregation;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -683,8 +683,8 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 
 	private Set<Long> getAnalyzerPaneThreads() {
 		HashSet<Long> result = new HashSet<Long>();
-		AnalyzerPane _pane = main.getAnalyzerGroupPane().getCurrentTab();
-		if(_pane instanceof TreeView) {
+		Component _pane = main.getAnalyzerGroupPane().getCurrentTab();
+		if(_pane!=null && _pane instanceof TreeView) {
 			TreeView pane = (TreeView) _pane;
 			Node selectedNode = pane.getSelectedNode();
 			if(selectedNode!=null) {

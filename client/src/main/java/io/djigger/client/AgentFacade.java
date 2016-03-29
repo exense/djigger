@@ -84,7 +84,7 @@ public class AgentFacade extends Facade implements MessageListener {
 	}
 
 	@Override
-	protected void close_() {
+	protected void destroy_() {
 		if(client!=null) {
 			client.disconnect();			
 		}
