@@ -17,27 +17,41 @@
  *******************************************************************************/
 package io.djigger.ui.storebrowser;
 
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.Iterator;
+
+import javax.swing.BoxLayout;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.JTextField;
+import javax.swing.ListCellRenderer;
+import javax.swing.SpinnerDateModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import org.antlr.runtime.RecognitionException;
+import org.bson.conversions.Bson;
+
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.ql.OSQL;
 import io.djigger.ui.Session;
 import io.djigger.ui.common.MonitoredExecution;
 import io.djigger.ui.common.MonitoredExecutionRunnable;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.Date;
-import java.util.Iterator;
-
-import javax.swing.BoxLayout;
-import javax.swing.JPanel;
-import javax.swing.JSpinner;
-import javax.swing.JTextField;
-import javax.swing.SpinnerDateModel;
-
-import org.antlr.runtime.RecognitionException;
-import org.bson.conversions.Bson;
-
-public class StoreBrowserPane extends JPanel implements ActionListener {
+@SuppressWarnings("serial")
+public class StoreBrowserPane extends JPanel implements ActionListener, KeyListener {
 	
 	private final Session parent;
 	
@@ -46,7 +60,32 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
 	private final JSpinner fromDateSpinner;
 	
 	private final JSpinner toDateSpinner;
+	
+	private final JComboBox<DatePresets> datePresets;
+	
+	private boolean changeLock = false;
 
+	enum DatePresets {
+
+		MINS15("Last 15 mins", 900000, 0),
+		MINS60("Last 60 mins", 3600000, 0),
+		HOURS4("Last 4 hours", 14400000, 0),
+		HOURS24("Last 24 hours", 86400000, 0),
+		CUSTOM("Custom", 0, 0);
+
+		String label;
+		
+		int fromOffset;
+		
+		int toOffset;
+
+		private DatePresets(String label, int fromOffset, int toOffset) {
+			this.label = label;
+			this.fromOffset = fromOffset;
+			this.toOffset = toOffset;
+		}
+	}
+	
 	public StoreBrowserPane(final Session parent) {
 		super();
 		
@@ -56,22 +95,81 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
 		queryTextField.addActionListener(this);
 		add(queryTextField);
 		
-		fromDateSpinner = new JSpinner();
-		fromDateSpinner.setModel(new SpinnerDateModel());
-		fromDateSpinner.setEditor(new JSpinner.DateEditor(fromDateSpinner, "dd.MM.yyyy h:mm a"));
-	    add(fromDateSpinner);
-	    
-	    toDateSpinner = new JSpinner();
-		toDateSpinner.setModel(new SpinnerDateModel());
-		toDateSpinner.setEditor(new JSpinner.DateEditor(toDateSpinner, "dd.MM.yyyy h:mm a"));
-	    add(toDateSpinner);
+		fromDateSpinner = initSpinner();
+	    toDateSpinner = initSpinner();
 		
+	    DatePresets[] presets = DatePresets.values();
+		
+		datePresets = new JComboBox<>(presets);
+		datePresets.setSelectedIndex(0);
+		datePresets.setRenderer(new ListCellRenderer<DatePresets>() {
+			@Override
+			public Component getListCellRendererComponent(JList<? extends DatePresets> arg0, DatePresets arg1, int arg2, boolean arg3, boolean arg4) {
+				return new JLabel(arg1.label);
+			}
+		});
+		datePresets.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent event) {
+				if (event.getStateChange() == ItemEvent.SELECTED) {					
+					DatePresets preset = (DatePresets) event.getItem();
+					applyPreset(preset);
+				}				
+			}
+		}); 
+	    
+		add(datePresets);
 		setLayout(new BoxLayout(this,BoxLayout.LINE_AXIS));
+		
+		applyPreset((DatePresets) datePresets.getSelectedItem());
+	}
+
+	private JSpinner initSpinner() {
+		JSpinner spinner = new JSpinner();
+		
+		spinner.setModel(new SpinnerDateModel());
+		spinner.getModel().addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent arg0) {
+				selectCustomPresetIfNeeded();
+			}
+		});
+		spinner.setEditor(new JSpinner.DateEditor(spinner, "dd.MM.yyyy HH:mm"));
+		((JSpinner.DefaultEditor)spinner.getEditor()).getTextField().addKeyListener(this);
+	    add(spinner);
+	    
+	    return spinner;
+	}
+
+	private void applyPreset(DatePresets preset) {
+		if(preset!=DatePresets.CUSTOM) {
+			changeLock = true;
+			try {	
+				Calendar cal = new GregorianCalendar();
+				cal.add(Calendar.MILLISECOND, -preset.fromOffset);
+				fromDateSpinner.getModel().setValue(cal.getTime());
+				cal.setTime(new Date());
+				cal.add(Calendar.MILLISECOND, -preset.toOffset);
+				toDateSpinner.getModel().setValue(cal.getTime());
+				
+			} finally {
+				changeLock = false;
+			}
+		}
+	}
+
+	private void selectCustomPresetIfNeeded() {
+		if(datePresets!=null && !changeLock) {	
+			datePresets.setSelectedIndex(datePresets.getItemCount()-1);
+		}
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
-		// TODO Auto-generated method stub
+		search();
+	}
+
+	private void search() {
 		parent.clear();
 		
 		final Bson query;
@@ -118,4 +216,16 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
 		}
 	}
 
+	@Override
+	public void keyPressed(KeyEvent arg0) {
+		if(arg0.getKeyCode() == KeyEvent.VK_ENTER) {
+			search();
+		}
+	}
+
+	@Override
+	public void keyReleased(KeyEvent arg0) {}
+
+	@Override
+	public void keyTyped(KeyEvent arg0) {}
 }
