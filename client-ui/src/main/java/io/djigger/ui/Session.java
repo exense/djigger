@@ -18,6 +18,25 @@
 
 package io.djigger.ui;
 
+import java.awt.BorderLayout;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.Inet4Address;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.List;
+import java.util.Properties;
+import java.util.UUID;
+
+import javax.swing.JPanel;
+import javax.swing.JSplitPane;
+
+import com.sun.tools.attach.VirtualMachine;
+
 import io.djigger.client.AgentFacade;
 import io.djigger.client.Facade;
 import io.djigger.client.FacadeListener;
@@ -34,6 +53,7 @@ import io.djigger.store.filter.StoreFilter;
 import io.djigger.ui.SessionConfiguration.SessionParameter;
 import io.djigger.ui.agentcontrol.SessionControlPane;
 import io.djigger.ui.analyzer.AnalyzerGroupPane;
+import io.djigger.ui.common.Closeable;
 import io.djigger.ui.common.MonitoredExecution;
 import io.djigger.ui.common.MonitoredExecutionRunnable;
 import io.djigger.ui.common.NodePresentationHelper;
@@ -43,28 +63,9 @@ import io.djigger.ui.model.SessionExport;
 import io.djigger.ui.storebrowser.StoreBrowserPane;
 import io.djigger.ui.threadselection.ThreadSelectionPane;
 
-import java.awt.BorderLayout;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.Inet4Address;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
-import java.util.jar.JarFile;
 
-import javax.swing.JPanel;
-import javax.swing.JSplitPane;
-
-import com.sun.tools.attach.VirtualMachine;
-
-
-public class Session extends JPanel implements FacadeListener {
+@SuppressWarnings("serial")
+public class Session extends JPanel implements FacadeListener, Closeable {
 	
 	private final SessionConfiguration config;
 		

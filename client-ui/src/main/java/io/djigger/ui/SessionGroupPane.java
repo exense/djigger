@@ -17,26 +17,34 @@
  *******************************************************************************/
 package io.djigger.ui;
 
-import io.djigger.ui.analyzer.AnalyzerPane;
-
 import java.awt.Component;
 
-import javax.swing.JTabbedPane;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-public class SessionGroupPane extends JTabbedPane implements ChangeListener {
+import io.djigger.ui.common.EnhancedTabbedPane;
+
+@SuppressWarnings("serial")
+public class SessionGroupPane extends EnhancedTabbedPane implements ChangeListener {
 
 	private final MainFrame main;
 
-    public SessionGroupPane(MainFrame main) {
+    public SessionGroupPane(final MainFrame main) {
 		super();
 		this.main = main;
 		addChangeListener(this);
+		
+		setAddTabAction(new Runnable() {
+			
+			@Override
+			public void run() {
+				main.getMainToolbar().addSession();
+			}
+		});
 	}
 
 	public void addSession(Session session) {
-        add(session.getName(), session);
+		addTab(session, session.getName(), true);
     }
 	
 	public void selectSession(Session session) {
@@ -46,10 +54,11 @@ public class SessionGroupPane extends JTabbedPane implements ChangeListener {
 	}
 	
 	public void removeSession(Session session) {
+		session.close();
 		remove(session);
 	}
 
-    public Session getCurrentTab() {
+    public Session getCurrentSession() {
         Component _component = getSelectedComponent();
         if(_component instanceof Session) {
             return (Session) _component;
@@ -59,6 +68,7 @@ public class SessionGroupPane extends JTabbedPane implements ChangeListener {
 
 	@Override
 	public void stateChanged(ChangeEvent e) {
-		main.selectSession(getCurrentTab());
+		main.selectSession(getCurrentSession());
 	}
+
 }

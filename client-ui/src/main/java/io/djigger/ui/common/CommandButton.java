@@ -30,7 +30,6 @@ import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JToggleButton;
 import javax.swing.plaf.basic.BasicButtonUI;
 
@@ -41,12 +40,12 @@ public class CommandButton extends JToggleButton {
 		init(null, action);
 	}
 	
-	public CommandButton(String resourceName, String toolTip, final Runnable cmd) {
+	public CommandButton(String resourceName, String toolTip, final Runnable cmd, int size) {
 		super();
 		
 		java.net.URL imgURL = getClass().getResource(resourceName);
 		ImageIcon icon = new ImageIcon(imgURL, toolTip);
-		icon.setImage(icon.getImage().getScaledInstance(20, 20, Image.SCALE_FAST));
+		icon.setImage(icon.getImage().getScaledInstance(size, size, Image.SCALE_FAST));
 		AbstractAction action = new AbstractAction("", icon) {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -55,6 +54,10 @@ public class CommandButton extends JToggleButton {
 		};
 		
         init(toolTip, action);
+	}
+	
+	public CommandButton(String resourceName, String toolTip, final Runnable cmd) {
+		this(resourceName, toolTip, cmd, 20);
 	}
 
 	private void init(String toolTip, Action action) {

@@ -145,7 +145,7 @@ public class MainFrame extends JPanel {
 	}
 	
 	public void removeCurrentSession() {
-		Session currentSession = groupPane.getCurrentTab();
+		Session currentSession = groupPane.getCurrentSession();
 		removeSession(currentSession);
 	}
 	
@@ -214,6 +214,10 @@ public class MainFrame extends JPanel {
 	
     public ArgumentParser getOptions() {
 		return options;
+	}
+
+	public MainToolbarPane getMainToolbar() {
+		return mainToolbar;
 	}
 
 	public static void main(String[] args)  {

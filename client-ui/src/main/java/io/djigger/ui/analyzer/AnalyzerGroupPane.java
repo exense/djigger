@@ -27,9 +27,7 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
-import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
-import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -37,11 +35,12 @@ import javax.swing.event.ChangeListener;
 import io.djigger.aggregation.Aggregator;
 import io.djigger.store.filter.StoreFilter;
 import io.djigger.ui.Session;
+import io.djigger.ui.common.EnhancedTabbedPane;
 import io.djigger.ui.common.NodePresentationHelper;
 import io.djigger.ui.model.Node;
 
 
-public class AnalyzerGroupPane extends JTabbedPane implements ChangeListener {
+public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListener {
 
 	private static final long serialVersionUID = -894031577206042607L;
 
@@ -62,41 +61,31 @@ public class AnalyzerGroupPane extends JTabbedPane implements ChangeListener {
         addChangeListener(this);
         aggregator = new Aggregator(parent.getStore());
         this.presentationHelper = presentationHelper;  
-	}
-
-    public void addTab(Component analyzer, String name) {
-    	insertTab(name, null, analyzer, null, Math.max(0, getTabCount()-1));
-    }
-    
-    @SuppressWarnings("serial")
-	private class AddTab extends JPanel implements TabSelectionListener {
-
-		@Override
-		public void tabSelected(Component c, AnalyzerGroupPane p) {
-			Point p1 = MouseInfo.getPointerInfo().getLocation();
-			SwingUtilities.convertPointFromScreen(p1, p);
+        
+        final AnalyzerGroupPane me = this;
+        setAddTabAction(new Runnable() {
 			
-			AddTabPopUp popup = new AddTabPopUp(p);
-			popup.show(p, p1.x, p1.y);
-		}
-    }
-
-	private void createAddTab() {
-		addTab(new AddTab(), "+");
+			@Override
+			public void run() {
+				Point p1 = MouseInfo.getPointerInfo().getLocation();
+	    		SwingUtilities.convertPointFromScreen(p1, me);
+	    		
+	    		AddTabPopUp popup = new AddTabPopUp(me);
+	    		popup.show(me, p1.x, p1.y);
+			}
+		});
 	}
-    
-    @SuppressWarnings("serial")
-	private class AddTabPopUp extends JPopupMenu {
+
+    @SuppressWarnings("serial") class AddTabPopUp extends JPopupMenu {
     	    	
 		public AddTabPopUp(final AnalyzerGroupPane groupPane){
-        	
-        	final AddTabPopUp me = this;
-        	
+        	        	
             add(new JMenuItem(new AbstractAction("Tree View") {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 			        TreeView normalAnalyzer = new TreeView(groupPane, TreeType.NORMAL);
-			        me.addTab(groupPane, normalAnalyzer, e.getActionCommand());
+			        addTab(normalAnalyzer, e.getActionCommand(), true);
+			    	setVisible(false);
 				}
 
 			}));
@@ -104,7 +93,8 @@ public class AnalyzerGroupPane extends JTabbedPane implements ChangeListener {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 			        TreeView normalAnalyzer = new TreeView(groupPane, TreeType.REVERSE);
-			        me.addTab(groupPane, normalAnalyzer, e.getActionCommand());
+			        addTab(normalAnalyzer, e.getActionCommand(), true);
+			    	setVisible(false);
 				}
 
 			}));
@@ -112,7 +102,8 @@ public class AnalyzerGroupPane extends JTabbedPane implements ChangeListener {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					BlockView normalAnalyzer = new BlockView(groupPane, TreeType.NORMAL);
-			        me.addTab(groupPane, normalAnalyzer, e.getActionCommand());
+			        addTab(normalAnalyzer, e.getActionCommand(), true);
+			    	setVisible(false);
 				}
 
 			}));
@@ -120,24 +111,12 @@ public class AnalyzerGroupPane extends JTabbedPane implements ChangeListener {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					BlockView normalAnalyzer = new BlockView(groupPane, TreeType.REVERSE);
-			        me.addTab(groupPane, normalAnalyzer, e.getActionCommand());
+					addTab(normalAnalyzer, e.getActionCommand(), true);
+			    	setVisible(false);
 				}
 
 			}));
         }
-		
-        private void addTab(final AnalyzerGroupPane groupPane, AnalyzerPane normalAnalyzer, String title) {
-        	// set selected index to 0 in order to avoid stateChangedEvent to be thrown for AddTab
-        	groupPane.setSelectedIndex(0);
-        	groupPane.addTab(normalAnalyzer, title);
-        	groupPane.setSelectedComponent(normalAnalyzer);
-        	setVisible(false);
-        }
-    }
-
-    public Component getCurrentTab() {
-        Component _component = getSelectedComponent();
-        return _component;
     }
     
     public void setStoreFilter(StoreFilter storeFilter) {
@@ -154,33 +133,20 @@ public class AnalyzerGroupPane extends JTabbedPane implements ChangeListener {
     }
 
     public void initialize() {
-    	createAddTab();
         TreeView normalAnalyzer = new TreeView(this, TreeType.NORMAL);
-        addTab(normalAnalyzer, "Tree view");
+        addTab(normalAnalyzer, "Tree view", true);
         TreeView reverseAnalyzer = new TreeView(this, TreeType.REVERSE);
-        addTab(reverseAnalyzer, "Reverse tree view");
+        addTab(reverseAnalyzer, "Reverse tree view", true);
         BlockView blockPane = new BlockView(this, TreeType.NORMAL);
-        addTab(blockPane, "Block view");
+        addTab(blockPane, "Block view", true);
         BlockView testPane = new BlockView(this, TreeType.REVERSE);
-        addTab(testPane, "Reverse block view");
+        addTab(testPane, "Reverse block view", true);
         setSelectedIndex(0);
-    }
-    
-    private interface TabSelectionListener {
-    	
-    	public void tabSelected(Component c, AnalyzerGroupPane p);
     }
 
 	@Override
-	public void stateChanged(ChangeEvent e) {
-		AnalyzerGroupPane p = (AnalyzerGroupPane) e.getSource();
-
+	public void stateChanged(ChangeEvent e) {		
 		Component selection = getCurrentTab();
-		if(p.isShowing()) {
-			if(selection instanceof TabSelectionListener) {
-				((TabSelectionListener)selection).tabSelected(selection, p);
-			}
-		}
 		/*
 		// This feature seems to disturb more than it helps
 		if(selection!=null && currentSelection!=null) {
