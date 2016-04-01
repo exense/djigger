@@ -36,6 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -43,8 +44,10 @@ import org.bson.types.ObjectId;
 
 import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
+import com.mongodb.MongoExecutionTimeoutException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.IndexOptions;
 
 
@@ -118,9 +121,19 @@ public class ThreadInfoAccessorImpl implements ThreadInfoAccessor {
 		return result;
 	}
 
-	public long count(Bson mongoQuery, Date from, Date to) {
+	private static long COUNT_MAXTIME_SECONDS=30; 
+	
+	public long count(Bson mongoQuery, Date from, Date to) throws TimeoutException {
 		mongoQuery = buildQuery(mongoQuery, from, to);
-		return threadInfoCollection.count(mongoQuery);
+		
+		CountOptions options = new CountOptions();
+		options.maxTime(COUNT_MAXTIME_SECONDS, TimeUnit.SECONDS);
+		
+		try {
+			return threadInfoCollection.count(mongoQuery, options);
+		} catch(MongoExecutionTimeoutException e) {
+			throw new TimeoutException("Count exceeded time limit");
+		}
 	}
 	
 	public Iterable<ThreadInfo> query(Bson mongoQuery, Date from, Date to) {

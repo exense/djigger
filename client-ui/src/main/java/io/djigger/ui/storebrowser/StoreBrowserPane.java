@@ -28,11 +28,13 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
+import java.util.concurrent.TimeoutException;
 
 import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
@@ -182,30 +184,35 @@ public class StoreBrowserPane extends JPanel implements ActionListener, KeyListe
 				protected void run(MonitoredExecution execution) {
     				
 					execution.setText("Calculating execution time...");
-    				long maxValue = parent.getStoreClient().getThreadInfoAccessor().count(query, from, to);
-    				execution.setMaxValue(maxValue);
-    				execution.setText("Retrieving data...");
-    				
-    				try {
-    					int count = 0;
-    					Iterator<ThreadInfo> it = parent.getStoreClient().getThreadInfoAccessor().query(query, from, to).iterator();
-    					
-    					ThreadInfo thread;
-    					while(it.hasNext() && !execution.isInterrupted()) {
-    						count++;
-    						
-    						execution.setValue(count);
-    						
-    						thread=it.next();
-
-							parent.getStore().addThreadInfo(thread);
-    					}
-    					parent.getStore().processBuffers();
-    				
-    					System.out.println("Fetched " + count + " stacktraces.");
-    				} catch (Exception e) {
-    					e.printStackTrace();
-    				}
+					try {
+	    				long maxValue = parent.getStoreClient().getThreadInfoAccessor().count(query, from, to);
+	    				execution.setMaxValue(maxValue);
+	    				execution.setText("Retrieving data...");
+	    				
+	    				try {
+	    					int count = 0;
+	    					Iterator<ThreadInfo> it = parent.getStoreClient().getThreadInfoAccessor().query(query, from, to).iterator();
+	    					
+	    					ThreadInfo thread;
+	    					while(it.hasNext() && !execution.isInterrupted()) {
+	    						count++;
+	    						
+	    						execution.setValue(count);
+	    						
+	    						thread=it.next();
+	
+								parent.getStore().addThreadInfo(thread);
+	    					}
+	    					parent.getStore().processBuffers();
+	    				
+	    					System.out.println("Fetched " + count + " stacktraces.");
+	    				} catch (Exception e) {
+	    					e.printStackTrace();
+	    				}
+					} catch (TimeoutException e)  {
+						JOptionPane.showMessageDialog(parent, "Execution time limit exceeded. Try to reduce the time range, use more specific search criteria or create an index for the search criteria (see documentation)", "Error",
+						        JOptionPane.ERROR_MESSAGE);
+					}
     			}
     		}, true);
     		execution.run();
