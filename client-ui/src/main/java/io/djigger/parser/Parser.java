@@ -34,10 +34,15 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 
 public class Parser {
 
+	private static final Logger logger = LoggerFactory.getLogger(Parser.class);
+	
 	private final Format format;
 	
 	private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -162,13 +167,11 @@ public class Parser {
 				} */
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("IO error while detecting format of file "+file,e);
 		} finally {
 			try {
 				reader.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			} catch (IOException e) {}
 		}
 		return Format.WLS;
 	}

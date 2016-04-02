@@ -32,9 +32,14 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.thoughtworks.xstream.XStream;
 
 public class MainFrame extends JPanel {
+	
+	private static final Logger logger = LoggerFactory.getLogger(MainFrame.class);
 
     private final JFrame frame;
         
@@ -171,8 +176,7 @@ public class MainFrame extends JPanel {
 				}
 				xstream.toXML(configs, new FileWriter(file));			
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.error("Error while exporting sessions",e);
 			}
 		}
 	}
@@ -181,7 +185,8 @@ public class MainFrame extends JPanel {
 		XStream xstream = new XStream();
 		File file = FileChooserHelper.selectFile("Import session list", "Open");
 		if(file!=null) {
-        	List<SessionConfiguration> configs = (List<SessionConfiguration>) xstream.fromXML(file);
+        	@SuppressWarnings("unchecked")
+			List<SessionConfiguration> configs = (List<SessionConfiguration>) xstream.fromXML(file);
     		for(SessionConfiguration config:configs) {
     			Session session = new Session(config, this);
     			addSession(session);

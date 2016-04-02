@@ -66,9 +66,14 @@ import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneLayout;
 import javax.swing.border.EmptyBorder;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class ThreadSelectionPane extends JPanel implements MouseMotionListener, MouseListener, KeyListener, ComponentListener, InstrumentationPaneListener, AnalyzerPaneListener {
 
+	private static final Logger logger = LoggerFactory.getLogger(ThreadSelectionPane.class);
+	
 	private final Session main;
 
 	private final Store store;
@@ -147,7 +152,7 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
     	try {
     		buildBlocks();
     	} catch (Exception e) {
-    		e.printStackTrace();
+    		logger.error("Error while refreshing blocks ",e);
     		throw new RuntimeException(e);
     	}
     	scrollPane.repaint();

@@ -39,10 +39,14 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.thoughtworks.xstream.XStream;
 
 public class TransactionTable extends JPanel {
 	
+	private static final Logger logger = LoggerFactory.getLogger(TransactionTable.class);
 	
 	private final InstrumentationPane parent;
 	
@@ -124,8 +128,7 @@ public class TransactionTable extends JPanel {
 	            	try {
 						xstream.toXML(parent.getSession().getStore().getSubscriptions(), new FileWriter(file));
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						logger.error("Error while saving transaction definitions to file "+file, e);
 					}
 	            }
 			}

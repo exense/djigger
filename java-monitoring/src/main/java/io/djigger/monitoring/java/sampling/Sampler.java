@@ -52,6 +52,7 @@ public class Sampler extends Thread {
 					}
 				}
 			} catch (Exception e) {
+				//TODO logger
 				e.printStackTrace();
 			}
 		}

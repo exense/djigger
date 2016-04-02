@@ -29,8 +29,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 class ThreadBlock {
+	
+	private static final Logger logger = LoggerFactory.getLogger(ThreadBlock.class);
 
 	private final ThreadSelectionPane threadSelectionGraphPane;
 
@@ -160,7 +165,7 @@ class ThreadBlock {
 				percentage = percentage.setScale(0,RoundingMode.HALF_EVEN);
 				str.append(percentage);
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Error while calculation label "+str.toString(),e);
 			}
 			str.append("%  ");
 		}

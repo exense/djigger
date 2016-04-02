@@ -94,13 +94,13 @@ public class Configurator {
 		try {
 			br = new BufferedReader(new FileReader(connectionsConfigFilename));
 		} catch (FileNotFoundException e1) {
-			e1.printStackTrace();
+			logger.error("Error while parsing connection definitions from file "+connectionsConfigFilename,e1);
 		}
 		String line = null;
 		try {
 			line = br.readLine();
 		} catch (IOException e1) {
-			e1.printStackTrace();
+			logger.error("Error while parsing connection definitions from file "+connectionsConfigFilename,e1);
 		}
 
 		// Build a single ConnectionGroup to hold all Connections with flat, potentially redundant attributes
@@ -114,12 +114,12 @@ public class Configurator {
 			try {
 				cgnList.add(parseAndBuildConnection(line));
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Error while parsing line "+line,e);
 			}
 			try {
 				line = br.readLine();
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.error("Error while reading line",e);
 			}
 		}
 
@@ -202,12 +202,12 @@ public class Configurator {
 		try {
 			br = new BufferedReader(new FileReader(pathToPassword));
 		} catch (FileNotFoundException e)
-		{ e.printStackTrace();}
+		{ logger.error("Error while resolving password from file "+pathToPassword,e);}
 
 		try {
 			line = br.readLine();
 		} catch (IOException e1)
-		{e1.printStackTrace();}
+		{ logger.error("Error while resolving password from file "+pathToPassword,e1);}
 
 		while (line != null)
 		{
@@ -216,7 +216,7 @@ public class Configurator {
 			try {
 				line = br.readLine();
 			} catch (IOException e)
-			{ e.printStackTrace();}
+			{  logger.error("Error while resolving password from file "+pathToPassword,e);}
 		}
 		return password;
 	}

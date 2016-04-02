@@ -61,10 +61,15 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneLayout;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class BlockView extends AnalyzerPane implements MouseListener, MouseMotionListener, AdjustmentListener {
 
 	private static final long serialVersionUID = 7088753046913758857L;
+	
+	private static final Logger logger = LoggerFactory.getLogger(BlockView.class);
 
 	private final BlockColorer blockColorer;
 
@@ -94,7 +99,7 @@ public class BlockView extends AnalyzerPane implements MouseListener, MouseMotio
 			try {
 				colorer = new BlockColorer(new File(main.getOptions().getOption("colorer")));
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Error while initilizing block view ", e);
 				colorer = new BlockColorer();
 			}
 			blockColorer = colorer;
@@ -310,8 +315,7 @@ public class BlockView extends AnalyzerPane implements MouseListener, MouseMotio
 		try {
 			ImageIO.write(im, "PNG", new File("c:\\temp\\yourImageName.PNG"));
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			logger.error("Error while exporting block view",e1);
 		}
 	}
 
@@ -378,6 +382,7 @@ public class BlockView extends AnalyzerPane implements MouseListener, MouseMotio
 			add(exportButton);
 	    }
 
+		@SuppressWarnings("serial")
 		private class LegendButton extends CustomButton implements ActionListener {
 
 			private final Framework framework;
@@ -439,6 +444,7 @@ public class BlockView extends AnalyzerPane implements MouseListener, MouseMotio
 		}
 	}
 
+	@SuppressWarnings("serial")
 	private class EditFramework extends JPanel implements ActionListener {
 
 		private final Framework framework;

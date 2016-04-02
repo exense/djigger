@@ -34,10 +34,15 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class InstrumentationStatistics implements Serializable {
 
 	private static final long serialVersionUID = -6506453302335513463L;
+	
+	private static final Logger logger = LoggerFactory.getLogger(InstrumentationStatistics.class);
 	
 	private final DateFormat format = new SimpleDateFormat("hh:mm:ss");
 
@@ -184,8 +189,7 @@ public class InstrumentationStatistics implements Serializable {
 				}
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("Error while exporting samples to file " + file, e);
 		} finally {
 			writer.close();
 		}

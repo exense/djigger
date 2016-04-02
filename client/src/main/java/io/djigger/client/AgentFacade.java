@@ -28,12 +28,16 @@ import java.net.Socket;
 import java.util.List;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smb.core.Message;
 import org.smb.core.MessageListener;
 import org.smb.core.MessageRouter;
 
 
 public class AgentFacade extends Facade implements MessageListener {
+	
+	private static final Logger logger = LoggerFactory.getLogger(AgentFacade.class);
 
     private MessageRouter client;
     
@@ -56,8 +60,7 @@ public class AgentFacade extends Facade implements MessageListener {
     	try {
     		client.sendMessage(JavaAgentMessageType.SUBSCRIBE_THREAD_SAMPLING, getSamplingInterval());
     	} catch (IOException e) {
-    		// TODO Auto-generated catch block
-    		e.printStackTrace();
+    		logger.error("Error while sending message to agent:",e);
     	}
     }
 
@@ -65,7 +68,7 @@ public class AgentFacade extends Facade implements MessageListener {
         try {
             client.sendMessage(JavaAgentMessageType.UNSUBSCRIBE_THREAD_SAMPLING, null);
         } catch (IOException e) {
-            e.printStackTrace();
+    		logger.error("Error while sending message to agent:",e);
         }
     }
 	
@@ -95,8 +98,7 @@ public class AgentFacade extends Facade implements MessageListener {
 		try {
             client.sendMessage(JavaAgentMessageType.INSTRUMENT, subscription);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+    		logger.error("Error while sending message to agent:",e);
         }
 	}
 
@@ -105,8 +107,7 @@ public class AgentFacade extends Facade implements MessageListener {
 		try {
             client.sendMessage(JavaAgentMessageType.DEINSTRUMENT, subscription);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+    		logger.error("Error while sending message to agent:",e);
         }
 	}
 

@@ -35,6 +35,9 @@ import java.util.UUID;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sun.tools.attach.VirtualMachine;
 
 import io.djigger.client.AgentFacade;
@@ -66,6 +69,8 @@ import io.djigger.ui.threadselection.ThreadSelectionPane;
 
 @SuppressWarnings("serial")
 public class Session extends JPanel implements FacadeListener, Closeable {
+	
+	private static final Logger logger = LoggerFactory.getLogger(Session.class);
 	
 	private final SessionConfiguration config;
 		
@@ -124,8 +129,7 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 								socket = s.accept();
 								createFacade(prop, socket);
 							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
+								logger.error("Error while creating facade with properties "+prop, e);
 							} finally {
 								try {
 									s.close();
@@ -150,13 +154,12 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 			            os.close();
 			      
 					} catch (IOException e1) {
-						e1.printStackTrace();
+						logger.error("Error while writing agent temp file to "+agentJar, e1);
 					}
 					
 					vm.loadAgent(agentJar.getAbsolutePath(),"host:"+Inet4Address.getLocalHost().getHostName()+",port:"+port);
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					logger.error("Error while creating agent connection",e);
 				}
         	} else {        		
         		prop.put("host", config.getParameters().get(SessionParameter.HOSTNAME));
@@ -166,8 +169,7 @@ public class Session extends JPanel implements FacadeListener, Closeable {
         		try {
 					facade.connect();
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					logger.error("Error while creating agent connection. Properties:"+prop,e);
 				}
         	}
         } else if (config.getType() == SessionType.JMX) {
@@ -181,8 +183,7 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     		try {
 				facade.connect();
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.error("Error while connecting via JMX to "+prop,e);
 			}
 		} else {
 			facade = null;
@@ -234,8 +235,7 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 			facade.addListener(this);
     		facade.connect();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("Error while creating facade with properties "+props, e);
 		}
     }
     
@@ -256,7 +256,7 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     	    			List<ThreadInfo> dumps = parseThreadDumpFile(file);
     	    			threadInfosReceived(dumps);
     				} catch (IOException e) {
-    					e.printStackTrace();
+    					logger.error("Error while parsing thread dumps from file "+file, e);
     				}
     			}
     		});
@@ -274,7 +274,7 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     					store.addInstrumentationSamples(export.getStore().queryInstrumentationSamples(null));
     					store.getSubscriptions().addAll(export.getStore().getSubscriptions());
     				} catch (Exception e) {
-    					e.printStackTrace();
+    					logger.error("Error while opening session from file "+file, e);
     				}
     			}
     		});

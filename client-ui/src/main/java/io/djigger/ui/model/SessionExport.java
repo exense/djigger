@@ -18,16 +18,10 @@
 
 package io.djigger.ui.model;
 
-import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
-import io.djigger.monitoring.java.model.ThreadInfo;
-import io.djigger.store.Store;
-import io.djigger.ui.Session;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -35,10 +29,20 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
+import io.djigger.monitoring.java.model.ThreadInfo;
+import io.djigger.store.Store;
+import io.djigger.ui.Session;
+
 
 public class SessionExport implements Serializable {
 
 	private static final long serialVersionUID = 3414592768882821440L;
+	
+	private static final Logger logger = LoggerFactory.getLogger(SessionExport.class);
 
 	private Store store;
 
@@ -63,17 +67,13 @@ public class SessionExport implements Serializable {
 				stream.reset();
 			}
 			stream.flush();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Error whil saving session to file "+file, e);
 		} finally {
 			if(stream != null) {
 				try {
 					stream.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				} catch (IOException e) {}
 			}
 		}
 	}
@@ -86,17 +86,13 @@ public class SessionExport implements Serializable {
 			stream = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
 			stream.writeObject(sessionExport);
 			stream.flush();
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Error whil saving session to file "+file, e);
 		} finally {
 			if(stream != null) {
 				try {
 					stream.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				} catch (IOException e) {}
 			}
 		}
 	}
@@ -119,24 +115,14 @@ public class SessionExport implements Serializable {
 			} else {
 				return null;
 			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
 		} catch (Exception e) {
+			logger.error("Error while reading session from file "+file, e);
 			return null;
 		} finally {
 			if(stream != null) {
 				try {
 					stream.close();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				} catch (IOException e) {}
 			}
 		}
 	}
@@ -144,8 +130,10 @@ public class SessionExport implements Serializable {
 	private static SessionExport memoryOptimizedRead(File file) {
 		ArrayList<ThreadInfo> threads = new ArrayList<ThreadInfo>();
 		ArrayList<InstrumentationSample> samples = new ArrayList<InstrumentationSample>();
+		
+		ObjectInputStream stream=null;
 		try {
-			ObjectInputStream stream = new ObjectInputStream(new BufferedInputStream(new FileInputStream(file)));
+			stream = new ObjectInputStream(new BufferedInputStream(new FileInputStream(file)));
 			Object o;
 			while((o = stream.readObject())!=null) {
 				if(o instanceof ThreadInfo) {
@@ -154,12 +142,14 @@ public class SessionExport implements Serializable {
 					samples.add((InstrumentationSample)o);
 				}
 			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (Exception e) {
+			logger.error("Error while reading session from file "+file, e);
+		} finally {
+			if(stream!=null) {
+				try {
+					stream.close();
+				} catch (IOException e) {}
+			}
 		}
 		
 		Store store = new Store();

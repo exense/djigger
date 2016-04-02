@@ -34,8 +34,14 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class BlockColorer implements Serializable {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+@SuppressWarnings("serial")
+public class BlockColorer implements Serializable {
+	
+	private static final Logger logger = LoggerFactory.getLogger(BlockColorer.class);
+	
 	public final List<Framework> frameworks;
 
 	public BlockColorer() {
@@ -157,12 +163,10 @@ public class BlockColorer implements Serializable {
 				return null;
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("Unable load the bloc colorer from file " + file, e);
 			return null;
 		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("Unable load the bloc colorer from file " + file, e);
 			return null;
 		} catch (Exception e) {
 			return null;
@@ -170,10 +174,7 @@ public class BlockColorer implements Serializable {
 			if(stream != null) {
 				try {
 					stream.close();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				} catch (IOException e) {}
 			}
 		}
 	}
@@ -187,17 +188,13 @@ public class BlockColorer implements Serializable {
 				addFramework(line);
 			}
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("Unable load framweork definition from file " + file, e);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("Unable load framweork definition from file " + file, e);
 		} finally {
 			try {
 				reader.close();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			} catch (Exception e) {}
 		}
 	}
 
@@ -226,8 +223,7 @@ public class BlockColorer implements Serializable {
 			}
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("Unable to export framework definition to file " + file, e);
 		} finally {
 			writer.close();
 		}

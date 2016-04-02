@@ -33,7 +33,12 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class MonitoredExecution extends JDialog {
+	
+	private static final Logger logger = LoggerFactory.getLogger(MonitoredExecution.class);
 	
 	private final JProgressBar dpb;
 	
@@ -137,7 +142,7 @@ public class MonitoredExecution extends JDialog {
 			try {
 				runnable.run(execution);
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error("Error while running monitored execution",e);
 			}finally {
 				duration = (int) (start - System.currentTimeMillis());
             	if(duration<1000) {

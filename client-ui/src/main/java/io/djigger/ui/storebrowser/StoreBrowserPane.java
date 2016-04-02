@@ -45,6 +45,8 @@ import javax.swing.event.ChangeListener;
 
 import org.antlr.runtime.RecognitionException;
 import org.bson.conversions.Bson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.ql.OSQL;
@@ -54,6 +56,8 @@ import io.djigger.ui.common.MonitoredExecutionRunnable;
 
 @SuppressWarnings("serial")
 public class StoreBrowserPane extends JPanel implements ActionListener, KeyListener {
+	
+	private static final Logger logger = LoggerFactory.getLogger(StoreBrowserPane.class);
 	
 	private final Session parent;
 	
@@ -207,7 +211,7 @@ public class StoreBrowserPane extends JPanel implements ActionListener, KeyListe
 	    				
 	    					System.out.println("Fetched " + count + " stacktraces.");
 	    				} catch (Exception e) {
-	    					e.printStackTrace();
+	    					logger.error("Error while fetching ThreadInfos from store",e); 
 	    				}
 					} catch (TimeoutException e)  {
 						JOptionPane.showMessageDialog(parent, "Execution time limit exceeded. Try to reduce the time range, use more specific search criteria or create an index for the search criteria (see documentation)", "Error",

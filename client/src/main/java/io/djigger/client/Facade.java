@@ -171,7 +171,7 @@ public abstract class Facade {
             	}
             		
             } catch (Exception e) {
-            	e.printStackTrace();
+            	logger.error("Error while calling FacadeListener "+listener.toString(), e);
             }
         }
     }

@@ -23,7 +23,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class Settings {
+	
+	private static final Logger logger = LoggerFactory.getLogger(Settings.class);
 
 	private final static String SETTINGS_FILENAME = "djigger.settings";
 		
@@ -38,11 +43,9 @@ public class Settings {
 		try {
 			settings.load(new FileInputStream(SETTINGS_FILENAME));
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("Error while loading settings from file "+SETTINGS_FILENAME, e);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("Error while loading settings from file "+SETTINGS_FILENAME, e);
 		}
 	}
 
@@ -59,11 +62,9 @@ public class Settings {
 		try {
 			settings.store(new FileOutputStream(SETTINGS_FILENAME), "");
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("Error while saving settings to file "+SETTINGS_FILENAME, e);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("Error while saving settings to file "+SETTINGS_FILENAME, e);
 		}
 	}
 	

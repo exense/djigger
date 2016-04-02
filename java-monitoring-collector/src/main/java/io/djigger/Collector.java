@@ -56,7 +56,7 @@ public class Collector {
 			attributesHolder.setThreadID(Thread.currentThread().getId());
 			buffer.put(new InstrumentationSample(contextID.get(), classname, method, start, end, attributesHolder));
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
+			System.out.println("Error while reporting sample from "+classname+"."+method);
 			e.printStackTrace();
 		}
 	}

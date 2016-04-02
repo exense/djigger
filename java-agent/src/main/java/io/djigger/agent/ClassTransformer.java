@@ -97,10 +97,8 @@ public class ClassTransformer implements ClassFileTransformer {
 
 
 				} catch (CannotCompileException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (Exception e) {
 					e.printStackTrace();
