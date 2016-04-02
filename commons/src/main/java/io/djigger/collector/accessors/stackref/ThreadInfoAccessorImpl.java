@@ -85,21 +85,44 @@ public class ThreadInfoAccessorImpl implements ThreadInfoAccessor {
 		
 		Document ttlIndex = getIndex(threadInfoCollection, "timestamp");
 		if(ttlIndex==null) {
-			createTimestampTTLIndex(ttl);
+			if(ttl!=null && ttl>0) {
+				createTimestampIndexWithTTL(ttl);
+			} else {
+				createTimestampIndex();
+			}
 		} else {
-			if(!ttlIndex.containsKey("expireAfterSeconds") || !ttlIndex.getLong("expireAfterSeconds").equals(ttl)) {
-				threadInfoCollection.dropIndex(ttlIndex.getString("name"));
-				createTimestampTTLIndex(ttl);
+			if(ttl!=null && ttl>0) {
+				if(!ttlIndex.containsKey("expireAfterSeconds") || !ttlIndex.getLong("expireAfterSeconds").equals(ttl)) {
+					dropIndex(ttlIndex);
+					createTimestampIndexWithTTL(ttl);
+				}
+			} else {
+				if(ttlIndex.containsKey("expireAfterSeconds")) {
+					dropIndex(ttlIndex);
+					createTimestampIndex();
+				}
 			}
 		}
 	}
 
-	private void createTimestampTTLIndex(Long ttl) {
+	private void dropIndex(Document ttlIndex) {
+		threadInfoCollection.dropIndex(ttlIndex.getString("name"));
+	}
+
+	private void createTimestampIndexWithTTL(Long ttl) {
 		IndexOptions options = new IndexOptions();
 		options.expireAfter(ttl, TimeUnit.SECONDS);
-		threadInfoCollection.createIndex(new Document("timestamp", 1), options);
+		createTimestampIndexWithOptions(options);
 	}
 	
+	private void createTimestampIndex() {
+		IndexOptions options = new IndexOptions();
+		createTimestampIndexWithOptions(options);
+	}
+	
+	private void createTimestampIndexWithOptions(IndexOptions options) {
+		threadInfoCollection.createIndex(new Document("timestamp", 1), options);
+	}
 	
 	private Document getIndex(MongoCollection<Document> collection,String indexName) {
 		for(Document index:collection.listIndexes()) {
