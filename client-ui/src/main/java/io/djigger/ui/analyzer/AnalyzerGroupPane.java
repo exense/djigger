@@ -55,7 +55,7 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 	private final List<AnalyzerPaneListener> listeners;
 
 	public AnalyzerGroupPane(final Session parent, final NodePresentationHelper presentationHelper) {
-		super();
+		super(false);
 		this.parent = parent;
 		listeners = new ArrayList<AnalyzerPaneListener>();
         addChangeListener(this);

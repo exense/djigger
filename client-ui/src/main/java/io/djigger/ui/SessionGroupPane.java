@@ -30,7 +30,7 @@ public class SessionGroupPane extends EnhancedTabbedPane implements ChangeListen
 	private final MainFrame main;
 
     public SessionGroupPane(final MainFrame main) {
-		super();
+		super(true);
 		this.main = main;
 		addChangeListener(this);
 		

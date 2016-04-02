@@ -18,10 +18,13 @@
 
 package io.djigger.ui.common;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
+import java.awt.GridBagLayout;
 
 import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
@@ -35,7 +38,7 @@ public class EnhancedTabbedPane extends JTabbedPane {
 	
 	private boolean insertingTab = false;
 	
-    public EnhancedTabbedPane() {
+    public EnhancedTabbedPane(boolean backgroundWithLogo) {
 		super();
 		
 		addChangeListener(new ChangeListener() {
@@ -55,7 +58,7 @@ public class EnhancedTabbedPane extends JTabbedPane {
 			}
 		});
 
-		createAddTab();
+		createAddTab(backgroundWithLogo);
 	}
 
 	interface TabSelectionListener {
@@ -65,7 +68,21 @@ public class EnhancedTabbedPane extends JTabbedPane {
     
 	class AddTab extends JPanel implements TabSelectionListener {
 
-    	@Override
+    	public AddTab(boolean backgroundWithLogo) {
+			super();
+
+			if(backgroundWithLogo) {
+				setLayout(new GridBagLayout());
+				
+				java.net.URL imgURL = CommandButton.class.getResource("logo.png");
+				ImageIcon icon = new ImageIcon(imgURL);
+				JLabel background = new JLabel(icon);
+				add(background);
+				setBackground(Color.WHITE);
+			}
+		}
+
+		@Override
     	public void tabSelected(Component c, Component p) {
     		addTabAction.run();
     	}
@@ -79,8 +96,8 @@ public class EnhancedTabbedPane extends JTabbedPane {
 		this.addTabAction = addTabAction;
 	}
 
-	private void createAddTab() {
-		addTab(new AddTab(), "+", false);
+	private void createAddTab(boolean backgroundWithLogo) {
+		addTab(new AddTab(backgroundWithLogo), "+", false);
 	}
 	
     public void addTab(Component analyzer, String name, boolean closeButton) {

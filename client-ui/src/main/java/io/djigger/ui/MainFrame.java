@@ -17,8 +17,6 @@
  *******************************************************************************/
 package io.djigger.ui;
 
-import io.djigger.ui.common.FileChooserHelper;
-
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.io.File;
@@ -27,15 +25,19 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
+import javax.swing.UIManager.LookAndFeelInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.thoughtworks.xstream.XStream;
+
+import io.djigger.ui.common.FileChooserHelper;
 
 public class MainFrame extends JPanel {
 	
@@ -68,8 +70,10 @@ public class MainFrame extends JPanel {
 			new HeapMonitor(this);
 		}
 		
+		
 		try {
-            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            //UIManager.setLookAndFeel(WindowsLookAndFeel));
         } catch (Exception e) {
             System.err.println("Couldn't use system look and feel.");
         }
@@ -78,6 +82,10 @@ public class MainFrame extends JPanel {
        	frame = new JFrame("dJigger 1.4.1");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setPreferredSize(new Dimension(1300,700));
+        
+        java.net.URL imgURL = getClass().getResource("logo_small.png");
+		ImageIcon icon = new ImageIcon(imgURL);
+        frame.setIconImage(icon.getImage());
         
         mainToolbar = new MainToolbarPane(this);
         

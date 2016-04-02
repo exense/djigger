@@ -17,11 +17,7 @@
  *******************************************************************************/
 package io.djigger.ui.connectiondialog;
 
-import io.djigger.ui.MainFrame;
-import io.djigger.ui.SessionConfiguration;
-
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -33,8 +29,9 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import javax.swing.JToggleButton;
-import javax.swing.plaf.metal.MetalToggleButtonUI;
+
+import io.djigger.ui.MainFrame;
+import io.djigger.ui.SessionConfiguration;
 
 
 public class AgentConnectionDialog implements ActionListener {
@@ -52,15 +49,17 @@ public class AgentConnectionDialog implements ActionListener {
 	private boolean result = false;
 	
 	private ConnectionType type;
+	
+	private MainFrame main;
 
 	public AgentConnectionDialog(MainFrame main) {
 		super();
 		
+		this.main = main;
+		
 		this.type = ConnectionType.JMX;
 		
 		dialog = new JDialog(main.getFrame(), "Agent connection", true);
-		dialog.setLocation(Math.max(0, main.getWidth() / 2),
-				main.getHeight() / 2);
 		dialog.setFocusable(true);
 		dialog.setLayout(new BorderLayout());		
 		
@@ -75,8 +74,6 @@ public class AgentConnectionDialog implements ActionListener {
 		
 		connectionTypePane.add(buttonGroupPane);
 		dialog.add(connectionTypePane, BorderLayout.NORTH);
-		
-		//agentPane.add(namePane);
 		
 		JPanel buttonPane = new JPanel();
 		connectionButton = new JButton("Open");
@@ -95,6 +92,7 @@ public class AgentConnectionDialog implements ActionListener {
 	}
 
 	private void addOption(JPanel pane, final ConnectionType connectionType) {
+		@SuppressWarnings("serial")
 		Action l = new AbstractAction(connectionType.getDescription()) {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -130,6 +128,7 @@ public class AgentConnectionDialog implements ActionListener {
 	
 	public boolean showAndWait() {
 		dialog.pack();
+		dialog.setLocationRelativeTo(main);
 		dialog.setVisible(true);
 		return result;
 	}
@@ -160,6 +159,7 @@ public class AgentConnectionDialog implements ActionListener {
 		agentPane.add(currentFrame.getPanel());
 		agentPane.revalidate();
 		agentPane.repaint();
+		dialog.pack();
 	}
 
 }
