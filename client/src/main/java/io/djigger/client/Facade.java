@@ -84,7 +84,7 @@ public abstract class Facade {
 	}
 
 	public void connect() throws Exception {
-    	connect_();
+		connect_();
     	connected = true;
     	fireConnectionEvent();
     }
@@ -103,7 +103,9 @@ public abstract class Facade {
 	
 	public void destroy() {
 		destroy_();
-		timer.cancel();
+		if(timer!=null) {
+			timer.cancel();
+		}
 	}
 	
 	protected abstract void destroy_();

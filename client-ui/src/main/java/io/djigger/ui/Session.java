@@ -21,16 +21,10 @@ package io.djigger.ui;
 import java.awt.BorderLayout;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.Inet4Address;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.List;
 import java.util.Properties;
-import java.util.UUID;
 
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
@@ -38,12 +32,11 @@ import javax.swing.JSplitPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sun.tools.attach.VirtualMachine;
-
 import io.djigger.client.AgentFacade;
 import io.djigger.client.Facade;
 import io.djigger.client.FacadeListener;
 import io.djigger.client.JMXClientFacade;
+import io.djigger.client.ProcessAttachFacade;
 import io.djigger.db.client.StoreClient;
 import io.djigger.model.Capture;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
@@ -112,83 +105,11 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 		statisticsCache = new InstrumentationStatisticsCache(store);
 		presentationHelper = new NodePresentationHelper(statisticsCache);
         
-        if(config.getType() == SessionType.AGENT) {
-        	final Properties prop = new Properties();
-        	if(config.getParameters().containsKey(SessionParameter.PROCESSID)) {        		
-        		VirtualMachine vm;
-
-				try {
-					final ServerSocket s = new ServerSocket(0);
-					int port = s.getLocalPort();
-					
-					new Thread(new Runnable() {
-						@Override
-						public void run() {
-							Socket socket;
-							try {
-								socket = s.accept();
-								createFacade(prop, socket);
-							} catch (IOException e) {
-								logger.error("Error while creating facade with properties "+prop, e);
-							} finally {
-								try {
-									s.close();
-								} catch (IOException e) {}
-							}
-						}
-					}).start();
-					
-					vm = VirtualMachine.attach (config.getParameters().get(SessionParameter.PROCESSID));
-					
-					InputStream is = getClass().getClassLoader().getResourceAsStream("agent.jar");
-					File agentJar = File.createTempFile("agent-"+UUID.randomUUID(),".jar");
-					try {
-						FileOutputStream os = new FileOutputStream(agentJar);		
-						byte[] buffer = new byte[1024];
-			            int bytesRead;
-			            while((bytesRead = is.read(buffer)) !=-1){
-			                os.write(buffer, 0, bytesRead);
-			            }
-			            is.close();
-			            os.flush();
-			            os.close();
-			      
-					} catch (IOException e1) {
-						logger.error("Error while writing agent temp file to "+agentJar, e1);
-					}
-					
-					vm.loadAgent(agentJar.getAbsolutePath(),"host:"+Inet4Address.getLocalHost().getHostName()+",port:"+port);
-				} catch (Exception e) {
-					logger.error("Error while creating agent connection",e);
-				}
-        	} else {        		
-        		prop.put("host", config.getParameters().get(SessionParameter.HOSTNAME));
-        		prop.put("port", config.getParameters().get(SessionParameter.PORT));
-        		facade = new AgentFacade(prop);
-        		facade.addListener(this);
-        		try {
-					facade.connect();
-				} catch (Exception e) {
-					logger.error("Error while creating agent connection. Properties:"+prop,e);
-				}
-        	}
-        } else if (config.getType() == SessionType.JMX) {
-        	Properties prop = new Properties();
-        	prop.put("host", config.getParameters().get(SessionParameter.HOSTNAME));
-        	prop.put("port", config.getParameters().get(SessionParameter.PORT));
-        	prop.put("username", config.getParameters().get(SessionParameter.USERNAME));
-        	prop.put("password", config.getParameters().get(SessionParameter.PASSWORD));
-			facade = new JMXClientFacade(prop, true);
-			facade.addListener(this);
-    		try {
-				facade.connect();
-			} catch (Exception e) {
-				logger.error("Error while connecting via JMX to "+prop,e);
-			}
-		} else {
-			facade = null;
-		}
-
+        facade = createFacade(config);
+        
+        if(facade!=null) {
+    		facade.addListener(this);
+        }
 
         splitPane1 = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
@@ -228,23 +149,38 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 
     	splitPane.setDividerLocation(0.7);
     }
-    
-    private void createFacade(Properties props, Socket socket) {
-    	try {
-			facade = new AgentFacade(props, socket);
-			facade.addListener(this);
-    		facade.connect();
-		} catch (Exception e) {
-			logger.error("Error while creating facade with properties "+props, e);
+
+	private Facade createFacade(SessionConfiguration config) {
+		Facade facade;
+		if(config.getType() == SessionType.AGENT) {
+        	final Properties prop = new Properties();
+        	if(config.getParameters().containsKey(SessionParameter.PROCESSID)) {        		
+        		prop.put(ProcessAttachFacade.PROCESSID, config.getParameters().get(SessionParameter.PROCESSID));
+        		facade = new ProcessAttachFacade(prop, false);
+        	} else {        		
+        		prop.put("host", config.getParameters().get(SessionParameter.HOSTNAME));
+        		prop.put("port", config.getParameters().get(SessionParameter.PORT));
+        		facade = new AgentFacade(prop, false);
+        	}
+        } else if (config.getType() == SessionType.JMX) {
+        	Properties prop = new Properties();
+        	prop.put("host", config.getParameters().get(SessionParameter.HOSTNAME));
+        	prop.put("port", config.getParameters().get(SessionParameter.PORT));
+        	prop.put("username", config.getParameters().get(SessionParameter.USERNAME));
+        	prop.put("password", config.getParameters().get(SessionParameter.PASSWORD));
+			facade = new JMXClientFacade(prop, false);
+		} else {
+			facade = null;
 		}
-    }
+		return facade;
+	}
     
     public void start() throws Exception {
-    	if(getSessionType()==SessionType.AGENT) {
-    		//facade.connect();
-    	} else if(getSessionType()==SessionType.JMX) {    		
-    		//facade.connect();
-    	} else if(getSessionType()==SessionType.STORE) {
+    	if(facade!=null) {
+    		facade.connect();
+    	}
+    	
+    	if(getSessionType()==SessionType.STORE) {
     		storeClient = new StoreClient();
     		storeClient.connect(config.getParameters().get(SessionParameter.HOSTNAME));
     	} else if (getSessionType()==SessionType.FILE) {

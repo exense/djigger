@@ -18,13 +18,7 @@
 
 package io.djigger.client;
 
-import io.djigger.monitoring.java.agent.JavaAgentMessageType;
-import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
-import io.djigger.monitoring.java.model.ThreadInfo;
-
 import java.io.IOException;
-import java.net.Socket;
 import java.util.List;
 import java.util.Properties;
 
@@ -34,24 +28,24 @@ import org.smb.core.Message;
 import org.smb.core.MessageListener;
 import org.smb.core.MessageRouter;
 
+import io.djigger.monitoring.java.agent.JavaAgentMessageType;
+import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
+import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
+import io.djigger.monitoring.java.model.ThreadInfo;
+
 
 public class AgentFacade extends Facade implements MessageListener {
 	
 	private static final Logger logger = LoggerFactory.getLogger(AgentFacade.class);
 
-    private MessageRouter client;
-    
-    private boolean providedRouter;
-
-    public AgentFacade(Properties properties, Socket socket) throws IOException {
-		super(properties, false);
-		providedRouter = true;
-		client = new MessageRouter(null, socket);
+    protected MessageRouter client;
+        
+    public AgentFacade(Properties properties) {
+		this(properties, true);
 	}
     
-    public AgentFacade(Properties properties) {
-		super(properties, true);
-		providedRouter = false;
+    public AgentFacade(Properties properties, boolean autoReconnect) {
+		super(properties, autoReconnect);
 		this.client = null;
 	}
     
@@ -113,12 +107,14 @@ public class AgentFacade extends Facade implements MessageListener {
 
 	@Override
 	public void connect_() throws Exception {		
-		if(!providedRouter) {
-			String host = properties.getProperty("host");
-			String port = properties.getProperty("port");
-			this.client = new MessageRouter(host,Integer.parseInt(port));
-		}
+		String host = properties.getProperty("host");
+		String port = properties.getProperty("port");
+		this.client = new MessageRouter(host,Integer.parseInt(port));
 		
+		startClient();
+	}
+
+	protected void startClient() {
 		client.start();
 		client.registerPermanentListener(JavaAgentMessageType.THREAD_SAMPLE, this);
 		client.registerPermanentListener(JavaAgentMessageType.INSTRUMENT_SAMPLE, this);

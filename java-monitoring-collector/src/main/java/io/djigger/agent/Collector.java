@@ -16,7 +16,7 @@
  *    - Jérôme Comte
  *******************************************************************************/
 
-package io.djigger;
+package io.djigger.agent;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentationAttributes;
 import io.djigger.monitoring.java.instrumentation.InstrumentationAttributesHolder;

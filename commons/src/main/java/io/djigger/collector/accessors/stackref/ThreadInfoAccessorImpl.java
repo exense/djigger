@@ -21,10 +21,6 @@ import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.gt;
 import static com.mongodb.client.model.Filters.lt;
-import io.djigger.collector.accessors.ThreadInfoAccessor;
-import io.djigger.collector.accessors.stackref.dbmodel.StackTraceElementEntry;
-import io.djigger.collector.accessors.stackref.dbmodel.StackTraceEntry;
-import io.djigger.monitoring.java.model.ThreadInfo;
 
 import java.lang.Thread.State;
 import java.net.UnknownHostException;
@@ -43,12 +39,19 @@ import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientOptions.Builder;
 import com.mongodb.MongoException;
 import com.mongodb.MongoExecutionTimeoutException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.IndexOptions;
+
+import io.djigger.collector.accessors.ThreadInfoAccessor;
+import io.djigger.collector.accessors.stackref.dbmodel.StackTraceElementEntry;
+import io.djigger.collector.accessors.stackref.dbmodel.StackTraceEntry;
+import io.djigger.monitoring.java.model.ThreadInfo;
 
 
 public class ThreadInfoAccessorImpl implements ThreadInfoAccessor {
@@ -66,7 +69,12 @@ public class ThreadInfoAccessorImpl implements ThreadInfoAccessor {
 	}
 
 	public void start(String host, String collection) throws UnknownHostException, MongoException {
-		mongoClient = new MongoClient(host);
+		Builder o = MongoClientOptions.builder().serverSelectionTimeout(3000);  
+		mongoClient = new MongoClient(host, o.build());
+		
+		// call this method to check if the connection succeeded as the mongo client lazy loads the connection 
+		mongoClient.getAddress();
+		
 		MongoDatabase db = mongoClient.getDatabase(collection);
 		
 		threadInfoCollection = db.getCollection("threaddumps");

@@ -17,7 +17,7 @@
  *******************************************************************************/
 package io.djigger.agent;
 
-import io.djigger.Collector;
+import io.djigger.agent.Collector;
 import io.djigger.monitoring.java.agent.JavaAgentMessageType;
 import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
 import io.djigger.monitoring.java.model.ThreadInfo;

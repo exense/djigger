@@ -121,7 +121,7 @@ public class MainFrame extends JPanel {
 			groupPane.selectSession(session);
 			exportSessions(new File("djigger_lastsession.xml"));
 		} catch (Exception e) {
-			JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, e.toString(), "Error", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 	
