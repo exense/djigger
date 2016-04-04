@@ -108,8 +108,6 @@ public class MainFrame extends JPanel {
         frame.add(this);
         frame.pack();
         frame.setVisible(true);
-        
-        mainToolbar.addSession();
 	}
 	
 	public synchronized void addSession(final Session session) {
