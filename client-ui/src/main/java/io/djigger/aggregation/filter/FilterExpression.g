@@ -5,7 +5,7 @@ header {
 class FilterExpressionLexer extends Lexer;
 
 // Words, which include our operators
-WORD: ('a'..'z' | 'A'..'Z' | '0'..'9' |'.'|'$'|'_')+ ;
+WORD: ('a'..'z' | 'A'..'Z' | '0'..'9' |'.'|'$'|'_'|'-')+ ;
 
 // Grouping
 LEFT_PAREN: '(';
