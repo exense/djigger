@@ -22,51 +22,32 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.GridBagLayout;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 @SuppressWarnings("serial")
 public class EnhancedTabbedPane extends JTabbedPane {
 
 	private Runnable addTabAction;
-	
-	private boolean insertingTab = false;
-	
+		
     public EnhancedTabbedPane(boolean backgroundWithLogo) {
 		super();
-		
-		addChangeListener(new ChangeListener() {
-			
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				if(!insertingTab) {
-					Component p = (Component) e.getSource();
-	
-					Component selection = getCurrentTab();
-					if(p.isShowing()) {
-						if(selection instanceof TabSelectionListener) {
-							((TabSelectionListener)selection).tabSelected(selection, p);
-						}
-					}
-				}
-			}
-		});
 
 		createAddTab(backgroundWithLogo);
 	}
 
-	interface TabSelectionListener {
+	interface TabClickListener {
     	
-    	public void tabSelected(Component c, Component p);
+    	public void tabClicked();
     }
     
-	class AddTab extends JPanel implements TabSelectionListener {
+	class AddTab extends JPanel implements TabClickListener {
 
     	public AddTab(boolean backgroundWithLogo) {
 			super();
@@ -81,11 +62,11 @@ public class EnhancedTabbedPane extends JTabbedPane {
 				setBackground(Color.WHITE);
 			}
 		}
-
+		
 		@Override
-    	public void tabSelected(Component c, Component p) {
-    		addTabAction.run();
-    	}
+		public void tabClicked() {
+			addTabAction.run();
+		}
     }
     
     public Runnable getAddTabAction() {
@@ -101,44 +82,54 @@ public class EnhancedTabbedPane extends JTabbedPane {
 	}
 	
     public void addTab(Component analyzer, String name, boolean closeButton) {
-//    	if(getTabCount()>0)
-//    		setSelectedIndex(0);
-    	insertingTab = true;
-    	
-    	try {
-	    	insertTab(name, null, analyzer, null, Math.max(0, getTabCount()-1));
-	    	if(closeButton) {
-	    		setTabComponentAt(indexOfComponent(analyzer), getTitlePanelWithCloseButton(analyzer, name));
-	    	}
-	    	setSelectedComponent(analyzer);
-    	} finally {
-    		insertingTab = false;
-    	}
+    	insertTab(name, null, analyzer, null, Math.max(0, getTabCount()-1));
+    	setTabComponentAt(indexOfComponent(analyzer), getTitlePanelWithCloseButton(analyzer, name, closeButton));
+    	setSelectedComponent(analyzer);
     }
     
-	private JPanel getTitlePanelWithCloseButton(final Component component, String title) {
+	private JPanel getTitlePanelWithCloseButton(final Component component, String title, boolean addCloseButton) {
 		JPanel panelanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
 		panelanel.setOpaque(false);
 		JLabel titleLbl = new JLabel(title);
 		titleLbl.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 5));
 		panelanel.add(titleLbl);
-		CommandButton closeButton = new CommandButton("close.png","Close session", new Runnable() {
-			@Override
-			public void run() {
-				insertingTab = true;
-				try {
+		if(addCloseButton) {
+			CommandButton closeButton = new CommandButton("close.png","Close session", new Runnable() {
+				@Override
+				public void run() {
 					int i = indexOfComponent(component);
 					remove(component);
 					if(component instanceof Closeable) {
 						((Closeable)component).close();
 					}
 					setSelectedIndex(Math.max(0, i-1));
-				} finally {
-					insertingTab = false;
 				}
-			}
-		}, 10);
-		panelanel.add(closeButton);
+			}, 10);
+			panelanel.add(closeButton);
+		}
+		
+		
+		if(component instanceof TabClickListener) {
+			panelanel.addMouseListener(new MouseListener() {
+				
+				@Override
+				public void mouseReleased(MouseEvent arg0) {}
+				
+				@Override
+				public void mousePressed(MouseEvent arg0) {}
+				
+				@Override
+				public void mouseExited(MouseEvent arg0) {}
+				
+				@Override
+				public void mouseEntered(MouseEvent arg0) {}
+				
+				@Override
+				public void mouseClicked(MouseEvent arg0) {
+						((TabClickListener)component).tabClicked();
+				}
+			});
+		}
 		return panelanel;
 	}
 
