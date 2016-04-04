@@ -17,26 +17,29 @@
  *******************************************************************************/
 package io.djigger.ui.connectiondialog;
 
-import io.djigger.ui.SessionConfiguration;
-import io.djigger.ui.Session.SessionType;
-import io.djigger.ui.SessionConfiguration.SessionParameter;
-
-import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.GridLayout;
 
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
+import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sun.tools.attach.VirtualMachine;
 import com.sun.tools.attach.VirtualMachineDescriptor;
 
+import io.djigger.ui.Session.SessionType;
+import io.djigger.ui.SessionConfiguration;
+import io.djigger.ui.SessionConfiguration.SessionParameter;
+
 public class AttachConnectionParameters implements ConnectionParameterFrame {
+	
+	private static final Logger logger = LoggerFactory.getLogger(AttachConnectionParameters.class);
 	
 	private final JPanel panel;
 
@@ -47,33 +50,45 @@ public class AttachConnectionParameters implements ConnectionParameterFrame {
 	public AttachConnectionParameters() {
 		super();		
 		listModel = new DefaultListModel<>();
-		for(VirtualMachineDescriptor vm:VirtualMachine.list()) {
-			listModel.addElement(vm);
+		
+		boolean toolJarAvailable = true;
+		try {
+			for(VirtualMachineDescriptor vm:VirtualMachine.list()) {
+				listModel.addElement(vm);
+			}
+		} catch (NoClassDefFoundError e) {
+			toolJarAvailable = false;
+			logger.debug("Unable to initialize AttachConnectionParameters. The class com.sun.tools.attach.VirtualMachine cannot be found in the classpath.",e);
 		}
 
-		
-		processList = new JList<VirtualMachineDescriptor>(listModel); //data has type Object[]
-		processList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		processList.setLayoutOrientation(JList.VERTICAL);
-		processList.setCellRenderer(new DefaultListCellRenderer() {
-			@Override
-			public Component getListCellRendererComponent(JList<?> list,
-					Object value, int index, boolean isSelected,
-					boolean cellHasFocus) {
-				if (value != null) {
-					VirtualMachineDescriptor vm = (VirtualMachineDescriptor) value;
-					value = vm.id() + " " + vm.displayName();
-				}
-				return super.getListCellRendererComponent(list, value, index,
-						isSelected, cellHasFocus);
-			}
-		});
-		
-
-		
-		JScrollPane listScroller = new JScrollPane(processList);
 		panel = new JPanel();
-		panel.add(listScroller);
+		if(toolJarAvailable) {
+			
+			processList = new JList<VirtualMachineDescriptor>(listModel); //data has type Object[]
+			processList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+			processList.setLayoutOrientation(JList.VERTICAL);
+			processList.setCellRenderer(new DefaultListCellRenderer() {
+				@Override
+				public Component getListCellRendererComponent(JList<?> list,
+						Object value, int index, boolean isSelected,
+						boolean cellHasFocus) {
+					if (value != null) {
+						VirtualMachineDescriptor vm = (VirtualMachineDescriptor) value;
+						value = vm.id() + " " + vm.displayName();
+					}
+					return super.getListCellRendererComponent(list, value, index,
+							isSelected, cellHasFocus);
+				}
+			});
+			
+			
+			
+			JScrollPane listScroller = new JScrollPane(processList);
+			panel.add(listScroller);
+		} else {
+			JLabel infoMsg = new JLabel("Add tools.jar to the classpath to enable this feature");
+			panel.add(infoMsg);
+		}
 	}
 	
 	public JPanel getPanel() {
@@ -90,6 +105,5 @@ public class AttachConnectionParameters implements ConnectionParameterFrame {
 
 	@Override
 	public void setConnectionType(ConnectionType type) {}
-
 	
 }
