@@ -1,0 +1,43 @@
+<assembly
+	xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.3"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.3 http://maven.apache.org/xsd/assembly-1.1.3.xsd">
+	<id>bin</id>
+	<formats>
+		<format>tar.gz</format>
+		<format>zip</format>
+	</formats>
+	<includeBaseDirectory>false</includeBaseDirectory>
+	<fileSets>
+		<fileSet>
+			<directory>template/</directory>
+			<outputDirectory>./</outputDirectory>
+		</fileSet>
+	</fileSets>
+	<moduleSets>
+		<moduleSet>
+			<useAllReactorProjects>true</useAllReactorProjects>
+			<includes>
+				<include>io.djigger:client-ui</include>
+				<include>io.djigger:collector</include>
+			</includes>
+			<binaries>
+				<outputDirectory>lib</outputDirectory>
+				<unpack>false</unpack>
+			</binaries>
+		</moduleSet>
+		<moduleSet>
+			<useAllReactorProjects>true</useAllReactorProjects>
+			<includes>
+				<include>io.djigger:java-agent</include>
+			</includes>
+			<binaries>
+				<attachmentClassifier>jar-with-dependencies</attachmentClassifier>
+				<outputDirectory>agent</outputDirectory>
+				<outputFileNameMapping>javaagent.jar</outputFileNameMapping>
+				<unpack>false</unpack>
+				<includeDependencies>false</includeDependencies>
+			</binaries>
+		</moduleSet>
+	</moduleSets>
+</assembly>

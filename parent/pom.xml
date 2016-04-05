@@ -19,6 +19,7 @@
 		<module>../java-monitoring-collector</module>
 		<module>../java-monitoring</module>
 		<module>../smb-core</module>
+		<module>../distribution</module>
 	</modules>
 
 	<dependencies>
