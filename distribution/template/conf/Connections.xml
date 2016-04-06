@@ -18,7 +18,7 @@
 					</attributes>
 					<groups>
 						<Connection connectionClass="io.djigger.client.JMXClientFacade">
-							<samplingParameters samplingRate="100" />
+							<samplingParameters samplingRate="1000" />
 							<connectionProperties>
 								<property name="host" value="localhost" />
 								<property name="port" value="1098" />

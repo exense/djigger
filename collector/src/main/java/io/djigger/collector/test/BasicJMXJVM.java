@@ -45,7 +45,7 @@ public class BasicJMXJVM {
 		
 		JMXConnectorServer srv = null;
 		try {
-			srv = brjvm_1.createJmxConnectorServer(9878);
+			srv = brjvm_1.createJmxConnectorServer(1098);
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
