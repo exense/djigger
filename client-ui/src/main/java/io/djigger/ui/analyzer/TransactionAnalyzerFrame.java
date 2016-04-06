@@ -55,7 +55,7 @@ public class TransactionAnalyzerFrame extends JPanel {
             System.err.println("Couldn't use system look and feel.");
         }
 
-        frame = new JFrame("dJigger - Transaction Details");
+        frame = new JFrame("djigger - Transaction Details");
         frame.setPreferredSize(new Dimension(1300,700));
 
 		statisticsCache = new InstrumentationStatisticsCache(main.getStore());

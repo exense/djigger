@@ -28,6 +28,7 @@
 									<artifactId>java-agent</artifactId>
 									<version>${project.version}</version>
 									<type>jar</type>
+									<classifier>jar-with-dependencies</classifier>
 									<overWrite>false</overWrite>
 									<outputDirectory>${project.basedir}/src/main/resources</outputDirectory>
 									<destFileName>agent.jar</destFileName>
@@ -96,7 +97,7 @@
 			<artifactId>tools</artifactId>
 			<version>1.7</version>
 			<scope>system</scope>
-			<systemPath>${java.home}/lib/tools.jar</systemPath>
+			<systemPath>${java.home}/../lib/tools.jar</systemPath>
 		</dependency>
 
 	</dependencies>

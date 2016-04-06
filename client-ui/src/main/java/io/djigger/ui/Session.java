@@ -368,7 +368,7 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 		return analyzerGroupPane;
 	}
 
-    public String getName() {
+    public String getSessionName() {
 		return config.getName();
 	}
 
