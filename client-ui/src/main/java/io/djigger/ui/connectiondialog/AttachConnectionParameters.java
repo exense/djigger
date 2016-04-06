@@ -88,7 +88,7 @@ public class AttachConnectionParameters implements ConnectionParameterFrame {
 			JScrollPane listScroller = new JScrollPane(processList);
 			panel.add(listScroller);
 		} else {
-			JLabel infoMsg = new JLabel("Add tools.jar to the classpath to enable this feature");
+			JLabel infoMsg = new JLabel("Add tools.jar from your JDK (jdk_x/lib/tools.jar) to the classpath to enable this feature");
 			panel.add(infoMsg);
 		}
 	}

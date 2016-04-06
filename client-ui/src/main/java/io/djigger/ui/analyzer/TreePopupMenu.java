@@ -52,13 +52,13 @@ public class TreePopupMenu extends JPopupMenu {
 			}
 		}));
 		if(analyzer.getMain().getSessionType()==SessionType.AGENT) {
-			add(new JMenuItem(new AbstractAction("Instrument this node") {
+			add(new JMenuItem(new AbstractAction("Instrument this node (only this path)") {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
 					analyzer.instrumentCurrentNode();
 				}
 			}));
-			add(new JMenuItem(new AbstractAction("Instrument all nodes in this method") {
+			add(new JMenuItem(new AbstractAction("Instrument this node (all paths)") {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
 					analyzer.instrumentCurrentMethod();
