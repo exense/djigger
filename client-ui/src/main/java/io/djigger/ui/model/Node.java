@@ -246,6 +246,15 @@ public class Node implements Comparable<Node> {
 	}
 
 	@Override
+	public String toString() {
+		if(id!=null) {
+			return id.toString();			
+		} else {
+			return super.toString();
+		}
+	}
+
+	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
