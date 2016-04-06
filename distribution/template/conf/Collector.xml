@@ -1,0 +1,5 @@
+<Collector>
+	<servicePort>80</servicePort>
+	<dataTTL>86400</dataTTL>
+	<db host="localhost" collection="djigger" />
+</Collector>
