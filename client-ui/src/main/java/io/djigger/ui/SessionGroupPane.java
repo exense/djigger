@@ -46,7 +46,7 @@ public class SessionGroupPane extends EnhancedTabbedPane implements ChangeListen
 	}
 
 	public void addSession(Session session) {
-		addTab(session, session.getName(), true);
+		addTab(session, session.getSessionName(), true);
     }
 	
 	public void selectSession(Session session) {
