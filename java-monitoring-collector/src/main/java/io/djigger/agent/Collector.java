@@ -51,7 +51,7 @@ public class Collector {
 			InstrumentationAttributesHolder attributesHolder = new InstrumentationAttributesHolder();
 			if(InstrumentationAttributes.hasStacktrace(attributes)) {
 				StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-				ThreadInfo info = new ThreadInfo(ThreadDumpHelper.toStackTraceElement(stackTrace));
+				ThreadInfo info = new ThreadInfo(ThreadDumpHelper.toStackTraceElement(stackTrace,2));
 				attributesHolder.setStacktrace(info);
 			}
 			attributesHolder.setThreadID(Thread.currentThread().getId());

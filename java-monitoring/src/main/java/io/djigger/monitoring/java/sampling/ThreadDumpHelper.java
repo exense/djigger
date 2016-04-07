@@ -31,7 +31,7 @@ public class ThreadDumpHelper {
 		long timestamp = System.currentTimeMillis();
 		List<io.djigger.monitoring.java.model.ThreadInfo> snapshots = new ArrayList<>();
 		for (ThreadInfo info : threadInfos) {
-			io.djigger.monitoring.java.model.ThreadInfo i = new io.djigger.monitoring.java.model.ThreadInfo(toStackTraceElement(info.getStackTrace()));
+			io.djigger.monitoring.java.model.ThreadInfo i = new io.djigger.monitoring.java.model.ThreadInfo(toStackTraceElement(info.getStackTrace(),0));
 			i.setTimestamp(new Date(timestamp));
 			i.setState(info.getThreadState());
 			i.setName(info.getThreadName());
@@ -43,12 +43,11 @@ public class ThreadDumpHelper {
 		return snapshots;	
 	}
 	
-	public static io.djigger.monitoring.java.model.StackTraceElement[] toStackTraceElement(StackTraceElement[] stacktrace) {
-		io.djigger.monitoring.java.model.StackTraceElement[] result = new io.djigger.monitoring.java.model.StackTraceElement[stacktrace.length];
-		for(int i=0;i<stacktrace.length;i++) {
+	public static io.djigger.monitoring.java.model.StackTraceElement[] toStackTraceElement(StackTraceElement[] stacktrace, int offset) {
+		io.djigger.monitoring.java.model.StackTraceElement[] result = new io.djigger.monitoring.java.model.StackTraceElement[stacktrace.length-offset];
+		for(int i=offset;i<stacktrace.length;i++) {
 			StackTraceElement el = stacktrace[i];
-			result[i] = new io.djigger.monitoring.java.model.StackTraceElement(el.getClassName(), el.getMethodName(), el.getFileName(), el.getLineNumber());
-			
+			result[i-offset] = new io.djigger.monitoring.java.model.StackTraceElement(el.getClassName(), el.getMethodName(), el.getFileName(), el.getLineNumber());
 		}
 		return result;
 	}

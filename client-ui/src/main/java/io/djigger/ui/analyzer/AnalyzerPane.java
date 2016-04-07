@@ -19,6 +19,17 @@
  *******************************************************************************/
 package io.djigger.ui.analyzer;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.List;
+import java.util.Set;
+
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+
 import io.djigger.aggregation.Aggregation;
 import io.djigger.aggregation.Aggregator;
 import io.djigger.aggregation.DefaultPathTransformer;
@@ -32,23 +43,13 @@ import io.djigger.aggregation.filter.ParsingException;
 import io.djigger.model.NodeID;
 import io.djigger.model.RealNodePath;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
+import io.djigger.monitoring.java.instrumentation.subscription.RealNodePathSubscription;
 import io.djigger.monitoring.java.instrumentation.subscription.SimpleInstrumentationSubscription;
 import io.djigger.ui.Session;
 import io.djigger.ui.common.EnhancedTextField;
 import io.djigger.ui.common.NodePresentationHelper;
 import io.djigger.ui.instrumentation.InstrumentationPaneListener;
 import io.djigger.ui.model.Node;
-
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.List;
-import java.util.Set;
-
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 
 
 public abstract class AnalyzerPane extends JPanel implements ActionListener, InstrumentationPaneListener {
@@ -214,8 +215,7 @@ public abstract class AnalyzerPane extends JPanel implements ActionListener, Ins
 	
 	public void instrumentCurrentNode() {
 		if(nodeFilter==null) {
-//			main.getFacade().instrument(new NodeSubscription(getSelectedNode().getId(), false));
-			// TODO main.addSubscription(new RealNodePathSubscription(getSelectedNode().getPath()., false));
+			main.addSubscription(new RealNodePathSubscription(getSelectedNode().getPath().toStackTrace(), false));
 		} else {
 			JOptionPane.showMessageDialog(this,
 				    "Instrumentation impossible when packages are skipped. Please remove the exclusion criteria and try again.",

@@ -44,6 +44,18 @@ public class RealNodePath implements Serializable, Poolable {
 		
 	}
 	
+	public StackTraceElement[] toStackTrace() {
+		int size = fullPath.size();
+		StackTraceElement[] result = new StackTraceElement[size];
+		if(size>0) {
+			for(int i=0;i<size;i++) {
+				NodeID id = fullPath.get(i);
+				result[size-i-1] = new StackTraceElement(id.getClassName(), id.getMethodName(), null, -1);
+			}
+		}
+		return result;
+	}
+	
 	public static RealNodePath getInstance(ArrayList<NodeID> fullPath) {
 		return pool.getInstance(new RealNodePath(fullPath));
 	}

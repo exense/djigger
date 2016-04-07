@@ -46,7 +46,28 @@ public class RealNodePathSubscription extends InstrumentSubscription {
 	@Override
 	public boolean match(InstrumentationSample sample) {
 		ThreadInfo threadInfo = sample.getAtributesHolder().getStacktrace();
-		return Arrays.equals(path, threadInfo.getStackTrace());
+		
+		//TODO re implement this  
+		if(threadInfo!=null) {
+			StackTraceElement[] samplePath = threadInfo.getStackTrace();
+			if(path.length!=samplePath.length) {
+				return false;
+			} else {
+				int length = path.length;
+				for (int i=0; i<length; i++) {
+					StackTraceElement o1 = path[i];
+					StackTraceElement o2 = samplePath[i];
+					if(!o1.getMethodName().equals(o2.getMethodName())||!o1.getMethodName().equals(o2.getMethodName())) {
+						return false;
+					}
+				}
+			}
+		} else {
+			return false;
+		}
+		
+		// Arrays.equals(path, threadInfo.getStackTrace())
+		return true;
 	}
 
 	public StackTraceElement[]  getPath() {
