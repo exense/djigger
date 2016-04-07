@@ -1,0 +1,3 @@
+# djigger
+
+djigger is a full-featured performance analysis and monitoring solution for java applications which relies primarily on an advanced round-the-clock sampler and an agent mode for instrumentation. The client contains all the means necessary to connect to a target JVM and offers standard JMX connection capability, process attach, a jstack output parser, and the means to connect to a djigger agent and store. Store mode is a direct connection to the mongoDB instance used to persist the samples taken by the headless jetty collector. TTL functionality at the threaddump collection level allows the user to monitor his java apps 24/7 without having to worry about running out of space.
