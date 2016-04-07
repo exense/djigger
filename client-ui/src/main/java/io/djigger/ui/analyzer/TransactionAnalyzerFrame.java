@@ -50,7 +50,7 @@ public class TransactionAnalyzerFrame extends JPanel {
 		this.filter = filter;
 		
 		try {
-            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
             System.err.println("Couldn't use system look and feel.");
         }
