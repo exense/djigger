@@ -1,1 +1,2 @@
-localhost;1098;;;3000;env;myPc;app;test;node;2;isBatch;false
+localhost;1098;jmx_user;path_to_file_containing_jmx_password;3000;env;myPc;app;test;node;1;myAttributeKeyX;myAttributeValueX;myAttributeKeyY;myAttributeValueY
+anotherhost;1098;jmx_user;path_to_file_containing_jmx_password;3000;env;myPc;app;test;node;2;myAttributeKeyX;myAttributeValueX;myAttributeKeyY;myAttributeValueY
