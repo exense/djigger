@@ -17,7 +17,7 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.model;
+package io.djigger.ui.model;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,39 +31,30 @@ public class RealNode {
 	private final RealNode parent;
 
 	private final Map<NodeID, RealNode> children = new HashMap<NodeID, RealNode>();
+	
+	private int minCallCount;
 
-	public static final RealNode root = new RealNode(null,null);
-
-	public static RealNode getInstance(RealNodePath path) {
-		return find(path);
-	}
-
-	private RealNode(NodeID id, RealNode parent) {
+	public RealNode(NodeID id, RealNode parent) {
 		super();
 		this.id = id;
 		this.parent = parent;
 	}
 
-	private static RealNode find(RealNodePath path) {
-		RealNode parent = root,child = null;
-		for(NodeID nodeID:path.getFullPath()) {
-			child = getOrCreateChild(parent, nodeID);
-			parent = child;
-		}
-		return child;
+	public NodeID getId() {
+		return id;
 	}
 
-	private static RealNode getOrCreateChild(RealNode parent, NodeID nodeID) {
-		RealNode child = parent.children.get(nodeID);
+	public RealNode getOrCreateChild(NodeID nodeID) {
+		RealNode child = getChild(nodeID);
 		if(child == null) {
-			child = new RealNode(nodeID, parent);
-			parent.children.put(nodeID, child);
+			child = new RealNode(nodeID, this);
+			this.children.put(nodeID, child);
 		}
 		return child;
 	}
 
 	public RealNode getChild(NodeID nodeID) {
-		return getOrCreateChild(this, nodeID);
+		return children.get(nodeID);
 	}
 
 	public RealNodePath getPath() {
@@ -78,4 +69,14 @@ public class RealNode {
 			pathBuilder.add(id);
 		}
 	}
+
+	public int getMinCallCount() {
+		return minCallCount;
+	}
+
+	public void setMinCallCount(int minCallCount) {
+		this.minCallCount = minCallCount;
+	}
+	
+	
 }

@@ -17,29 +17,22 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.aggregation;
+package io.djigger.ui.model;
 
-import io.djigger.model.NodeID;
-import io.djigger.model.RealNode;
+import java.util.ArrayList;
+import java.util.Collection;
 
-public class PathTransformerResult {
 
-	private final NodeID nodeID;
+public class AnalysisNodePath extends ArrayList<NodeID> {
 
-	private final RealNode realNode;
+	private static final long serialVersionUID = -2349458916501211000L;
 
-	public PathTransformerResult(NodeID nodeID, RealNode realNode) {
+	public AnalysisNodePath() {
 		super();
-		this.nodeID = nodeID;
-		this.realNode = realNode;
 	}
 
-	public RealNode getRealPath() {
-		return realNode;
-	}
-
-	public NodeID getNodeID() {
-		return nodeID;
+	public AnalysisNodePath(Collection<? extends NodeID> c) {
+		super(c);
 	}
 
 }

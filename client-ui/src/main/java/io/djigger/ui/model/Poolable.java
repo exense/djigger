@@ -19,22 +19,6 @@
  *******************************************************************************/
 package io.djigger.ui.model;
 
-import io.djigger.model.NodeID;
-
-import java.util.ArrayList;
-import java.util.Collection;
-
-
-public class NodePath extends ArrayList<NodeID> {
-
-	private static final long serialVersionUID = -2349458916501211000L;
-
-	public NodePath() {
-		super();
-	}
-
-	public NodePath(Collection<? extends NodeID> c) {
-		super(c);
-	}
-
+public interface Poolable {
+	public Object getPoolIndex();
 }

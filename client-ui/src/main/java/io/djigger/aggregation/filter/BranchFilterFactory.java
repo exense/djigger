@@ -19,8 +19,8 @@
  *******************************************************************************/
 package io.djigger.aggregation.filter;
 
-import io.djigger.model.RealNodePath;
 import io.djigger.ui.common.NodePresentationHelper;
+import io.djigger.ui.model.RealNodePath;
 
 public class BranchFilterFactory implements AtomicFilterFactory<RealNodePath> {
 

@@ -17,7 +17,7 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.model;
+package io.djigger.ui.model;
 
 import io.djigger.monitoring.java.model.StackTraceElement;
 
@@ -38,7 +38,7 @@ public class RealNodePath implements Serializable, Poolable {
 	public static RealNodePath fromStackTrace(StackTraceElement[] stacktrace, boolean includeLineNumbers) {
 		ArrayList<NodeID> nodeIDs = new ArrayList<NodeID>(stacktrace.length);
 		for(int i=stacktrace.length-1;i>=0;i--) {
-			nodeIDs.add(NodeID.getNewInstance(stacktrace[i], includeLineNumbers));
+			nodeIDs.add(NodeID.getInstance(stacktrace[i], includeLineNumbers));
 		}
 		return getInstance(nodeIDs);
 		

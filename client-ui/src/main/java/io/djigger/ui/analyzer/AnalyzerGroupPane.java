@@ -33,12 +33,12 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import io.djigger.aggregation.Aggregator;
+import io.djigger.aggregation.AnalyzerService;
 import io.djigger.store.filter.StoreFilter;
 import io.djigger.ui.Session;
 import io.djigger.ui.common.EnhancedTabbedPane;
 import io.djigger.ui.common.NodePresentationHelper;
-import io.djigger.ui.model.Node;
+import io.djigger.ui.model.AnalysisNode;
 
 
 public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListener {
@@ -47,7 +47,11 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 
 	private final Session parent;
 
-	private final Aggregator aggregator;
+	protected final AnalyzerService analyzerService;
+	
+	protected StoreFilter storeFilter;
+	
+	protected boolean includeLineNumbers;
 	
 	private final NodePresentationHelper presentationHelper;
 
@@ -60,7 +64,7 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 		this.parent = parent;
 		listeners = new ArrayList<AnalyzerPaneListener>();
         addChangeListener(this);
-        aggregator = new Aggregator(parent.getStore());
+        analyzerService = new AnalyzerService(parent.getStore());
         this.presentationHelper = presentationHelper;  
         
         final AnalyzerGroupPane me = this;
@@ -121,11 +125,11 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
     }
     
     public void setStoreFilter(StoreFilter storeFilter) {
-    	aggregator.setStoreFilter(storeFilter);
+    	this.storeFilter = storeFilter;
     }
 
     public void refresh() {
-    	aggregator.reload();
+    	analyzerService.load(storeFilter, includeLineNumbers);
     	for(Component component:getComponents()) {
             if(component instanceof AnalyzerPane) {
                 ((AnalyzerPane)component).refresh();
@@ -178,7 +182,7 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 		listeners.add(listener);
 	}
 
-	protected void fireSelection(Node node) {
+	protected void fireSelection(AnalysisNode node) {
 		for(AnalyzerPaneListener listener:listeners) {
 			listener.onSelection(node);
 		}
@@ -188,17 +192,17 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 		return parent;
 	}
 
-	public Aggregator getAggregator() {
-		return aggregator;
-	}
-
 	public NodePresentationHelper getPresentationHelper() {
 		return presentationHelper;
 	}
 	
 	public void showLineNumbers(boolean show) {
-		aggregator.setIncludeLineNumbers(show);
+		this.includeLineNumbers = show;
 		refresh();
+	}
+
+	public AnalyzerService getAnalyzerService() {
+		return analyzerService;
 	}
 
 

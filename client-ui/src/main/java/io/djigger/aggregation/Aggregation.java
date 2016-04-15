@@ -19,26 +19,25 @@
  *******************************************************************************/
 package io.djigger.aggregation;
 
-import io.djigger.model.RealNodePath;
-import io.djigger.monitoring.java.model.ThreadInfo;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import io.djigger.ui.model.RealNodePath;
 
 
 public class Aggregation {
 
 	private final RealNodePath path;
 
-	private final ArrayList<ThreadInfo> samples;
+	private final ArrayList<Thread> samples;
 
 	public Aggregation(RealNodePath path) {
 		super();
-		samples = new ArrayList<ThreadInfo>();
+		samples = new ArrayList<>();
 		this.path = path;
 	}
 
-	public void addSample(ThreadInfo sample) {
+	public void addSample(Thread sample) {
 		samples.add(sample);
 	}
 
@@ -50,7 +49,7 @@ public class Aggregation {
 		return path;
 	}
 
-	public List<ThreadInfo> getSamples() {
+	public List<Thread> getSamples() {
 		return samples;
 	}
 }

@@ -31,8 +31,8 @@ import io.djigger.ui.analyzer.AnalyzerPaneListener;
 import io.djigger.ui.analyzer.TreeView;
 import io.djigger.ui.instrumentation.InstrumentationPaneListener;
 import io.djigger.ui.instrumentation.InstrumentationStatistics;
-import io.djigger.ui.model.Node;
-import io.djigger.ui.model.NodeAggregation;
+import io.djigger.ui.model.AnalysisNode;
+import io.djigger.ui.model.RealNodeAggregation;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -692,11 +692,11 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 		Component _pane = main.getAnalyzerGroupPane().getCurrentTab();
 		if(_pane!=null && _pane instanceof TreeView) {
 			TreeView pane = (TreeView) _pane;
-			Node selectedNode = pane.getSelectedNode();
+			AnalysisNode selectedNode = pane.getSelectedNode();
 			if(selectedNode!=null) {
-				for(NodeAggregation aggregation:selectedNode.getAggregations()) {
-					for(ThreadInfo threadSnapshot:aggregation.getAggregation().getSamples()) {
-						result.add(threadSnapshot.getId());
+				for(RealNodeAggregation aggregation:selectedNode.getAggregations()) {
+					for(io.djigger.aggregation.Thread thread:aggregation.getAggregation().getSamples()) {
+						result.add(thread.getId());
 					}
 				}
 				/*
@@ -727,7 +727,7 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 
 
 	@Override
-	public void onSelection(Node selectedNode) {
+	public void onSelection(AnalysisNode selectedNode) {
 		Set<Long> selectedInAnalyzerPane = getAnalyzerPaneThreads();
 
     	for(ThreadBlock block:blocks) {

@@ -19,12 +19,12 @@
  *******************************************************************************/
 package io.djigger.ui.instrumentation;
 
-import io.djigger.model.RealNodePath;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.subscription.NodeSubscription;
 import io.djigger.store.filter.StoreFilter;
 import io.djigger.ui.Session;
 import io.djigger.ui.common.NodePresentationHelper;
+import io.djigger.ui.model.RealNodePath;
 
 import java.awt.Color;
 import java.awt.GridLayout;

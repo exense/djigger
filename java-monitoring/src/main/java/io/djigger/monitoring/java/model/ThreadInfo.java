@@ -42,6 +42,13 @@ public class ThreadInfo implements Serializable {
 
 		this.stackTrace = stackTrace;
 	}
+	
+	public ThreadInfo(StackTraceElement[] stackTrace, long id, Date timestamp) {
+		super();
+		this.id = id;
+		this.stackTrace = stackTrace;
+		this.timestamp = timestamp;
+	}
 
 	public StackTraceElement[] getStackTrace() {
 		return stackTrace;

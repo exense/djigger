@@ -19,11 +19,11 @@
  *******************************************************************************/
 package io.djigger.ui.instrumentation;
 
-import io.djigger.model.RealNodePath;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
 import io.djigger.store.Store;
 import io.djigger.store.filter.StoreFilter;
+import io.djigger.ui.model.RealNodePath;
 
 import java.io.BufferedWriter;
 import java.io.File;

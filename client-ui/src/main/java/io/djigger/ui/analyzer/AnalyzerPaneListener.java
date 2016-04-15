@@ -19,10 +19,10 @@
  *******************************************************************************/
 package io.djigger.ui.analyzer;
 
-import io.djigger.ui.model.Node;
+import io.djigger.ui.model.AnalysisNode;
 
 public interface AnalyzerPaneListener {
 
-	public void onSelection(Node selectedNode);
+	public void onSelection(AnalysisNode selectedNode);
 
 }

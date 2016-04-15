@@ -19,7 +19,7 @@
  *******************************************************************************/
 package io.djigger.ui.analyzer;
 
-import io.djigger.ui.model.Node;
+import io.djigger.ui.model.AnalysisNode;
 
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
@@ -27,9 +27,9 @@ import javax.swing.tree.TreePath;
 
 public class NodeTreeModel implements TreeModel {
 	
-	private final Node root;
+	private final AnalysisNode root;
 
-	public NodeTreeModel(Node root) {
+	public NodeTreeModel(AnalysisNode root) {
 		super();
 		this.root = root;
 	}
@@ -41,19 +41,19 @@ public class NodeTreeModel implements TreeModel {
 
 	@Override
 	public Object getChild(Object _parent, int index) {
-		Node parent = (Node) _parent;
+		AnalysisNode parent = (AnalysisNode) _parent;
 		return parent.getChildren().get(index);
 	}
 
 	@Override
 	public int getChildCount(Object _parent) {
-		Node parent = (Node) _parent;
+		AnalysisNode parent = (AnalysisNode) _parent;
 		return parent.getChildren().size();
 	}
 
 	@Override
 	public boolean isLeaf(Object _node) {
-		Node node = (Node) _node;
+		AnalysisNode node = (AnalysisNode) _node;
 		return node.isLeaf();
 	}
 
@@ -64,8 +64,8 @@ public class NodeTreeModel implements TreeModel {
 
 	@Override
 	public int getIndexOfChild(Object _parent, Object _child) {
-		Node parent = (Node) _parent;
-		Node child = (Node) _child;
+		AnalysisNode parent = (AnalysisNode) _parent;
+		AnalysisNode child = (AnalysisNode) _child;
 		for(int i=0;i<parent.getChildren().size();i++) {
 			if(parent.getChildren().get(i).equals(child)) {
 				return i;

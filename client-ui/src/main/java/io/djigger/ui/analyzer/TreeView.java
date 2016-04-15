@@ -19,7 +19,7 @@
  *******************************************************************************/
 package io.djigger.ui.analyzer;
 
-import io.djigger.ui.model.Node;
+import io.djigger.ui.model.AnalysisNode;
 
 import java.awt.Component;
 import java.awt.GridLayout;
@@ -36,7 +36,7 @@ import javax.swing.tree.TreePath;
 @SuppressWarnings("serial")
 public class TreeView extends AnalyzerPane implements TreeSelectionListener {
 
-	private Node currentNode;
+	private AnalysisNode currentNode;
 
 	private final JTree tree;
 
@@ -52,8 +52,8 @@ public class TreeView extends AnalyzerPane implements TreeSelectionListener {
 			public Component getTreeCellRendererComponent(JTree tree, Object value,
 					boolean sel, boolean expanded, boolean leaf, int row,
 					boolean hasFocus) {
-				if(value instanceof Node) {
-					Node node = (Node) value;
+				if(value instanceof AnalysisNode) {
+					AnalysisNode node = (AnalysisNode) value;
 					value = parent.getPresentationHelper().toString(node);
 				}
 				return super.getTreeCellRendererComponent(tree, value,
@@ -87,13 +87,13 @@ public class TreeView extends AnalyzerPane implements TreeSelectionListener {
 	public void valueChanged(TreeSelectionEvent e) {
 		TreePath newSelectionPath = e.getNewLeadSelectionPath();
 		if(newSelectionPath!=null) {
-			currentNode = (Node) newSelectionPath.getLastPathComponent();
+			currentNode = (AnalysisNode) newSelectionPath.getLastPathComponent();
 			parent.fireSelection(currentNode);
 		}
 	}
 
 	@Override
-	public Node getSelectedNode() {
+	public AnalysisNode getSelectedNode() {
 		return currentNode;
 	}
 }

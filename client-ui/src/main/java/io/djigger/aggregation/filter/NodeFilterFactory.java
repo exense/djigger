@@ -19,8 +19,8 @@
  *******************************************************************************/
 package io.djigger.aggregation.filter;
 
-import io.djigger.model.NodeID;
 import io.djigger.ui.common.NodePresentationHelper;
+import io.djigger.ui.model.NodeID;
 
 public class NodeFilterFactory implements AtomicFilterFactory<NodeID> {
 

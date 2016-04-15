@@ -19,9 +19,6 @@
  *******************************************************************************/
 package io.djigger.client;
 
-import io.djigger.model.Capture;
-import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +29,9 @@ import java.util.TimerTask;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.djigger.model.Capture;
+import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 
 public abstract class Facade {
 	

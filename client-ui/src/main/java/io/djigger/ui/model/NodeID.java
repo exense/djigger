@@ -17,9 +17,7 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.model;
-
-import io.djigger.monitoring.java.model.StackTraceElement;
+package io.djigger.ui.model;
 
 import java.io.ObjectStreamException;
 import java.io.Serializable;
@@ -32,6 +30,8 @@ public class NodeID implements Serializable, Poolable {
 	private final String className;
 
 	private final String methodName;
+	
+	private String cachedFullname;
 
 	private final int hashcode;
 
@@ -45,10 +45,6 @@ public class NodeID implements Serializable, Poolable {
 
 	public static NodeID getInstance(io.djigger.monitoring.java.model.StackTraceElement element, boolean includeLineNumbers) {
 		return pool.getInstance(new NodeID(element, includeLineNumbers));
-	}
-	
-	public static NodeID getNewInstance(io.djigger.monitoring.java.model.StackTraceElement element, boolean includeLineNumbers) {
-		return new NodeID(element, includeLineNumbers);
 	}
 
 	private NodeID(io.djigger.monitoring.java.model.StackTraceElement element, boolean includeLineNumbers) {
@@ -74,14 +70,25 @@ public class NodeID implements Serializable, Poolable {
 	public String getMethodName() {
 		return methodName;
 	}
+	
+	private final static String DELIMITER = ".";
+	
+	private String buildFullname() {
+		StringBuilder builder = new StringBuilder(className.length()+1+methodName.length());
+		builder.append(className).append(DELIMITER).append(methodName);
+		return builder.toString();
+	}
 
-	public String getFullname() {
-		return className + "." + methodName;
+	public synchronized String getFullname() {
+		if(cachedFullname==null) {
+			cachedFullname = buildFullname();
+		}
+		return cachedFullname;
 	}
 
 	@Override
 	public String toString() {
-		return className + "." + methodName;
+		return getFullname();
 	}
 
 	@Override

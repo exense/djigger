@@ -19,11 +19,11 @@
  *******************************************************************************/
 package io.djigger.ui.common;
 
-import io.djigger.model.NodeID;
-import io.djigger.model.RealNodePath;
 import io.djigger.ui.instrumentation.InstrumentationStatistics;
 import io.djigger.ui.instrumentation.InstrumentationStatisticsCache;
-import io.djigger.ui.model.Node;
+import io.djigger.ui.model.AnalysisNode;
+import io.djigger.ui.model.NodeID;
+import io.djigger.ui.model.RealNodePath;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -38,7 +38,7 @@ public class NodePresentationHelper {
 		this.statisticsCache = statisticsCache;
 	}
 
-	public String shortLabel(Node node, Node rootForCalculation) {
+	public String shortLabel(AnalysisNode node, AnalysisNode rootForCalculation) {
 		String[] split = getFullname(node).split("\\.");
 		if(split.length>=2) {
 			return split[split.length-2] + "." + split[split.length-1] + "() " + getPercentage(node, rootForCalculation) ;
@@ -56,31 +56,31 @@ public class NodePresentationHelper {
 		}
 	}
 
-	public String longLabel(Node node, Node rootForCalcultation) {
+	public String longLabel(AnalysisNode node, AnalysisNode rootForCalcultation) {
 		return getFullname(node) + "()  " + getPercentage(node, rootForCalcultation) ;
 	}
 
-	public String toString(Node node) {
+	public String toString(AnalysisNode node) {
 		return getFullname(node) + "()  " + getPercentage(node, node.getRoot()) ;
 	}
 
-	public String getFullname(Node node) {
+	public String getFullname(AnalysisNode node) {
 		return getFullname(node.getId());
 	}
 
 	public String getFullname(NodeID nodeID) {
 		if(nodeID!=null) {
-			return nodeID.getClassName() + "." + nodeID.getMethodName();
+			return nodeID.getFullname();
 		} else {
 			return "Root";
 		}
 	}
 
-	private String getPercentage(Node node, Node rootForCalculation) {
-		InstrumentationStatistics statisctics = statisticsCache.getInstrumentationStatistics(node.getPath());
+	private String getPercentage(AnalysisNode node, AnalysisNode rootForCalculation) {
+		InstrumentationStatistics statisctics = statisticsCache.getInstrumentationStatistics(node.getRealNodePath());
 
-		Node root = rootForCalculation;
-		Node thisNode = node;
+		AnalysisNode root = rootForCalculation;
+		AnalysisNode thisNode = node;
 
 		BigDecimal percentage;
 		if(thisNode.getWeight()>0) {
@@ -90,16 +90,18 @@ public class NodePresentationHelper {
 		}
 		percentage = percentage.setScale(0,RoundingMode.HALF_EVEN);
 
+		int minCallCount = thisNode.getMinCallCount();
+		
 		String info;
 		if(statisctics!=null) {
-			info = percentage + "% [" + thisNode.getWeight() + "]"+ "  { " + statisctics.getRealCount() + " - " + statisctics.getAverageResponseTime() + "ms}";
+			info = percentage + "% [" + thisNode.getWeight() + "] <"+minCallCount+">"+ "  { " + statisctics.getRealCount() + " - " + statisctics.getAverageResponseTime() + "ms}";
 		} else {
-			info = percentage + "% [" + thisNode.getWeight() + "]";
+			info = percentage + "% [" + thisNode.getWeight() + "] <"+minCallCount+">";
 		}
 		return info;
 	}
 
-	public boolean hasInstrumentationStatistics(Node node) {
-		return statisticsCache.getInstrumentationStatistics(node.getPath())!=null;
+	public boolean hasInstrumentationStatistics(AnalysisNode node) {
+		return statisticsCache.getInstrumentationStatistics(node.getRealNodePath())!=null;
 	}
 }

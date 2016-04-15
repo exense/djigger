@@ -17,7 +17,7 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.model;
+package io.djigger.ui.model;
 
 import java.util.HashMap;
 

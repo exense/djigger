@@ -20,21 +20,20 @@
 package io.djigger.ui.model;
 
 import io.djigger.aggregation.Aggregation;
-import io.djigger.model.RealNode;
 
-public class NodeAggregation {
+public class RealNodeAggregation {
 
 	private final RealNode realNode;
 
 	private final Aggregation aggregation;
 
-	public NodeAggregation(RealNode realNode, Aggregation aggregation) {
+	public RealNodeAggregation(RealNode realNode, Aggregation aggregation) {
 		super();
 		this.realNode = realNode;
 		this.aggregation = aggregation;
 	}
 
-	public RealNode getPath() {
+	public RealNode getRealNode() {
 		return realNode;
 	}
 
