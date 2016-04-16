@@ -61,7 +61,7 @@ public class AgentConnectionDialog implements ActionListener {
 		
 		this.type = ConnectionType.JMX;
 		
-		dialog = new JDialog(main.getFrame(), "Agent connection", true);
+		dialog = new JDialog(main.getFrame(), "New session", true);
 		dialog.setFocusable(true);
 		dialog.setLayout(new BorderLayout());		
 		
