@@ -115,6 +115,7 @@ public class MainFrame extends JPanel {
 	public synchronized void addSession(final Session session) {
 		try {
 			session.start();
+			session.configure();
 			sessions.add(session);
 			selectionPane.addSession(session);
 			groupPane.addSession(session);
