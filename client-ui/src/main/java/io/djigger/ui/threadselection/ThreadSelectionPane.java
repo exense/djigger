@@ -19,6 +19,10 @@
  *******************************************************************************/
 package io.djigger.ui.threadselection;
 
+import io.djigger.aggregation.filter.AtomicFilterFactory;
+import io.djigger.aggregation.filter.Filter;
+import io.djigger.aggregation.filter.FilterFactory;
+import io.djigger.aggregation.filter.ParsingException;
 import io.djigger.model.Capture;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.model.ThreadInfo;
@@ -29,6 +33,7 @@ import io.djigger.store.filter.TimeStoreFilter;
 import io.djigger.ui.Session;
 import io.djigger.ui.analyzer.AnalyzerPaneListener;
 import io.djigger.ui.analyzer.TreeView;
+import io.djigger.ui.common.EnhancedTextField;
 import io.djigger.ui.instrumentation.InstrumentationPaneListener;
 import io.djigger.ui.instrumentation.InstrumentationStatistics;
 import io.djigger.ui.model.AnalysisNode;
@@ -43,6 +48,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
@@ -60,6 +66,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
+import javax.swing.AbstractAction;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -108,8 +115,13 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 	private boolean timeBasedAxis;
 	
 	private final JScrollPane scrollPane;
+	
+	private final String THREADNAME_FILTER = "Thread name filter (and, or, not operators allowed)";
+	
+	private EnhancedTextField threadnameFilterTextField;
 
-    public ThreadSelectionPane(Session main) {
+    @SuppressWarnings("serial")
+	public ThreadSelectionPane(Session main) {
 		super(new BorderLayout());
 		this.main = main;
 		this.store = main.getStore();
@@ -135,12 +147,26 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 		blocksPane.addComponentListener(this);
 		blocksPane.setComponentPopupMenu(popup);
 		
-		add(axis, BorderLayout.PAGE_START);
+		threadnameFilterTextField = new EnhancedTextField(THREADNAME_FILTER);
+		threadnameFilterTextField.setToolTipText(THREADNAME_FILTER);
+		threadnameFilterTextField.setMaximumSize(new Dimension(Integer.MAX_VALUE,20));
+		threadnameFilterTextField.addActionListener(new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				refresh();
+				selectionChanged();
+			}
+		});
+		add(threadnameFilterTextField, BorderLayout.PAGE_START);
+		
+		JPanel threadTimelinePane = new JPanel(new BorderLayout());
+		threadTimelinePane.add(axis, BorderLayout.PAGE_START);
 		scrollPane = new JScrollPane(blocksPane, ScrollPaneLayout.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneLayout.HORIZONTAL_SCROLLBAR_NEVER);
 		scrollPane.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
-		add(scrollPane, BorderLayout.CENTER);
-		add(label, BorderLayout.PAGE_END);
-
+		threadTimelinePane.add(scrollPane, BorderLayout.CENTER);
+		threadTimelinePane.add(label, BorderLayout.PAGE_END);
+		add(threadTimelinePane, BorderLayout.CENTER);
+		
 		refresh();
 	}
     
@@ -553,10 +579,11 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 		}
 
 		if(timeBasedAxis) {
+			Filter<ThreadInfo> threadnameFilter = parseThreadnameFilter();
 			if(currentSelection.selectWholeRange) {
-				filter = new TimeStoreFilter(threadIdsFilter, null, null);
+				filter = new TimeStoreFilter(threadnameFilter, threadIdsFilter, null, null);
 			} else {
-				filter = new TimeStoreFilter(threadIdsFilter, currentSelection.start, currentSelection.end);
+				filter = new TimeStoreFilter(threadnameFilter, threadIdsFilter, currentSelection.start, currentSelection.end);
 			}
 		} else {
 			if(currentSelection.selectWholeRange) {
@@ -566,6 +593,31 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 			}
 		}
     	return filter;
+	}
+	
+	private Filter<ThreadInfo> parseThreadnameFilter() {
+		Filter<ThreadInfo> complexFilter = null;
+		String filter = threadnameFilterTextField.getText();
+		if(filter!=null) {
+			FilterFactory<ThreadInfo> factory = new FilterFactory<>(new AtomicFilterFactory<ThreadInfo>() {
+				@Override
+				public Filter<ThreadInfo> createFilter(final String expression) {
+					return new Filter<ThreadInfo>() {
+						@Override
+						public boolean isValid(ThreadInfo input) {
+							return input.getName().contains(expression);
+						}
+						
+					};
+				}
+			});
+			try {
+				complexFilter = factory.getCompositeFilter(filter);
+			} catch (ParsingException e) {
+				JOptionPane.showMessageDialog(this,	e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			}
+		}
+		return complexFilter;
 	}
 
 	private void selectionChanged() {
