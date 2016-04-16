@@ -23,10 +23,14 @@ import io.djigger.ui.model.AnalysisNode;
 
 import java.awt.Component;
 import java.awt.GridLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.Enumeration;
 
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
+import javax.swing.SwingUtilities;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultTreeCellRenderer;
@@ -45,7 +49,6 @@ public class TreeView extends AnalyzerPane implements TreeSelectionListener {
 		
 		tree = new JTree(new NodeTreeModel(workNode));
 		tree.setUI(new CustomTreeUI());
-		tree.setComponentPopupMenu(new TreePopupMenu(this));
 		tree.addTreeSelectionListener(this);
 		tree.setCellRenderer(new DefaultTreeCellRenderer() {	
 			@Override
@@ -60,6 +63,23 @@ public class TreeView extends AnalyzerPane implements TreeSelectionListener {
 						sel, expanded, leaf, row, hasFocus);
 			}
 		});
+		
+		final TreePopupMenu popup = new TreePopupMenu(this);
+		// using the mouselistener instead of tree.setComponentPopupMenu() to also select items on right click
+		MouseListener ml = new MouseAdapter() {
+			public void mousePressed(MouseEvent e) {
+				if (SwingUtilities.isRightMouseButton(e)) {
+					int selRow = tree.getRowForLocation(e.getX(), e.getY());
+					TreePath selPath = tree.getPathForLocation(e.getX(),e.getY());
+					tree.setSelectionPath(selPath);
+					if (selRow > -1) {
+						tree.setSelectionRow(selRow);
+					}
+					popup.show(tree, e.getX(), e.getY());
+				}
+			}
+		};
+		tree.addMouseListener(ml);
 		
 		contentPanel.setLayout(new GridLayout(0,1));
 		contentPanel.add(new JScrollPane(tree));
