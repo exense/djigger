@@ -329,8 +329,7 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 		        	g2.fillRect(Math.min(dragInitialX,dragX), 0,
 		        			Math.abs(dragX-dragInitialX), getSize().height);
 		        	if(timeBasedAxis) {
-			        	SimpleDateFormat format = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss.S");
-		        		String label = (format.format(new Date(xToRange(dragX)))).toString();
+		        		String label = formatDate(xToRange(dragX));
 		        		g2.setColor(new Color(0,100,200));
 		        		g2.drawChars(label.toCharArray(), 0, label.length(), dragX, dragY);
 		        	}
@@ -453,27 +452,38 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 		} else {
 			setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 		}
+
+		StringBuilder labelStr = new StringBuilder();
 		if(mouseOverBlock != null) {
 			String captureInfos = "";
+			long time = xToRange(e.getX());
 			if(currentCaptures!=null) {
-				long time = xToRange(e.getX());
 				Capture capture = getCapture(time);
 				if(capture!=null) {
 					captureInfos = ", Sampling interval (ms): " + capture.getSamplingInterval();
 				}
 			}
-			String labelStr = mouseOverBlock.label + " [" + currentNumberOfThreadDumps + " thread dumps" + captureInfos + "]";
+			labelStr.append(mouseOverBlock.label + " [" + currentNumberOfThreadDumps + " thread dumps" + captureInfos + "]");
 			if(!label.getText().equals(labelStr)) {
 				repaint = true;
 			}
-			label.setText(labelStr);
+			labelStr.append(" - ").append(formatDate(time));
 		} else {
-			label.setText(" ");
+			labelStr.append(" ");
 		}
+
+		
+		label.setText(labelStr.toString());
 
 		if(repaint) {
 			repaint();
 		}
+	}
+
+	private static final String DATE_FORMAT = "yyyy.MM.dd HH:mm:ss.S";
+	private String formatDate(long time) {
+		SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT);
+		return format.format(new Date(time));
 	}
 
 	private ThreadBlock getBlock(int x, int y) {
