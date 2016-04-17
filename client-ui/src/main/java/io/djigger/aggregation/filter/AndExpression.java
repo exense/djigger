@@ -20,7 +20,7 @@
 package io.djigger.aggregation.filter;
 
 
-public class AndExpression<T> implements Filter<T> {
+public class AndExpression<T> implements Filter<T>, ContextAwareFilter {
 
 	private final Filter<T> filter1;
 
@@ -35,6 +35,26 @@ public class AndExpression<T> implements Filter<T> {
 	@Override
 	public boolean isValid(T input) {
 		return filter1.isValid(input) && filter2.isValid(input);
+	}
+
+	@Override
+	public void startIteration() {
+		if(filter1 instanceof ContextAwareFilter) {
+			((ContextAwareFilter)filter1).startIteration();
+		}
+		if(filter2 instanceof ContextAwareFilter) {
+			((ContextAwareFilter)filter2).startIteration();
+		}
+	}
+
+	@Override
+	public void stopIteration() {
+		if(filter1 instanceof ContextAwareFilter) {
+			((ContextAwareFilter)filter1).stopIteration();
+		}
+		if(filter2 instanceof ContextAwareFilter) {
+			((ContextAwareFilter)filter2).stopIteration();
+		}
 	}
 
 }

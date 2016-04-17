@@ -19,6 +19,7 @@
  *******************************************************************************/
 package io.djigger.aggregation;
 
+import io.djigger.aggregation.filter.ContextAwareFilter;
 import io.djigger.aggregation.filter.Filter;
 import io.djigger.ui.model.NodeID;
 import io.djigger.ui.model.RealNode;
@@ -42,6 +43,9 @@ public class DefaultPathTransformer implements PathTransformer {
 		List<RealNode> transformations = new ArrayList<>(path.getFullPath().size());
 
 		RealNode currentNode = realTree;
+		if(nodeFilter instanceof ContextAwareFilter) {
+			((ContextAwareFilter)nodeFilter).startIteration();
+		}
 		for(NodeID nodeID:path.getFullPath()) {
 			currentNode = currentNode.getChild(nodeID);
 			if(nodeFilter == null || nodeFilter.isValid(nodeID)) {

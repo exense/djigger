@@ -24,25 +24,59 @@ import io.djigger.ui.model.NodeID;
 
 
 
-public class NodeFilter implements Filter<NodeID> {
+public class NodeFilter implements Filter<NodeID>, ContextAwareFilter{
 
 	private final String excludePattern;
 
 	private final NodePresentationHelper presentationHelper;
+	
+	private static final String ENTRY_PREFIX = "entry:";
+	private boolean isEntry = false;
 
+	private boolean entryMatched=false;
+	
 	public NodeFilter(String excludePattern,
 			NodePresentationHelper presentationHelper) {
+		if(excludePattern.startsWith(ENTRY_PREFIX)) {
+			excludePattern = excludePattern.substring(ENTRY_PREFIX.length());
+			isEntry = true;
+		}
+		
 		this.excludePattern = excludePattern;
 		this.presentationHelper = presentationHelper;
 	}
 
 	@Override
 	public boolean isValid(NodeID nodeID) {
-		if(presentationHelper.getFullname(nodeID).contains(excludePattern)) {
-			return true;
+		if(!isEntry) {
+			if(presentationHelper.getFullname(nodeID).contains(excludePattern)) {
+				return true;
+			} else {
+				return false;
+			}
 		} else {
-			return false;
+			if(entryMatched) {
+				return true;
+			} else {
+				if(presentationHelper.getFullname(nodeID).contains(excludePattern)) {
+					entryMatched = true;
+					return true;
+				} else {
+					return false;
+				}				
+			}
 		}
+	}
+
+	@Override
+	public void startIteration() {
+		entryMatched = false;
+	}
+
+	@Override
+	public void stopIteration() {
+		// TODO Auto-generated method stub
+		
 	}
 
 }
