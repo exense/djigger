@@ -125,12 +125,8 @@ public class Session extends JPanel implements FacadeListener, Closeable {
         instrumentationPane = new InstrumentationPane(this, presentationHelper);
         splitPane.add(instrumentationPane);
 
-        if(config.getType() == SessionType.AGENT || config.getType() == SessionType.AGENT_CAPTURE ) {
-        	instrumentationPane.setVisible(true);
-        } else {
-        	instrumentationPane.setVisible(false);
-        }
-
+        instrumentationPane.setVisible(false);
+        
         splitPane1.add(splitPane);
         splitPane1.setDividerLocation(300);
 
@@ -218,6 +214,16 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     		execution.run();
     		refreshAll();
     	}
+    }
+    
+    public void configure() {
+        if(config.getType() == SessionType.AGENT) {
+        	instrumentationPane.setVisible(true);
+        } else if (config.getType() == SessionType.AGENT_CAPTURE && store.getInstrumentationSamplesCount()>0) {
+        	instrumentationPane.setVisible(true);
+        } else {
+        	instrumentationPane.setVisible(false);
+        }
     }
     
     private List<ThreadInfo> parseThreadDumpFile(File file) throws IOException {

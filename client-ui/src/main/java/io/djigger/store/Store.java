@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
 
 
 public class Store implements Serializable {
@@ -45,8 +44,6 @@ public class Store implements Serializable {
 	private final List<ThreadInfo> threadInfos;
 	
 	private transient List<ThreadInfo> threadInfosBuffer;
-
-	private AtomicLong threadDumpIdSequence = new AtomicLong(0);
 	
 	private List<InstrumentationSample> instrumentationSamples;
 
@@ -120,6 +117,10 @@ public class Store implements Serializable {
 			}
 		}
 		return result;
+	}
+	
+	public synchronized int getInstrumentationSamplesCount() {
+		return instrumentationSamples.size();
 	}
 	
 	public synchronized List<InstrumentationSample> queryInstrumentationSamples(StoreFilter filter) {

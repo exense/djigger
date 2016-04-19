@@ -28,6 +28,8 @@ package io.djigger.collector.test;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.rmi.registry.LocateRegistry;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.management.MBeanServer;
 import javax.management.remote.JMXConnectorServer;
@@ -40,9 +42,9 @@ public class BasicJMXJVM {
 
 		System.out.println("Starting basic jvm.");
 
-		// Programmatically open JMX channel
 		BasicJMXJVM brjvm_1 = new BasicJMXJVM();
-		
+
+		// Programmatically open JMX channel
 		JMXConnectorServer srv = null;
 		try {
 			srv = brjvm_1.createJmxConnectorServer(1098);
@@ -50,15 +52,17 @@ public class BasicJMXJVM {
 			e1.printStackTrace();
 		}
 		
-		long runFor = 60000L; // Run per default for 1 minute
-		long sleepFor = 1000L; // Check if time limit reached every second
+		long runFor = 600000L; // Run for X milliseconds
+		long sleepFor = 1000L; // Check if time limit reached every X millisecond
 
-		// 50%
-		brjvm_1.iSleep50pcOfTheTime(runFor, sleepFor);
+		// 50 % - CPU
+		brjvm_1.iWaste50pcOfTheTimeButIUseCPU(runFor, sleepFor);
 		
-		// 2x 25%
-		brjvm_1.iSleep25pcOfTheTime(runFor, sleepFor);
-		brjvm_1.andMeTwoiSleep25pcOfTheTimeToo(runFor, sleepFor);
+		// 30 % - WAIT
+		brjvm_1.iSleep30pcOfTheTime(runFor, sleepFor);
+		
+		// 20 % - WAIT
+		brjvm_1.iSleep20pcOfTheTime(runFor, sleepFor);
 		
 		System.out.println("Basic jvm run complete.");
 		
@@ -79,6 +83,53 @@ public class BasicJMXJVM {
 		return svr;
 	}
 	
+
+
+	private void iSleep30pcOfTheTime(long howLong, long checkInterval){
+		iSleep( (long) (howLong * 0.3), checkInterval);
+	}
+	
+	private void iSleep20pcOfTheTime(long howLong, long checkInterval){
+		iSleep( (long) (howLong * 0.2), checkInterval);
+	}
+	
+	private void iWaste50pcOfTheTimeButIUseCPU(long howLong, long checkInterval){
+		
+		for(int i = 0; i < 5; i++)
+			iSleepUsingCPU(howLong/20, checkInterval);
+		
+		// boiler plate for code line function check
+		for(int i = 0; i < 5; i++)
+			iSleepUsingCPU(howLong/20, checkInterval);
+	}
+
+	private void iSleepUsingCPU(long howLong, long checkInterval) {
+
+		long begin = System.currentTimeMillis();
+
+		Map<String,String> aCertainHashMap = new TreeMap<String,String>();
+		Map<String,String> anotherHashMap = new TreeMap<String,String>();
+
+		String result = "";
+
+		while(System.currentTimeMillis() - begin < howLong){
+			int i = 0;
+			
+			int loopNumber = 100000; // if too high, then risk of surpassing the check interval period
+			
+			for (; i < loopNumber; i++){
+				aCertainHashMap.put("key"+i, "value4");
+				if (i !=0){
+					aCertainHashMap.remove("key" + (i-1));
+					anotherHashMap.putAll(aCertainHashMap);
+				}
+
+				aCertainHashMap.remove("key" + i);
+
+			}
+		}
+	}
+	
 	private void iSleep(long howLong, long checkInterval){
 
 		long begin = System.currentTimeMillis();
@@ -89,18 +140,6 @@ public class BasicJMXJVM {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-	}
-
-	private void iSleep50pcOfTheTime(long howLong, long checkInterval){
-		iSleep(howLong/2, checkInterval);
-	}
-	
-	private void iSleep25pcOfTheTime(long howLong, long checkInterval){
-		iSleep(howLong/4, checkInterval);
-	}
-	
-	private void andMeTwoiSleep25pcOfTheTimeToo(long howLong, long checkInterval){
-		iSleep(howLong/4, checkInterval);
 	}
 	
 }

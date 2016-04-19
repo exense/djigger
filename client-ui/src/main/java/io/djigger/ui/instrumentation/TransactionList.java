@@ -81,7 +81,7 @@ public class TransactionList extends JPanel {
 				InstrumentationSample sample = samples.get(sampleList.convertRowIndexToModel(sampleList.getSelectedRow()));
 				Set<Long> threadId = new HashSet<Long>();
 				threadId.add(sample.getAtributesHolder().getThreadID());
-				TransactionAnalyzerFrame analysisFrame = new TransactionAnalyzerFrame(main, new TimeStoreFilter(threadId, sample.getStart(), sample.getEnd()));
+				TransactionAnalyzerFrame analysisFrame = new TransactionAnalyzerFrame(main, new TimeStoreFilter(null, threadId, sample.getStart(), sample.getEnd()));
 			}
 		}));
 
