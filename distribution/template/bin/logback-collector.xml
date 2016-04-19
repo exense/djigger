@@ -1,6 +1,6 @@
 <configuration scan="true">
 	<appender name="FILE" class="ch.qos.logback.core.FileAppender">
-		<file>collector.log</file>
+		<file>../log/collector.log</file>
 		<encoder>
 			<pattern>%date %level [%thread] %logger{10} [%file:%line] %msg%n</pattern>
 		</encoder>

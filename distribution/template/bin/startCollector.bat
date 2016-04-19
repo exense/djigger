@@ -10,4 +10,4 @@ for /f "skip=1" %%x in ('wmic os get localdatetime') do if not defined mydate se
 SET JAVA_OPTS=-DcollectorConfig=..\conf\Collector.xml -DconnectionsConfig=..\conf\Connections.xml -Dlogback.configurationFile=logback-collector.xml
 rem Use -DconnectionsConfig=../conf/Connections.csv" if you wan't to use the CSV configuration format
 
-%JAVA_PATH%java.exe %JAVA_OPTS% -cp "..\lib\*;" io.djigger.collector.server.Server > collector_%mydate%.stdout 2>&1
+%JAVA_PATH%java.exe %JAVA_OPTS% -cp "..\lib\*;" io.djigger.collector.server.Server > ../log/collector_%mydate%.stdout 2>&1

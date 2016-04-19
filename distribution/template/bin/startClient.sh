@@ -3,4 +3,4 @@ JAVA_PATH=""
 
 JAVA_OPTS=-Dlogback.configurationFile=logback-client.xml
 
-${JAVA_PATH}java ${JAVA_OPTS} -cp "../lib/*" io.djigger.ui.MainFrame > client_$(date +"%s")..stdout 2>&1
+${JAVA_PATH}java ${JAVA_OPTS} -cp "../lib/*" io.djigger.ui.MainFrame > ../log/client_$(date +"%s")..stdout 2>&1
