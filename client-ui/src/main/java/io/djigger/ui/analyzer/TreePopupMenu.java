@@ -26,6 +26,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.JSeparator;
 
 
 
@@ -35,24 +36,33 @@ public class TreePopupMenu extends JPopupMenu {
 
 	@SuppressWarnings("serial")
 	public TreePopupMenu(final AnalyzerPane analyzer) {
-/*		anItem = new JMenuItem("Merged calls");
-		anItem.addActionListener(this);
-		analyzer.mergedCalls();
-		add(anItem); */
-		add(new JMenuItem(new AbstractAction("Set filter on this method") {
+		add(new JMenuItem(new AbstractAction("Filter branches in this node") {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				analyzer.setFilterOnCurrentSelection();
+				analyzer.appendCurrentSelectionToBranchFilter(false);
 			}
 		}));
-		add(new JMenuItem(new AbstractAction("Skip this method") {
+		add(new JMenuItem(new AbstractAction("Exclude branches in this node") {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				analyzer.skipCurrentSelection();
+				analyzer.appendCurrentSelectionToBranchFilter(true);
+			}
+		}));
+		add(new JSeparator());
+		add(new JMenuItem(new AbstractAction("Filter this node") {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				analyzer.appendCurrentSelectionToNodeFilter(false);
+			}
+		}));
+		add(new JMenuItem(new AbstractAction("Skip this node") {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				analyzer.appendCurrentSelectionToNodeFilter(true);
 			}
 		}));
 		if(analyzer.getMain().getSessionType()==SessionType.AGENT) {
-			// TODO: this feature seems to be broken. Fix this
+			add(new JSeparator()); 
 			add(new JMenuItem(new AbstractAction("Instrument this node (only this path)") {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {

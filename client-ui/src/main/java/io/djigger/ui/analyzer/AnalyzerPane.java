@@ -106,28 +106,27 @@ public abstract class AnalyzerPane extends JPanel implements ActionListener, Ins
 		refreshDisplay();
 	}
 
-	public void mergedCalls() {
-		//Node currentNode = getSelectedNode();
-		//Node root = new Node();
-		//TODO: root.setOverallTotalCount(rootNode.updateTotalCount());
-		//filteredRootNode.extractMerge(currentNode.getMethodName(), root);
-		//TreeView mergedCallAnalyzer = new TreeView(parent, TreeType.MERGE, root);
-		//parent.addTab(mergedCallAnalyzer);
-	}
-
-	public void setFilterOnCurrentSelection() {
-		filterTextField.setText(getPresentationHelper().getFullname(getSelectedNode()));
+	public void appendCurrentSelectionToBranchFilter(boolean negate) {
+		appendFilter(negate, filterTextField);		
 		refresh();
 	}
 
-	public void skipCurrentSelection() {
-		String newSkipText = excludeTextField.getText();
-		if(newSkipText!=null && newSkipText.length()>0 && !newSkipText.endsWith(",")) {
-			newSkipText += ",";
+	public void appendCurrentSelectionToNodeFilter(boolean negate) {
+		appendFilter(negate, excludeTextField);
+		refresh();
+	}
+
+	private void appendFilter(boolean negate, EnhancedTextField textField) {
+		StringBuilder filter = new StringBuilder();
+		String currentFilter = textField.getText();
+		if(currentFilter!=null && currentFilter.trim().length()>0) {
+			filter.append(currentFilter).append(" and ");			
 		}
-		newSkipText += getPresentationHelper().getFullname(getSelectedNode());
-		excludeTextField.setText(newSkipText);
-		refresh();
+		if(negate) {
+			filter.append(" not ");
+		}
+		filter.append(getPresentationHelper().getFullname(getSelectedNode()));
+		textField.setText(filter.toString().trim());
 	}
 
 	@Override
