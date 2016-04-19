@@ -36,6 +36,29 @@ public class TreePopupMenu extends JPopupMenu {
 
 	@SuppressWarnings("serial")
 	public TreePopupMenu(final AnalyzerPane analyzer) {
+		if(analyzer instanceof TreeView) {
+			final TreeView tree = (TreeView)analyzer;
+			add(new JMenuItem(new AbstractAction("Expand all") {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					tree.expandChildrenOfCurrentSelection();
+				}
+			}));
+			add(new JMenuItem(new AbstractAction("Expand first branch") {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					tree.expandFirstChildrenOfCurrentSelection();
+				}
+			}));
+			add(new JMenuItem(new AbstractAction("Collapse all") {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					tree.collapseChildrenOfCurrentSelection();
+				}
+			}));
+			add(new JSeparator());
+		}
+		
 		add(new JMenuItem(new AbstractAction("Filter branches in this node") {
 			@Override
 			public void actionPerformed(ActionEvent e) {

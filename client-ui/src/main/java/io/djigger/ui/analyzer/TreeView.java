@@ -116,4 +116,50 @@ public class TreeView extends AnalyzerPane implements TreeSelectionListener {
 	public AnalysisNode getSelectedNode() {
 		return currentNode;
 	}
+	
+	public void expandAll() {
+		for (int i = 0; i < tree.getRowCount(); i++) {
+			tree.expandRow(i);
+		}
+	}
+
+	public void expandChildrenOfCurrentSelection() {
+		expandChildren(getSelectedNode());
+	}
+	
+	private void expandChildren(AnalysisNode node) {
+		for(AnalysisNode child:node.getChildren()) {
+			if(child.isLeaf()) {
+				tree.expandPath(new TreePath(node.getTreePath().toArray()));
+			} else {
+				expandChildren(child);
+			}
+		}
+	}
+	
+	public void expandFirstChildrenOfCurrentSelection() {
+		expandFirstChildren(getSelectedNode());
+	}
+	
+	private void expandFirstChildren(AnalysisNode node) {
+		for(AnalysisNode child:node.getChildren()) {
+			if(child.isLeaf()) {
+				tree.expandPath(new TreePath(node.getTreePath().toArray()));
+			} else {
+				expandFirstChildren(child);
+			}
+			break;
+		}
+	}
+	
+	public void collapseChildrenOfCurrentSelection() {
+		collapseChildren(getSelectedNode());
+	}
+	
+	private void collapseChildren(AnalysisNode node) {
+		for(AnalysisNode child:node.getChildren()) {
+			collapseChildren(child);
+			tree.collapsePath(new TreePath(node.getTreePath().toArray()));
+		}
+	}	
 }
