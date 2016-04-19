@@ -123,7 +123,7 @@ public abstract class AnalyzerPane extends JPanel implements ActionListener, Ins
 			filter.append(currentFilter).append(" and ");			
 		}
 		if(negate) {
-			filter.append(" not ");
+			filter.append("not ");
 		}
 		filter.append(getPresentationHelper().getFullname(getSelectedNode()));
 		textField.setText(filter.toString().trim());
