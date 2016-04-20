@@ -149,7 +149,7 @@ public class TransactionList extends JPanel {
 	            switch(c) {
 	            case 0:return String.class;
 	            case 1:return Date.class;
-	            case 2:return Integer.class;
+	            case 2:return Double.class;
 	            default:throw new RuntimeException();
 	            }
 	        }

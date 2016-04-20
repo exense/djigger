@@ -73,11 +73,15 @@ public class Store implements Serializable {
 	}
 
 	public synchronized void addInstrumentationSamples(List<InstrumentationSample> samples) {
-		instrumentationSamplesBuffer.addAll(samples);
+		//instrumentationSamplesBuffer.addAll(samples);
 	}
 
 	private synchronized void processInstrumentationSamplesBuffer() {
-		instrumentationSamples.addAll(instrumentationSamplesBuffer);
+//		for(InstrumentationSample sample:instrumentationSamplesBuffer) {
+//			sample.setClassname(sample.getClassname().intern());
+//			sample.setMethodname(sample.getMethodname().intern());
+//		}
+//		instrumentationSamples.addAll(instrumentationSamplesBuffer);
 		instrumentationSamplesBuffer.clear();
 	}
 

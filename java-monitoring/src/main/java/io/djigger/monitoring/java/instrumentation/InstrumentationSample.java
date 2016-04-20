@@ -20,52 +20,39 @@
 package io.djigger.monitoring.java.instrumentation;
 
 import java.io.Serializable;
-import java.util.UUID;
 
 
 public class InstrumentationSample implements Serializable {
 
 	private static final long serialVersionUID = 347226760314494168L;
-	
-	private final UUID contextID;
 
 	private String classname;
 	
 	private String methodname;
-
+	
 	private final long start;
 
-	private final long end;
-	
-	private final int duration;
+	private final long duration;
 	
 	private final InstrumentationAttributesHolder atributesHolder;
 
-	public InstrumentationSample(UUID contextID, String classname, String methodname,
-			long start, long end,
-			InstrumentationAttributesHolder atributesHolder) {
+	public InstrumentationSample(String classname, String methodname, long start, long duration, InstrumentationAttributesHolder atributesHolder) {
 		super();
-		this.contextID = contextID;
 		this.classname = classname;
 		this.methodname = methodname;
 		this.start = start;
-		this.end = end;
+		this.duration = duration;
 		this.atributesHolder = atributesHolder;
-		this.duration = (int) (end-start);
-	}
-
-	public UUID getContextID() {
-		return contextID;
 	}
 
 	public long getStart() {
 		return start;
 	}
-
+	
 	public long getEnd() {
-		return end;
+		return start+duration/1000000;
 	}
-
+	
 	public InstrumentationAttributesHolder getAtributesHolder() {
 		return atributesHolder;
 	}
@@ -85,8 +72,8 @@ public class InstrumentationSample implements Serializable {
 	public void setMethodname(String methodname) {
 		this.methodname = methodname;
 	}
-
-	public int getDuration() {
+	
+	public long getDuration() {
 		return duration;
 	}
 }

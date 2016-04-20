@@ -59,9 +59,9 @@ public class InstrumentationStatistics implements Serializable {
 
 	private int realCount;
 
-	private Integer averageResponseTime;
+	private Double averageResponseTime;
 	
-	private Integer throughput;
+	private Double throughput;
 
 	public InstrumentationStatistics() {
 		super();
@@ -81,7 +81,7 @@ public class InstrumentationStatistics implements Serializable {
 		}
 
 		if(realCount>0) {
-			averageResponseTime = (int)(totalTimeSpent/realCount);
+			averageResponseTime = totalTimeSpent/(1000000.0*realCount);
 		}
 	}
 
@@ -89,7 +89,7 @@ public class InstrumentationStatistics implements Serializable {
 		start = Math.min(start, sample.getStart());
 		end = Math.max(end, sample.getEnd());
 		realCount++;
-		int duration = (int)(sample.getEnd()-sample.getStart());
+		long duration = sample.getDuration();
 		totalTimeSpent += duration;
 		synchronized(samples) {
 			samples.add(new Sample(sample.getAtributesHolder().getThreadID(), sample.getStart(), duration, sample.getAtributesHolder()));
@@ -105,23 +105,23 @@ public class InstrumentationStatistics implements Serializable {
 		return realCount;
 	}
 
-	public Integer getAverageResponseTime() {
+	public Double getAverageResponseTime() {
 		if(averageResponseTime==null) {
 			if(realCount>0) {
-				averageResponseTime = (int)(totalTimeSpent/realCount);
+				averageResponseTime = totalTimeSpent/(1000000.0*realCount);
 			} else {
-				return 0;
+				return 0.0;
 			}
 		}
 		return averageResponseTime;
 	}
 
-	public Integer getThroughput() {
+	public Double getThroughput() {
 		if(throughput==null) {
 			if(realCount>1 && end-start>0) {
-				throughput = (int)(60000L*realCount/(end-start));
+				throughput = 1000.0*realCount/(end-start);
 			} else {
-				return 0;
+				return 0.0;
 			}
 		}
 		return throughput;
@@ -140,15 +140,15 @@ public class InstrumentationStatistics implements Serializable {
 
 		private final long time;
 
-		private final int elapsed;
+		private final long elapsed;
 		
 		private final InstrumentationAttributesHolder attributes;
 
-		public Sample(long threadId, long time, int elapsed, InstrumentationAttributesHolder attributes) {
+		public Sample(long threadId, long start, long duration, InstrumentationAttributesHolder attributes) {
 			super();
 			this.threadId = threadId;
-			this.time = time;
-			this.elapsed = elapsed;
+			this.time = start;
+			this.elapsed = duration;
 			this.attributes = attributes;
 		}
 
@@ -156,7 +156,7 @@ public class InstrumentationStatistics implements Serializable {
 			return time;
 		}
 
-		public int getElapsed() {
+		public long getElapsed() {
 			return elapsed;
 		}
 
