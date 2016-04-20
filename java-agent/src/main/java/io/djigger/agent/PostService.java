@@ -45,27 +45,41 @@ public class PostService extends Thread {
 	public void run() {
 		List<InstrumentationSample> buffer;
 		List<ThreadInfo> samplerBuffer;
+		boolean skipNext=false;
 		while(true) {
-			try {				
+			long start = System.currentTimeMillis();
+			try {
 				buffer = new ArrayList<InstrumentationSample>();
 				Collector.drainTo(buffer);
-				if(buffer.size()>0) {
-					session.getMessageRouter().send(new Message(JavaAgentMessageType.INSTRUMENT_SAMPLE,buffer));
-				}
-
 				
 				samplerBuffer = new ArrayList<ThreadInfo>();
 				session.getSamplerRunnable().drainTo(samplerBuffer);
-				if(samplerBuffer.size()>0) {
-					long t1 = System.currentTimeMillis();
-					session.getMessageRouter().send(new Message(JavaAgentMessageType.THREAD_SAMPLE,samplerBuffer));
-					System.out.println("Sent dumps in: " + Long.toString(System.currentTimeMillis()-t1));
+
+				if(!skipNext) {
+					if(buffer.size()>0) {
+						session.getMessageRouter().send(new Message(JavaAgentMessageType.INSTRUMENT_SAMPLE,buffer));
+					}
+					if(samplerBuffer.size()>0) {
+						session.getMessageRouter().send(new Message(JavaAgentMessageType.THREAD_SAMPLE,samplerBuffer));
+					}
+				} else {
+					System.out.println("Skipping "+buffer.size()+" samples and "+samplerBuffer.size()+" dumps.");					
 				}
-				
-				Thread.sleep(interval);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			} finally {
+				long duration = System.currentTimeMillis()-start;
+				if(duration>interval) {
+					skipNext = true;
+				} else {
+					skipNext = false;
+				}
+				try {
+					Thread.sleep(Math.max(0, interval-duration));
+				} catch (InterruptedException e) {
+					throw new RuntimeException(e);
+				}
 			}
 
 		}

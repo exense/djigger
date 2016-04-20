@@ -44,6 +44,10 @@ public class ClassTransformer implements ClassFileTransformer {
 		this.service = service;
 	}
 
+	private static final String START_TIMENANO_VAR = "$djigger$startnano";
+	
+	private static final String START_TIME_VAR = "$djigger$starttime";
+	
 	@Override
 	public byte[] transform(ClassLoader loader, String className,
 			Class<?> classBeingRedefined, ProtectionDomain protectionDomain,
@@ -83,10 +87,19 @@ public class ClassTransformer implements ClassFileTransformer {
 								attributesBuilder.append("true");
 								attributesBuilder.append("}");
 								
-								method.addLocalVariable("t1", CtClass.longType);
-								method.insertBefore("t1 = System.currentTimeMillis();io.djigger.agent.Collector.start(this, \"" + currentClass.getName() + "\",\"" + method.getName() + "\");");
+								method.addLocalVariable(START_TIMENANO_VAR, CtClass.longType);
+								method.addLocalVariable(START_TIME_VAR, CtClass.longType);
+								method.insertBefore(START_TIMENANO_VAR+" = System.nanoTime();");
+								method.insertBefore(START_TIME_VAR+" = System.currentTimeMillis();");
+								
+								if(!Modifier.isStatic(method.getModifiers())) {
+									method.insertBefore("io.djigger.agent.Collector.start(this, \"" + currentClass.getName() + "\",\"" + method.getName() + "\");");
+								} else {
+									method.insertBefore("io.djigger.agent.Collector.start(null, \"" + currentClass.getName() + "\",\"" + method.getName() + "\");");
+								}
+
 								System.out.println("io.djigger.agent.Collector.report(\"" + currentClass.getName() + "\",\"" + method.getName() + "\", t1," + attributesBuilder.toString() + ");");
-								method.insertAfter("io.djigger.agent.Collector.report(\"" + currentClass.getName() + "\",\"" + method.getName() + "\", t1," + attributesBuilder.toString() + ");");
+								method.insertAfter("io.djigger.agent.Collector.report(\"" + currentClass.getName() + "\",\"" + method.getName() + "\","+START_TIME_VAR+", System.nanoTime()-"+START_TIMENANO_VAR+"," + attributesBuilder.toString() + ");");
 							}
 						}
 

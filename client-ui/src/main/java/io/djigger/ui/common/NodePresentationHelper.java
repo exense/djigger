@@ -27,15 +27,22 @@ import io.djigger.ui.model.RealNodePath;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.DecimalFormat;
 
 
 public class NodePresentationHelper {
 	
 	private final InstrumentationStatisticsCache statisticsCache;
+	
+	private DecimalFormat format1 = new DecimalFormat("#");
+	
+	private DecimalFormat format2 = new DecimalFormat("#.####");
 
 	public NodePresentationHelper(InstrumentationStatisticsCache statisticsCache) {
 		super();
 		this.statisticsCache = statisticsCache;
+		this.format1.setRoundingMode(RoundingMode.CEILING);
+		this.format2.setRoundingMode(RoundingMode.CEILING);
 	}
 
 	public String shortLabel(AnalysisNode node, AnalysisNode rootForCalculation) {
@@ -75,6 +82,8 @@ public class NodePresentationHelper {
 			return "Root";
 		}
 	}
+	
+	
 
 	private String getPercentage(AnalysisNode node, AnalysisNode rootForCalculation) {
 		InstrumentationStatistics statisctics = statisticsCache.getInstrumentationStatistics(node.getRealNodePath());
@@ -94,7 +103,7 @@ public class NodePresentationHelper {
 		
 		String info;
 		if(statisctics!=null) {
-			info = percentage + "% [" + thisNode.getWeight() + "] <"+minCallCount+">"+ "  { " + statisctics.getRealCount() + " - " + statisctics.getAverageResponseTime() + "ms}";
+			info = percentage + "% [" + thisNode.getWeight() + "] <"+minCallCount+">"+ "  { " + statisctics.getRealCount() + " - " + format1.format(statisctics.getAverageResponseTime()) + "ms}";
 		} else {
 			info = percentage + "% [" + thisNode.getWeight() + "] <"+minCallCount+">";
 		}

@@ -29,6 +29,8 @@ import java.awt.BorderLayout;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -56,10 +58,18 @@ public class TransactionTable extends JPanel {
 	
 	private InstrumentationStatisticsCache cache;
 	
+	private DecimalFormat format1 = new DecimalFormat("#");
+	
+	private DecimalFormat format2 = new DecimalFormat("#.####");
+	
 	public TransactionTable(final InstrumentationStatisticsCache cache, final InstrumentationPane parent) {
 		super(new BorderLayout());
 		this.cache = cache;
 		this.parent = parent;
+		
+		
+		format1.setRoundingMode(RoundingMode.CEILING);
+		format2.setRoundingMode(RoundingMode.CEILING);
 		
 		table = new JTable();
 		table.setCellSelectionEnabled(false);
@@ -165,6 +175,14 @@ public class TransactionTable extends JPanel {
 		add(commandPanel,BorderLayout.SOUTH);
 	}
 
+	private String formatAverageResponseTime(long timeInNano) {
+		if(timeInNano>100000) {
+			return format1.format(timeInNano/1000000);
+		} else {
+			return format2.format(timeInNano/1000000);
+		}
+	}
+	
 	public void load() {
 		Set<InstrumentSubscription> subscriptions = parent.getSession().getStore().getSubscriptions();
 		
@@ -179,13 +197,13 @@ public class TransactionTable extends JPanel {
 			i++;
  		}
 		
-		DefaultTableModel model = new DefaultTableModel(data, new Object[]{"Name","Avg. (ms)","Calls","Calls/min"}) {
+		DefaultTableModel model = new DefaultTableModel(data, new Object[]{"Name","Avg. (ms)","Calls","Calls/s"}) {
 			public Class getColumnClass(int c) {				
 	            switch(c) {
 	            case 0:return InstrumentSubscription.class;
-	            case 1:return Integer.class;
+	            case 1:return Double.class;
 	            case 2:return Integer.class;
-	            case 3:return Integer.class;
+	            case 3:return Double.class;
 	            default:throw new RuntimeException();
 	            }
 	        }
