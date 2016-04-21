@@ -19,9 +19,9 @@
  *******************************************************************************/
 package io.djigger.store.filter;
 
-import io.djigger.aggregation.filter.Filter;
 import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
 import io.djigger.monitoring.java.model.ThreadInfo;
+import io.djigger.ql.Filter;
 
 import java.util.Date;
 import java.util.Set;

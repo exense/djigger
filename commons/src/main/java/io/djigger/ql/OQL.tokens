@@ -1,0 +1,17 @@
+EQ=1
+NEQ=2
+OR=3
+AND=4
+NOT=5
+OPAR=6
+CPAR=7
+NONQUOTEDSTRING=8
+STRING=9
+SPACE=10
+'='=1
+'!='=2
+'or'=3
+'and'=4
+'not'=5
+'('=6
+')'=7

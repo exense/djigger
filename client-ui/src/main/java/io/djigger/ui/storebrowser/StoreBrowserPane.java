@@ -19,6 +19,12 @@
  *******************************************************************************/
 package io.djigger.ui.storebrowser;
 
+import io.djigger.monitoring.java.model.ThreadInfo;
+import io.djigger.ql.OQLMongoDBBuilder;
+import io.djigger.ui.Session;
+import io.djigger.ui.common.MonitoredExecution;
+import io.djigger.ui.common.MonitoredExecutionRunnable;
+
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -45,16 +51,10 @@ import javax.swing.SpinnerDateModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.antlr.runtime.RecognitionException;
+import org.antlr.v4.runtime.RecognitionException;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import io.djigger.monitoring.java.model.ThreadInfo;
-import io.djigger.ql.OSQL;
-import io.djigger.ui.Session;
-import io.djigger.ui.common.MonitoredExecution;
-import io.djigger.ui.common.MonitoredExecutionRunnable;
 
 @SuppressWarnings("serial")
 public class StoreBrowserPane extends JPanel implements ActionListener, KeyListener {
@@ -182,7 +182,7 @@ public class StoreBrowserPane extends JPanel implements ActionListener, KeyListe
 		
 		final Bson query;
 		try {
-			query = OSQL.toMongoQuery(queryTextField.getText());
+			query = OQLMongoDBBuilder.build(queryTextField.getText());
 			final Date from = ((SpinnerDateModel)fromDateSpinner.getModel()).getDate();
 			final Date to = ((SpinnerDateModel)toDateSpinner.getModel()).getDate();
 			

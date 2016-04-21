@@ -19,6 +19,7 @@
  *******************************************************************************/
 package io.djigger.aggregation.filter;
 
+import io.djigger.ql.Filter;
 import io.djigger.ui.common.NodePresentationHelper;
 import io.djigger.ui.model.NodeID;
 import io.djigger.ui.model.RealNodePath;

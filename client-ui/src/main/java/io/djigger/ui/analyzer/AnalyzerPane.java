@@ -19,6 +19,23 @@
  *******************************************************************************/
 package io.djigger.ui.analyzer;
 
+import io.djigger.aggregation.AnalyzerService;
+import io.djigger.aggregation.filter.BranchFilterFactory;
+import io.djigger.aggregation.filter.NodeFilterFactory;
+import io.djigger.aggregation.filter.ParsingException;
+import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
+import io.djigger.monitoring.java.instrumentation.subscription.RealNodePathSubscription;
+import io.djigger.monitoring.java.instrumentation.subscription.SimpleInstrumentationSubscription;
+import io.djigger.ql.Filter;
+import io.djigger.ql.OQLFilterBuilder;
+import io.djigger.ui.Session;
+import io.djigger.ui.common.EnhancedTextField;
+import io.djigger.ui.common.NodePresentationHelper;
+import io.djigger.ui.instrumentation.InstrumentationPaneListener;
+import io.djigger.ui.model.AnalysisNode;
+import io.djigger.ui.model.NodeID;
+import io.djigger.ui.model.RealNodePath;
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
@@ -28,23 +45,6 @@ import java.util.Set;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-
-import io.djigger.aggregation.AnalyzerService;
-import io.djigger.aggregation.filter.BranchFilterFactory;
-import io.djigger.aggregation.filter.Filter;
-import io.djigger.aggregation.filter.FilterFactory;
-import io.djigger.aggregation.filter.NodeFilterFactory;
-import io.djigger.aggregation.filter.ParsingException;
-import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.subscription.RealNodePathSubscription;
-import io.djigger.monitoring.java.instrumentation.subscription.SimpleInstrumentationSubscription;
-import io.djigger.ui.Session;
-import io.djigger.ui.common.EnhancedTextField;
-import io.djigger.ui.common.NodePresentationHelper;
-import io.djigger.ui.instrumentation.InstrumentationPaneListener;
-import io.djigger.ui.model.AnalysisNode;
-import io.djigger.ui.model.NodeID;
-import io.djigger.ui.model.RealNodePath;
 
 
 public abstract class AnalyzerPane extends JPanel implements ActionListener, InstrumentationPaneListener {
@@ -156,10 +156,9 @@ public abstract class AnalyzerPane extends JPanel implements ActionListener, Ins
 		String filter = getStacktraceFilter();
 		if(filter!=null) {
 			BranchFilterFactory atomicFactory = new BranchFilterFactory(getPresentationHelper());
-			FilterFactory<RealNodePath> factory = new FilterFactory<RealNodePath>(atomicFactory);
 			try {
-				complexFilter = factory.getCompositeFilter(filter);
-			} catch (ParsingException e) {
+				complexFilter = OQLFilterBuilder.getFilter(filter, atomicFactory);
+			} catch (Exception e) {
 				JOptionPane.showMessageDialog(this,	e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			}
 		}
@@ -170,10 +169,9 @@ public abstract class AnalyzerPane extends JPanel implements ActionListener, Ins
 		String excludeFilter = getNodeFilter();
 		if(excludeFilter!=null) {
 			NodeFilterFactory atomicFactory = new NodeFilterFactory(getPresentationHelper());
-			FilterFactory<NodeID> factory = new FilterFactory<NodeID>(atomicFactory);
 			try {
-				nodeFilter = factory.getCompositeFilter(excludeFilter);
-			} catch (ParsingException e) {
+				nodeFilter =  OQLFilterBuilder.getFilter(excludeFilter, atomicFactory);
+			} catch (Exception e) {
 				JOptionPane.showMessageDialog(this,	e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 				nodeFilter = null;
 			}

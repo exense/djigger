@@ -19,13 +19,13 @@
  *******************************************************************************/
 package io.djigger.ui.threadselection;
 
-import io.djigger.aggregation.filter.AtomicFilterFactory;
-import io.djigger.aggregation.filter.Filter;
-import io.djigger.aggregation.filter.FilterFactory;
 import io.djigger.aggregation.filter.ParsingException;
 import io.djigger.model.Capture;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.model.ThreadInfo;
+import io.djigger.ql.Filter;
+import io.djigger.ql.FilterFactory;
+import io.djigger.ql.OQLFilterBuilder;
 import io.djigger.store.Store;
 import io.djigger.store.filter.IdStoreFilter;
 import io.djigger.store.filter.StoreFilter;
@@ -607,11 +607,12 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 	
 	private Filter<ThreadInfo> parseThreadnameFilter() {
 		Filter<ThreadInfo> complexFilter = null;
-		String filter = threadnameFilterTextField.getText();
+		final String filter = threadnameFilterTextField.getText();
 		if(filter!=null) {
-			FilterFactory<ThreadInfo> factory = new FilterFactory<>(new AtomicFilterFactory<ThreadInfo>() {
+			FilterFactory<ThreadInfo> factory = new FilterFactory<ThreadInfo>() {
+
 				@Override
-				public Filter<ThreadInfo> createFilter(final String expression) {
+				public Filter<ThreadInfo> createFullTextFilter(final String expression) {
 					return new Filter<ThreadInfo>() {
 						@Override
 						public boolean isValid(ThreadInfo input) {
@@ -620,10 +621,17 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 						
 					};
 				}
-			});
+
+				@Override
+				public Filter<ThreadInfo> createAttributeFilter(
+						String operator, String attribute, String value) {
+					// TODO Auto-generated method stub
+					return null;
+				}
+			};
 			try {
-				complexFilter = factory.getCompositeFilter(filter);
-			} catch (ParsingException e) {
+				complexFilter = OQLFilterBuilder.getFilter(filter, factory);
+			} catch (Exception e) {
 				JOptionPane.showMessageDialog(this,	e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			}
 		}

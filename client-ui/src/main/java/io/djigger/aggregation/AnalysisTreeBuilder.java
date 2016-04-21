@@ -19,13 +19,13 @@
  *******************************************************************************/
 package io.djigger.aggregation;
 
-import java.util.List;
-
-import io.djigger.aggregation.filter.Filter;
+import io.djigger.ql.Filter;
 import io.djigger.ui.model.AnalysisNode;
-import io.djigger.ui.model.RealNodeAggregation;
 import io.djigger.ui.model.NodeID;
 import io.djigger.ui.model.RealNode;
+import io.djigger.ui.model.RealNodeAggregation;
+
+import java.util.List;
 
 public class AnalysisTreeBuilder {
 

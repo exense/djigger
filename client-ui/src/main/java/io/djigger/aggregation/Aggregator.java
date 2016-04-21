@@ -19,13 +19,13 @@
  *******************************************************************************/
 package io.djigger.aggregation;
 
+import io.djigger.ql.Filter;
+import io.djigger.ui.model.RealNodePath;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import io.djigger.aggregation.filter.Filter;
-import io.djigger.ui.model.RealNodePath;
 
 
 

@@ -19,15 +19,8 @@
  *******************************************************************************/
 package io.djigger.aggregation;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import io.djigger.aggregation.filter.Filter;
 import io.djigger.monitoring.java.model.ThreadInfo;
+import io.djigger.ql.Filter;
 import io.djigger.store.Store;
 import io.djigger.store.filter.StoreFilter;
 import io.djigger.ui.analyzer.TreeType;
@@ -35,6 +28,13 @@ import io.djigger.ui.model.AnalysisNode;
 import io.djigger.ui.model.NodeID;
 import io.djigger.ui.model.RealNode;
 import io.djigger.ui.model.RealNodePath;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class AnalyzerService {
 
