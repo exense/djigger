@@ -1,8 +1,10 @@
 package io.djigger.ql;
 
 import static com.mongodb.client.model.Filters.*;
+
 import org.bson.Document;
 import org.bson.conversions.Bson;
+
 import io.djigger.ql.OQLParser.AndExprContext;
 import io.djigger.ql.OQLParser.EqualityExprContext;
 import io.djigger.ql.OQLParser.NonQuotedStringAtomContext;
@@ -27,10 +29,14 @@ public class OQLMongoDBQueryVisitor extends OQLBaseVisitor<Bson>{
 	@Override
 	public Bson visitEqualityExpr(EqualityExprContext ctx) {
 		String op = ctx.op.getText();
+		String value = ctx.expr(1).getText();
+	       // strip quotes
+		value = value.substring(1, value.length() - 1).replace("\"\"", "\"");
+		
 		if(op.equals("=")) 
-    		return new Document(ctx.expr(0).getText(), ctx.expr(1).getText());
+    		return new Document(ctx.expr(0).getText(), value);
     	else if (op.equals("~"))
-    		return regex(ctx.expr(0).getText(), ctx.expr(1).getText()); 
+    		return regex(ctx.expr(0).getText(), value); 
     	else 
     		throw new RuntimeException("Invalid operator: '"+op+"'");
 	}

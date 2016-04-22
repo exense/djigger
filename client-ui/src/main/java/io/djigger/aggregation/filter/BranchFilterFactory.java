@@ -40,8 +40,7 @@ public class BranchFilterFactory implements FilterFactory<RealNodePath> {
 	}
 
 	@Override
-	public io.djigger.ql.Filter<RealNodePath> createAttributeFilter(
-			String operator, String attribute, String value) {
+	public Filter<RealNodePath> createAttributeFilter(String operator, String attribute, String value) {
 		// TODO Auto-generated method stub
 		return null;
 	}

@@ -5,12 +5,12 @@ grammar OQL;
 }
 
 parse
-    : expr EOF
+    : expr? EOF
     ;
     
 expr
  : NOT expr                             #notExpr
- | expr op=(EQ | NEQ) expr              #equalityExpr
+ | expr op=(EQ | NEQ | REGEX) expr              #equalityExpr
  | expr AND expr                        #andExpr
  | expr OR expr                         #orExpr
  | atom                                 #atomExpr
@@ -24,6 +24,7 @@ atom
 
 EQ : '=';
 NEQ : '!=';
+REGEX : '~';
 OR : 'or';
 AND : 'and';
 NOT : 'not';

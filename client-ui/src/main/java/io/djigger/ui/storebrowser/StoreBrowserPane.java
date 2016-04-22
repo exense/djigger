@@ -22,6 +22,7 @@ package io.djigger.ui.storebrowser;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.ql.OQLMongoDBBuilder;
 import io.djigger.ui.Session;
+import io.djigger.ui.common.EnhancedTextField;
 import io.djigger.ui.common.MonitoredExecution;
 import io.djigger.ui.common.MonitoredExecutionRunnable;
 
@@ -45,13 +46,11 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
-import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
 import javax.swing.SpinnerDateModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.antlr.v4.runtime.RecognitionException;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +62,7 @@ public class StoreBrowserPane extends JPanel implements ActionListener, KeyListe
 	
 	private final Session parent;
 	
-	private final JTextField queryTextField;
+	private final EnhancedTextField queryTextField;
 	
 	private final JSpinner fromDateSpinner;
 	
@@ -94,12 +93,14 @@ public class StoreBrowserPane extends JPanel implements ActionListener, KeyListe
 		}
 	}
 	
+	private static final String LABEL = "Store filter (and, or, not operators allowed)";
+	
 	public StoreBrowserPane(final Session parent) {
 		super();
 		
 		this.parent = parent;
 		
-		queryTextField = new JTextField("",5);
+		queryTextField = new EnhancedTextField(LABEL);
 		queryTextField.addActionListener(this);
 		add(queryTextField);
 		
@@ -183,8 +184,15 @@ public class StoreBrowserPane extends JPanel implements ActionListener, KeyListe
 		final Bson query;
 		try {
 			query = OQLMongoDBBuilder.build(queryTextField.getText());
-			final Date from = ((SpinnerDateModel)fromDateSpinner.getModel()).getDate();
-			final Date to = ((SpinnerDateModel)toDateSpinner.getModel()).getDate();
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(parent, "Unable to parse query: "+e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+			
+		final Date from = ((SpinnerDateModel)fromDateSpinner.getModel()).getDate();
+		final Date to = ((SpinnerDateModel)toDateSpinner.getModel()).getDate();
+		
+		if(to.after(from)) {
 			
 			final MonitoredExecution execution = new MonitoredExecution(parent.getMain().getFrame(), "Opening session... Please wait.", new MonitoredExecutionRunnable() {
 				protected void run(MonitoredExecution execution) {
@@ -224,8 +232,9 @@ public class StoreBrowserPane extends JPanel implements ActionListener, KeyListe
     		execution.run();
     		
 			parent.refreshAll();
-		} catch (RecognitionException e) {
-			
+		} else {
+			JOptionPane.showMessageDialog(parent, "Invalid timerange: MaxDate<MinDate", "Error",
+			        JOptionPane.ERROR_MESSAGE);
 		}
 	}
 

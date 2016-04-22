@@ -31,8 +31,7 @@ public class OQLFilterVisitor <T> extends OQLBaseVisitor<Filter<T>>{
 
 	@Override
 	public Filter<T> visitEqualityExpr(EqualityExprContext ctx) {
-		// TODO Auto-generated method stub
-		return null;
+		return factory.createAttributeFilter(ctx.op.getText(), ctx.expr(0).getText(), ctx.expr(1).getText());
 	}
 
 	@Override

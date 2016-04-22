@@ -19,8 +19,8 @@ public class OQLParser extends Parser {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		EQ=1, NEQ=2, OR=3, AND=4, NOT=5, OPAR=6, CPAR=7, NONQUOTEDSTRING=8, STRING=9, 
-		SPACE=10;
+		EQ=1, NEQ=2, REGEX=3, OR=4, AND=5, NOT=6, OPAR=7, CPAR=8, NONQUOTEDSTRING=9, 
+		STRING=10, SPACE=11;
 	public static final int
 		RULE_parse = 0, RULE_expr = 1, RULE_atom = 2;
 	public static final String[] ruleNames = {
@@ -28,10 +28,10 @@ public class OQLParser extends Parser {
 	};
 
 	private static final String[] _LITERAL_NAMES = {
-		null, "'='", "'!='", "'or'", "'and'", "'not'", "'('", "')'"
+		null, "'='", "'!='", "'~'", "'or'", "'and'", "'not'", "'('", "')'"
 	};
 	private static final String[] _SYMBOLIC_NAMES = {
-		null, "EQ", "NEQ", "OR", "AND", "NOT", "OPAR", "CPAR", "NONQUOTEDSTRING", 
+		null, "EQ", "NEQ", "REGEX", "OR", "AND", "NOT", "OPAR", "CPAR", "NONQUOTEDSTRING", 
 		"STRING", "SPACE"
 	};
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
@@ -84,10 +84,10 @@ public class OQLParser extends Parser {
 		_interp = new ParserATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
 	}
 	public static class ParseContext extends ParserRuleContext {
+		public TerminalNode EOF() { return getToken(OQLParser.EOF, 0); }
 		public ExprContext expr() {
 			return getRuleContext(ExprContext.class,0);
 		}
-		public TerminalNode EOF() { return getToken(OQLParser.EOF, 0); }
 		public ParseContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -110,12 +110,20 @@ public class OQLParser extends Parser {
 	public final ParseContext parse() throws RecognitionException {
 		ParseContext _localctx = new ParseContext(_ctx, getState());
 		enterRule(_localctx, 0, RULE_parse);
+		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(6);
-			expr(0);
 			setState(7);
+			_la = _input.LA(1);
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << NOT) | (1L << OPAR) | (1L << NONQUOTEDSTRING) | (1L << STRING))) != 0)) {
+				{
+				setState(6);
+				expr(0);
+				}
+			}
+
+			setState(9);
 			match(EOF);
 			}
 		}
@@ -193,6 +201,7 @@ public class OQLParser extends Parser {
 		}
 		public TerminalNode EQ() { return getToken(OQLParser.EQ, 0); }
 		public TerminalNode NEQ() { return getToken(OQLParser.NEQ, 0); }
+		public TerminalNode REGEX() { return getToken(OQLParser.REGEX, 0); }
 		public EqualityExprContext(ExprContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
@@ -268,7 +277,7 @@ public class OQLParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(13);
+			setState(15);
 			switch (_input.LA(1)) {
 			case NOT:
 				{
@@ -276,9 +285,9 @@ public class OQLParser extends Parser {
 				_ctx = _localctx;
 				_prevctx = _localctx;
 
-				setState(10);
+				setState(12);
 				match(NOT);
-				setState(11);
+				setState(13);
 				expr(5);
 				}
 				break;
@@ -289,7 +298,7 @@ public class OQLParser extends Parser {
 				_localctx = new AtomExprContext(_localctx);
 				_ctx = _localctx;
 				_prevctx = _localctx;
-				setState(12);
+				setState(14);
 				atom();
 				}
 				break;
@@ -297,32 +306,32 @@ public class OQLParser extends Parser {
 				throw new NoViableAltException(this);
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(26);
+			setState(28);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,2,_ctx);
+			_alt = getInterpreter().adaptivePredict(_input,3,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					if ( _parseListeners!=null ) triggerExitRuleEvent();
 					_prevctx = _localctx;
 					{
-					setState(24);
+					setState(26);
 					_errHandler.sync(this);
-					switch ( getInterpreter().adaptivePredict(_input,1,_ctx) ) {
+					switch ( getInterpreter().adaptivePredict(_input,2,_ctx) ) {
 					case 1:
 						{
 						_localctx = new EqualityExprContext(new ExprContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expr);
-						setState(15);
+						setState(17);
 						if (!(precpred(_ctx, 4))) throw new FailedPredicateException(this, "precpred(_ctx, 4)");
-						setState(16);
+						setState(18);
 						((EqualityExprContext)_localctx).op = _input.LT(1);
 						_la = _input.LA(1);
-						if ( !(_la==EQ || _la==NEQ) ) {
+						if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << EQ) | (1L << NEQ) | (1L << REGEX))) != 0)) ) {
 							((EqualityExprContext)_localctx).op = (Token)_errHandler.recoverInline(this);
 						} else {
 							consume();
 						}
-						setState(17);
+						setState(19);
 						expr(5);
 						}
 						break;
@@ -330,11 +339,11 @@ public class OQLParser extends Parser {
 						{
 						_localctx = new AndExprContext(new ExprContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expr);
-						setState(18);
-						if (!(precpred(_ctx, 3))) throw new FailedPredicateException(this, "precpred(_ctx, 3)");
-						setState(19);
-						match(AND);
 						setState(20);
+						if (!(precpred(_ctx, 3))) throw new FailedPredicateException(this, "precpred(_ctx, 3)");
+						setState(21);
+						match(AND);
+						setState(22);
 						expr(4);
 						}
 						break;
@@ -342,20 +351,20 @@ public class OQLParser extends Parser {
 						{
 						_localctx = new OrExprContext(new ExprContext(_parentctx, _parentState));
 						pushNewRecursionContext(_localctx, _startState, RULE_expr);
-						setState(21);
-						if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
-						setState(22);
-						match(OR);
 						setState(23);
+						if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
+						setState(24);
+						match(OR);
+						setState(25);
 						expr(3);
 						}
 						break;
 					}
 					} 
 				}
-				setState(28);
+				setState(30);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,2,_ctx);
+				_alt = getInterpreter().adaptivePredict(_input,3,_ctx);
 			}
 			}
 		}
@@ -441,17 +450,17 @@ public class OQLParser extends Parser {
 		AtomContext _localctx = new AtomContext(_ctx, getState());
 		enterRule(_localctx, 4, RULE_atom);
 		try {
-			setState(35);
+			setState(37);
 			switch (_input.LA(1)) {
 			case OPAR:
 				_localctx = new ParExprContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(29);
-				match(OPAR);
-				setState(30);
-				expr(0);
 				setState(31);
+				match(OPAR);
+				setState(32);
+				expr(0);
+				setState(33);
 				match(CPAR);
 				}
 				break;
@@ -459,7 +468,7 @@ public class OQLParser extends Parser {
 				_localctx = new NonQuotedStringAtomContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(33);
+				setState(35);
 				match(NONQUOTEDSTRING);
 				}
 				break;
@@ -467,7 +476,7 @@ public class OQLParser extends Parser {
 				_localctx = new StringAtomContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(34);
+				setState(36);
 				match(STRING);
 				}
 				break;
@@ -506,18 +515,18 @@ public class OQLParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3\f(\4\2\t\2\4\3\t"+
-		"\3\4\4\t\4\3\2\3\2\3\2\3\3\3\3\3\3\3\3\5\3\20\n\3\3\3\3\3\3\3\3\3\3\3"+
-		"\3\3\3\3\3\3\3\3\7\3\33\n\3\f\3\16\3\36\13\3\3\4\3\4\3\4\3\4\3\4\3\4\5"+
-		"\4&\n\4\3\4\2\3\4\5\2\4\6\2\3\3\2\3\4*\2\b\3\2\2\2\4\17\3\2\2\2\6%\3\2"+
-		"\2\2\b\t\5\4\3\2\t\n\7\2\2\3\n\3\3\2\2\2\13\f\b\3\1\2\f\r\7\7\2\2\r\20"+
-		"\5\4\3\7\16\20\5\6\4\2\17\13\3\2\2\2\17\16\3\2\2\2\20\34\3\2\2\2\21\22"+
-		"\f\6\2\2\22\23\t\2\2\2\23\33\5\4\3\7\24\25\f\5\2\2\25\26\7\6\2\2\26\33"+
-		"\5\4\3\6\27\30\f\4\2\2\30\31\7\5\2\2\31\33\5\4\3\5\32\21\3\2\2\2\32\24"+
-		"\3\2\2\2\32\27\3\2\2\2\33\36\3\2\2\2\34\32\3\2\2\2\34\35\3\2\2\2\35\5"+
-		"\3\2\2\2\36\34\3\2\2\2\37 \7\b\2\2 !\5\4\3\2!\"\7\t\2\2\"&\3\2\2\2#&\7"+
-		"\n\2\2$&\7\13\2\2%\37\3\2\2\2%#\3\2\2\2%$\3\2\2\2&\7\3\2\2\2\6\17\32\34"+
-		"%";
+		"\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3\r*\4\2\t\2\4\3\t"+
+		"\3\4\4\t\4\3\2\5\2\n\n\2\3\2\3\2\3\3\3\3\3\3\3\3\5\3\22\n\3\3\3\3\3\3"+
+		"\3\3\3\3\3\3\3\3\3\3\3\3\3\7\3\35\n\3\f\3\16\3 \13\3\3\4\3\4\3\4\3\4\3"+
+		"\4\3\4\5\4(\n\4\3\4\2\3\4\5\2\4\6\2\3\3\2\3\5-\2\t\3\2\2\2\4\21\3\2\2"+
+		"\2\6\'\3\2\2\2\b\n\5\4\3\2\t\b\3\2\2\2\t\n\3\2\2\2\n\13\3\2\2\2\13\f\7"+
+		"\2\2\3\f\3\3\2\2\2\r\16\b\3\1\2\16\17\7\b\2\2\17\22\5\4\3\7\20\22\5\6"+
+		"\4\2\21\r\3\2\2\2\21\20\3\2\2\2\22\36\3\2\2\2\23\24\f\6\2\2\24\25\t\2"+
+		"\2\2\25\35\5\4\3\7\26\27\f\5\2\2\27\30\7\7\2\2\30\35\5\4\3\6\31\32\f\4"+
+		"\2\2\32\33\7\6\2\2\33\35\5\4\3\5\34\23\3\2\2\2\34\26\3\2\2\2\34\31\3\2"+
+		"\2\2\35 \3\2\2\2\36\34\3\2\2\2\36\37\3\2\2\2\37\5\3\2\2\2 \36\3\2\2\2"+
+		"!\"\7\t\2\2\"#\5\4\3\2#$\7\n\2\2$(\3\2\2\2%(\7\13\2\2&(\7\f\2\2\'!\3\2"+
+		"\2\2\'%\3\2\2\2\'&\3\2\2\2(\7\3\2\2\2\7\t\21\34\36\'";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {
