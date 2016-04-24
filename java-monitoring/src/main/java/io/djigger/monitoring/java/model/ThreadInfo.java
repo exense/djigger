@@ -20,12 +20,11 @@
 package io.djigger.monitoring.java.model;
 
 import java.io.Serializable;
-import java.util.Date;
 import java.util.Map;
 
 public class ThreadInfo implements Serializable {
 
-	private Date timestamp;
+	private long timestamp;
 	
 	private long id;
 	
@@ -43,7 +42,7 @@ public class ThreadInfo implements Serializable {
 		this.stackTrace = stackTrace;
 	}
 	
-	public ThreadInfo(StackTraceElement[] stackTrace, long id, Date timestamp) {
+	public ThreadInfo(StackTraceElement[] stackTrace, long id, long timestamp) {
 		super();
 		this.id = id;
 		this.stackTrace = stackTrace;
@@ -54,11 +53,11 @@ public class ThreadInfo implements Serializable {
 		return stackTrace;
 	}
 
-	public Date getTimestamp() {
+	public long getTimestamp() {
 		return timestamp;
 	}
 
-	public void setTimestamp(Date timestamp) {
+	public void setTimestamp(long timestamp) {
 		this.timestamp = timestamp;
 	}
 

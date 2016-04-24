@@ -19,9 +19,6 @@
  *******************************************************************************/
 package io.djigger.ui.instrumentation;
 
-import io.djigger.monitoring.java.instrumentation.InstrumentationAttributesHolder;
-import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -37,6 +34,8 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 
 
 public class InstrumentationStatistics implements Serializable {
@@ -85,17 +84,17 @@ public class InstrumentationStatistics implements Serializable {
 		}
 	}
 
-	public void update(InstrumentationSample sample) {
+	public void update(InstrumentationEvent sample) {
 		start = Math.min(start, sample.getStart());
 		end = Math.max(end, sample.getEnd());
 		realCount++;
 		long duration = sample.getDuration();
 		totalTimeSpent += duration;
 		synchronized(samples) {
-			samples.add(new Sample(sample.getAtributesHolder().getThreadID(), sample.getStart(), duration, sample.getAtributesHolder()));
+			samples.add(new Sample(sample.getThreadID(), sample.getStart(), duration));
 		}
 
-		threadIds.add(sample.getAtributesHolder().getThreadID());
+		threadIds.add(sample.getThreadID());
 
 		averageResponseTime = null;
 		throughput = null;
@@ -141,15 +140,12 @@ public class InstrumentationStatistics implements Serializable {
 		private final long time;
 
 		private final long elapsed;
-		
-		private final InstrumentationAttributesHolder attributes;
 
-		public Sample(long threadId, long start, long duration, InstrumentationAttributesHolder attributes) {
+		public Sample(long threadId, long start, long duration) {
 			super();
 			this.threadId = threadId;
 			this.time = start;
 			this.elapsed = duration;
-			this.attributes = attributes;
 		}
 
 		public long getTime() {
@@ -162,10 +158,6 @@ public class InstrumentationStatistics implements Serializable {
 
 		public long getThreadId() {
 			return threadId;
-		}
-
-		public InstrumentationAttributesHolder getAttributes() {
-			return attributes;
 		}
 
 		@Override

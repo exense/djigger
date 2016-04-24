@@ -201,7 +201,7 @@ public class ThreadInfoAccessorImpl implements ThreadInfoAccessor {
 						
 												
 						ThreadInfo info = new ThreadInfo(StackTraceElementEntry.fromEntries(s.getElements()));
-						info.setTimestamp(dbo.getDate("timestamp"));
+						info.setTimestamp(dbo.getDate("timestamp").getTime());
 						info.setName(dbo.getString("name"));
 						info.setId(dbo.getLong("id"));
 						info.setState(State.valueOf(dbo.getString("state")));
@@ -249,7 +249,7 @@ public class ThreadInfoAccessorImpl implements ThreadInfoAccessor {
 		o.put("id", threadInfo.getId());
 		o.put("name", threadInfo.getName());
 		o.put("state", threadInfo.getState());
-		o.put("timestamp", threadInfo.getTimestamp());
+		o.put("timestamp", new Date(threadInfo.getTimestamp()));
 		o.put("state", threadInfo.getState().toString());
 		threadInfoCollection.insertOne(o);
 	}

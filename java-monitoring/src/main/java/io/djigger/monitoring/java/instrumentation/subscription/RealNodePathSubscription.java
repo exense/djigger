@@ -19,36 +19,29 @@
  *******************************************************************************/
 package io.djigger.monitoring.java.instrumentation.subscription;
 
+import java.util.Arrays;
+
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.InstrumentationAttributes;
-import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEventWithThreadInfo;
 import io.djigger.monitoring.java.model.StackTraceElement;
 import io.djigger.monitoring.java.model.ThreadInfo;
-
-import java.util.Arrays;
 
 public class RealNodePathSubscription extends InstrumentSubscription {
 
 	static final long serialVersionUID = 173774663260136913L;
 
 	private final StackTraceElement[] path;
-	
-	private final InstrumentationAttributes attributes;
 
-	public RealNodePathSubscription(StackTraceElement[]  path, boolean isTransactionEntryPoint) {
-		super(isTransactionEntryPoint);
+	public RealNodePathSubscription(StackTraceElement[]  path) {
+		super();
 		this.path = path;
-		this.attributes = new InstrumentationAttributes();
-		attributes.addStacktrace();
-		attributes.addThreadId();
 	}
 
 	@Override
-	public boolean match(InstrumentationSample sample) {
-		ThreadInfo threadInfo = sample.getAtributesHolder().getStacktrace();
-		
-		//TODO re implement this  
-		if(threadInfo!=null) {
+	public boolean match(InstrumentationEvent sample) {
+		if(sample instanceof InstrumentationEventWithThreadInfo) {
+			ThreadInfo threadInfo = ((InstrumentationEventWithThreadInfo)sample).getThreadInfo();
 			StackTraceElement[] samplePath = threadInfo.getStackTrace();
 			if(path.length!=samplePath.length) {
 				return false;
@@ -78,7 +71,7 @@ public class RealNodePathSubscription extends InstrumentSubscription {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((path == null) ? 0 : path.hashCode());
+		result = prime * result + ((path == null) ? 0 : Arrays.hashCode(path));
 		return result;
 	}
 
@@ -94,16 +87,11 @@ public class RealNodePathSubscription extends InstrumentSubscription {
 		if (path == null) {
 			if (other.path != null)
 				return false;
-		} else if (!path.equals(other.path))
+		} else if (!Arrays.equals(path,other.path))
 			return false;
 		return true;
 	}
-
-	@Override
-	public InstrumentationAttributes getInstrumentationAttributes() {
-		return attributes;
-	}
-
+	
 	@Override
 	public boolean isRelatedToClass(String classname) {
 		StackTraceElement lastNode = path[0] ;
@@ -120,5 +108,10 @@ public class RealNodePathSubscription extends InstrumentSubscription {
 	public String getName() {
 		StackTraceElement lastNode = path[0] ;
 		return ".../" + lastNode.getClassName() + '.' + lastNode.getMethodName();
+	}
+
+	@Override
+	public boolean captureThreadInfo() {
+		return true;
 	}
 }

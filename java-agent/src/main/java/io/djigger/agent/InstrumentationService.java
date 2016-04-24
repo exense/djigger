@@ -69,17 +69,17 @@ public class InstrumentationService {
 	}
 
 	private void applySubscriptionChange(InstrumentSubscription subscription) {
-		try {
-			for(Class<?> clazz:instrumentation.getAllLoadedClasses()) {
-				if(subscription.isRelatedToClass(clazz.getName())) {
-					instrumentation.retransformClasses(clazz);
-				}
+		for(Class<?> clazz:instrumentation.getAllLoadedClasses()) {
+			try {
+					if(subscription.isRelatedToClass(clazz.getName())) {
+						instrumentation.retransformClasses(clazz);
+					}
+			} catch (UnmodifiableClassException e) {
+				System.err.println("Agent: unable to apply subscription "+subscription.getName()+ ". Class '"+clazz.getName()+"' unmodifiable.");
+			} catch(Throwable e) {
+				System.err.println("Agent: unable to apply subscription "+subscription.getName());
+				e.printStackTrace();
 			}
-		} catch (UnmodifiableClassException e) {
-			System.err.println("Agent: unable to apply subscription "+subscription.getName()+ ". Class unmodifiable.");
-		} catch(Throwable e) {
-			System.err.println("Agent: unable to apply subscription "+subscription.getName());
-			e.printStackTrace();
 		}
 	}
 }

@@ -17,36 +17,37 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.monitoring.java.instrumentation;
+package io.djigger.agent;
 
+import io.djigger.monitoring.eventqueue.EventQueue.EventQueueConsumer;
+import io.djigger.monitoring.java.agent.JavaAgentMessageType;
 import io.djigger.monitoring.java.model.ThreadInfo;
 
-import java.io.Serializable;
+import java.util.LinkedList;
 
-public class InstrumentationAttributesHolder implements Serializable {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.smb.core.Message;
+
+public class ThreadInfoEventQueueConsumer implements EventQueueConsumer<ThreadInfo> {
 	
-	private static final long serialVersionUID = 7398438089740207165L;
-
-	private long threadID;
+	private static final Logger logger = LoggerFactory.getLogger(ThreadInfoEventQueueConsumer.class);
 	
-	private ThreadInfo threadInfo;
-
-	public ThreadInfo getStacktrace() {
-		return threadInfo;
+	private final AgentSession session;
+		
+	public ThreadInfoEventQueueConsumer(AgentSession session) {
+		super();
+		this.session = session;
 	}
 
-	public void setStacktrace(ThreadInfo threadInfo) {
-		this.threadInfo = threadInfo;
+	@Override
+	public void processBuffer(LinkedList<ThreadInfo> buffer) {
+		if(buffer.size()>0) {
+			long t1 = System.nanoTime();
+			session.getMessageRouter().send(new Message(JavaAgentMessageType.THREAD_SAMPLE,buffer));
+			if(logger.isDebugEnabled()) {
+				logger.debug("Sent "+buffer.size()+" thread info events in "+((System.nanoTime()-t1)/1000000));				
+			}
+		}
 	}
-
-	public long getThreadID() {
-		return threadID;
-	}
-
-	public void setThreadID(long threadID) {
-		this.threadID = threadID;
-	}
-	
-	
-
 }

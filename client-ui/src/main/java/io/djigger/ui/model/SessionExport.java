@@ -33,7 +33,7 @@ import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.store.Store;
 import io.djigger.ui.Session;
@@ -111,7 +111,7 @@ public class SessionExport implements Serializable {
 			Object o = stream.readObject();
 			if(o instanceof SessionExport) {
 				return (SessionExport)o;
-			} else if (o instanceof ThreadInfo || o instanceof InstrumentationSample) {
+			} else if (o instanceof ThreadInfo || o instanceof InstrumentationEvent) {
 				return memoryOptimizedRead(file);
 			} else {
 				return null;
@@ -130,7 +130,7 @@ public class SessionExport implements Serializable {
 	
 	private static SessionExport memoryOptimizedRead(File file) {
 		ArrayList<ThreadInfo> threads = new ArrayList<ThreadInfo>();
-		ArrayList<InstrumentationSample> samples = new ArrayList<InstrumentationSample>();
+		ArrayList<InstrumentationEvent> samples = new ArrayList<InstrumentationEvent>();
 		
 		ObjectInputStream stream=null;
 		try {
@@ -139,8 +139,8 @@ public class SessionExport implements Serializable {
 			while((o = stream.readObject())!=null) {
 				if(o instanceof ThreadInfo) {
 					threads.add((ThreadInfo)o);					
-				} else if (o instanceof InstrumentationSample) {
-					samples.add((InstrumentationSample)o);
+				} else if (o instanceof InstrumentationEvent) {
+					samples.add((InstrumentationEvent)o);
 				}
 			}
 		} catch (Exception e) {

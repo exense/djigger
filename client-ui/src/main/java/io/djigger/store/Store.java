@@ -21,7 +21,7 @@ package io.djigger.store;
 
 import io.djigger.model.Capture;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.store.filter.StoreFilter;
 
@@ -45,17 +45,17 @@ public class Store implements Serializable {
 	
 	private transient List<ThreadInfo> threadInfosBuffer;
 	
-	private List<InstrumentationSample> instrumentationSamples;
+	private List<InstrumentationEvent> instrumentationSamples;
 
-	private transient List<InstrumentationSample> instrumentationSamplesBuffer;
+	private transient List<InstrumentationEvent> instrumentationSamplesBuffer;
 
 	public Store() {
 		super();
 		captures = new ArrayList<Capture>();
 		threadInfos = new ArrayList<>();
 		threadInfosBuffer = new ArrayList<>();
-		instrumentationSamples = new ArrayList<InstrumentationSample>();
-		instrumentationSamplesBuffer = new ArrayList<InstrumentationSample>();
+		instrumentationSamples = new ArrayList<InstrumentationEvent>();
+		instrumentationSamplesBuffer = new ArrayList<InstrumentationEvent>();
 		subscriptions = new HashSet<InstrumentSubscription>();
 	}
 	
@@ -72,16 +72,16 @@ public class Store implements Serializable {
 		threadInfosBuffer.clear();
 	}
 
-	public synchronized void addInstrumentationSamples(List<InstrumentationSample> samples) {
-		//instrumentationSamplesBuffer.addAll(samples);
+	public synchronized void addInstrumentationSamples(List<InstrumentationEvent> events) {
+		for(InstrumentationEvent event:events) {
+			event.setClassname(event.getClassname().intern());
+			event.setMethodname(event.getMethodname().intern());
+		}
+		instrumentationSamplesBuffer.addAll(events);
 	}
 
 	private synchronized void processInstrumentationSamplesBuffer() {
-//		for(InstrumentationSample sample:instrumentationSamplesBuffer) {
-//			sample.setClassname(sample.getClassname().intern());
-//			sample.setMethodname(sample.getMethodname().intern());
-//		}
-//		instrumentationSamples.addAll(instrumentationSamplesBuffer);
+		instrumentationSamples.addAll(instrumentationSamplesBuffer);
 		instrumentationSamplesBuffer.clear();
 	}
 
@@ -89,7 +89,7 @@ public class Store implements Serializable {
 		threadInfosBuffer.clear();
 		instrumentationSamplesBuffer.clear();
 		threadInfos.clear();
-		instrumentationSamples = new ArrayList<InstrumentationSample>();
+		instrumentationSamples = new ArrayList<InstrumentationEvent>();
 		subscriptions.clear();
 	}
 
@@ -127,9 +127,9 @@ public class Store implements Serializable {
 		return instrumentationSamples.size();
 	}
 	
-	public synchronized List<InstrumentationSample> queryInstrumentationSamples(StoreFilter filter) {
-		List<InstrumentationSample> result = new ArrayList<InstrumentationSample>();
-		for(InstrumentationSample sample:instrumentationSamples) {
+	public synchronized List<InstrumentationEvent> queryInstrumentationSamples(StoreFilter filter) {
+		List<InstrumentationEvent> result = new ArrayList<InstrumentationEvent>();
+		for(InstrumentationEvent sample:instrumentationSamples) {
 			if((filter==null || filter.match(sample))) {
 				result.add(sample);
 			}
@@ -144,7 +144,7 @@ public class Store implements Serializable {
 
 	private Object readResolve() throws ObjectStreamException {
 		threadInfosBuffer = new ArrayList<>(10000);
-		instrumentationSamplesBuffer = new ArrayList<InstrumentationSample>();
+		instrumentationSamplesBuffer = new ArrayList<InstrumentationEvent>();
 		return this;
 	}
 

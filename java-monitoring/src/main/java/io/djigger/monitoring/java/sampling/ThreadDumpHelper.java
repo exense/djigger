@@ -21,7 +21,6 @@ package io.djigger.monitoring.java.sampling;
 
 import java.lang.management.ThreadInfo;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 
@@ -32,7 +31,7 @@ public class ThreadDumpHelper {
 		List<io.djigger.monitoring.java.model.ThreadInfo> snapshots = new ArrayList<>();
 		for (ThreadInfo info : threadInfos) {
 			io.djigger.monitoring.java.model.ThreadInfo i = new io.djigger.monitoring.java.model.ThreadInfo(toStackTraceElement(info.getStackTrace(),0));
-			i.setTimestamp(new Date(timestamp));
+			i.setTimestamp(timestamp);
 			i.setState(info.getThreadState());
 			i.setName(info.getThreadName());
 			i.setId(info.getThreadId());

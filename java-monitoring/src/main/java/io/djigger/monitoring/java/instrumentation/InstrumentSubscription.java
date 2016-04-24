@@ -25,32 +25,21 @@ import java.io.Serializable;
 public abstract class InstrumentSubscription implements Serializable {
 
 	private static final long serialVersionUID = -299257813496574472L;
-
-	private boolean transactionEntryPoint;
 	
 	public abstract boolean isRelatedToClass(String classname);
 	
 	public abstract boolean isRelatedToMethod(String methodname);
 
-	public abstract boolean match(InstrumentationSample sample);
+	public abstract boolean match(InstrumentationEvent sample);
 	
-	public abstract InstrumentationAttributes getInstrumentationAttributes();
-	
+	public abstract boolean captureThreadInfo();
+		
 	public abstract String getName();
 
-	public InstrumentSubscription(boolean transactionEntryPoint) {
+	public InstrumentSubscription() {
 		super();
-		this.transactionEntryPoint = transactionEntryPoint;
 	}
 
-	public boolean isTransactionEntryPoint() {
-		return transactionEntryPoint;
-	}
-
-	public void setTransactionEntryPoint(boolean transactionEntryPoint) {
-		this.transactionEntryPoint = transactionEntryPoint;
-	}
-	
 	@Override
 	public String toString() {
 		return getName();

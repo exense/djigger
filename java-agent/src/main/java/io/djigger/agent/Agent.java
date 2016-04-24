@@ -81,7 +81,8 @@ public class Agent extends Thread {
 				Integer port = Integer.decode(parameterMap.get("port"));
 				(new Agent(instrumentation, port)).start();
 			} else {
-				System.out.println("Agent: parameter missing. Please check the agent arguments.");
+				Integer port = DEFAULT_PORT;
+				(new Agent(instrumentation, port)).start();
 			}
 		} catch(Exception e) {
 			System.out.println("Agent: an error occurred while trying to parse the agent parameters.");

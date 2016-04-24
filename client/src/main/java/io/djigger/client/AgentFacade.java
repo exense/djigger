@@ -29,9 +29,10 @@ import org.smb.core.Message;
 import org.smb.core.MessageListener;
 import org.smb.core.MessageRouter;
 
+import io.djigger.monitoring.eventqueue.EventQueue;
 import io.djigger.monitoring.java.agent.JavaAgentMessageType;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.ThreadInfo;
 
 
@@ -40,6 +41,10 @@ public class AgentFacade extends Facade implements MessageListener {
 	private static final Logger logger = LoggerFactory.getLogger(AgentFacade.class);
 
     protected MessageRouter client;
+    
+    protected EventQueue<ThreadInfo> samplingEvent;
+    
+    protected EventQueue<InstrumentationEvent> instumentationEventQueue;
         
     public AgentFacade(Properties properties) {
 		this(properties, true);
@@ -76,7 +81,7 @@ public class AgentFacade extends Facade implements MessageListener {
 			}
 		} else if (JavaAgentMessageType.INSTRUMENT_SAMPLE.equals(msg.getType())) {
 			for(FacadeListener listener:listeners) {
-				listener.instrumentationSamplesReceived((List<InstrumentationSample>) msg.getContent());
+				listener.instrumentationSamplesReceived((List<InstrumentationEvent>) msg.getContent());
 			}
 		}
 	}

@@ -19,31 +19,27 @@
  *******************************************************************************/
 package io.djigger.agent;
 
+import io.djigger.monitoring.eventqueue.EventQueue;
 import io.djigger.monitoring.java.sampling.ThreadDumpHelper;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
-import java.util.Collection;
-import java.util.concurrent.LinkedBlockingQueue;
 
 public class SamplerRunnable implements Runnable {
 	
-	private final LinkedBlockingQueue<io.djigger.monitoring.java.model.ThreadInfo> buffer = new LinkedBlockingQueue<>();
-
+	private final EventQueue<io.djigger.monitoring.java.model.ThreadInfo> threadInfoQueue;
+	
 	private ThreadMXBean mxBean = ManagementFactory.getThreadMXBean();
 	
-	public SamplerRunnable() {
+	public SamplerRunnable(EventQueue<io.djigger.monitoring.java.model.ThreadInfo> threadInfoQueue) {
 		super();
+		this.threadInfoQueue = threadInfoQueue;
 	}
 
 	@Override
 	public void run() {
-		ThreadInfo[] infos = mxBean.dumpAllThreads(false, false);					
-		buffer.addAll(ThreadDumpHelper.toThreadDump(infos));
-	}
-	
-	public void drainTo(Collection<io.djigger.monitoring.java.model.ThreadInfo> to) {
-		buffer.drainTo(to);
+		ThreadInfo[] infos = mxBean.dumpAllThreads(false, false);		
+		threadInfoQueue.add(ThreadDumpHelper.toThreadDump(infos));
 	}
 }

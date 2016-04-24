@@ -19,15 +19,14 @@
  *******************************************************************************/
 package io.djigger.monitoring.java.instrumentation.subscription;
 
-import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.InstrumentationAttributes;
-import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
-
 import java.io.ObjectStreamException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class NodeSubscription extends InstrumentSubscription {
+import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+
+public class RegexSubscription extends InstrumentSubscription {
 
 	private static final long serialVersionUID = -1137052413341333149L;
 	
@@ -37,8 +36,8 @@ public class NodeSubscription extends InstrumentSubscription {
 	private final Pattern methodNamePattern;
 	private transient Matcher methodNameMatcher;
 
-	public NodeSubscription(String classNameRegex, String methodNameRegex, boolean isTransactionEntryPoint) {
-		super(isTransactionEntryPoint);
+	public RegexSubscription(String classNameRegex, String methodNameRegex) {
+		super();
 		classNamePattern = Pattern.compile(classNameRegex);
 		classNameMatcher = classNamePattern.matcher("");
 		methodNamePattern = Pattern.compile(methodNameRegex);
@@ -46,16 +45,8 @@ public class NodeSubscription extends InstrumentSubscription {
 	}
 	
 	@Override
-	public boolean match(InstrumentationSample sample) {
+	public boolean match(InstrumentationEvent sample) {
 		return isRelatedToClass(sample.getClassname()) && isRelatedToMethod(sample.getMethodname());
-	}
-
-	@Override
-	public InstrumentationAttributes getInstrumentationAttributes() {
-		InstrumentationAttributes attributes = new InstrumentationAttributes();
-		attributes.addStacktrace();
-		attributes.addThreadId();
-		return attributes;
 	}
 
 	@Override
@@ -103,7 +94,7 @@ public class NodeSubscription extends InstrumentSubscription {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		NodeSubscription other = (NodeSubscription) obj;
+		RegexSubscription other = (RegexSubscription) obj;
 		if (classNamePattern == null) {
 			if (other.classNamePattern != null)
 				return false;
@@ -115,6 +106,11 @@ public class NodeSubscription extends InstrumentSubscription {
 		} else if (!methodNamePattern.pattern().equals(other.methodNamePattern.pattern()))
 			return false;
 		return true;
+	}
+
+	@Override
+	public boolean captureThreadInfo() {
+		return false;
 	}
 
 }

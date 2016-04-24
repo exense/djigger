@@ -20,7 +20,8 @@
 package io.djigger.ui.instrumentation;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEventWithThreadInfo;
 import io.djigger.store.Store;
 import io.djigger.store.filter.StoreFilter;
 import io.djigger.ui.model.RealNodePath;
@@ -43,11 +44,11 @@ public class InstrumentationStatisticsCache {
 	
 	private StoreFilter storeFilter;
 
-	private Map<RealNodePath, List<InstrumentationSample>> instrumentationSamples;
+	private Map<RealNodePath, List<InstrumentationEvent>> instrumentationSamples;
 	
 	private Map<RealNodePath, InstrumentationStatistics> instrumentationStatisticsCache;
 		
-	private List<InstrumentationSample> samples;
+	private List<InstrumentationEvent> samples;
 	
 	public InstrumentationStatisticsCache(Store store) {
 		super();
@@ -60,20 +61,20 @@ public class InstrumentationStatisticsCache {
 	}
 
 	public void reload() {
-		samples = new ArrayList<InstrumentationSample>();
-		instrumentationSamples = new HashMap<RealNodePath, List<InstrumentationSample>>();
+		samples = new ArrayList<InstrumentationEvent>();
+		instrumentationSamples = new HashMap<RealNodePath, List<InstrumentationEvent>>();
 		instrumentationStatisticsCache = new HashMap<RealNodePath, InstrumentationStatistics>();
 		
 		samples = store.queryInstrumentationSamples(storeFilter);
 
-		for (InstrumentationSample sample : samples) {
-			if(sample.getAtributesHolder().getStacktrace()!=null) {
-				RealNodePath path = RealNodePath.fromStackTrace(sample.getAtributesHolder().getStacktrace().getStackTrace(), false);
+		for (InstrumentationEvent sample : samples) {
+			if(sample instanceof InstrumentationEventWithThreadInfo) {
+				RealNodePath path = RealNodePath.fromStackTrace(((InstrumentationEventWithThreadInfo)sample).getThreadInfo().getStackTrace(), false);
 				if (path != null) {
 					// samples by RealNodePath
 					if (!instrumentationSamples.containsKey(path)) {
 						instrumentationSamples.put(path,
-								new ArrayList<InstrumentationSample>());
+								new ArrayList<InstrumentationEvent>());
 					}
 					instrumentationSamples.get(path).add(sample);
 	
@@ -94,7 +95,7 @@ public class InstrumentationStatisticsCache {
 
 	public synchronized InstrumentationStatistics getInstrumentationStatistics(InstrumentSubscription subscription) {
 		InstrumentationStatistics statistics = new InstrumentationStatistics();
-		for(InstrumentationSample sample:samples) {
+		for(InstrumentationEvent sample:samples) {
 			if(subscription.match(sample)) {
 				statistics.update(sample);
 			}
@@ -103,9 +104,9 @@ public class InstrumentationStatisticsCache {
 		return statistics;
 	}
 	
-	public synchronized List<InstrumentationSample> getInstrumentationSamples(InstrumentSubscription subscription) {
-		List<InstrumentationSample> result = new ArrayList<InstrumentationSample>();
-		for(InstrumentationSample sample:samples) {
+	public synchronized List<InstrumentationEvent> getInstrumentationSamples(InstrumentSubscription subscription) {
+		List<InstrumentationEvent> result = new ArrayList<InstrumentationEvent>();
+		for(InstrumentationEvent sample:samples) {
 			if(subscription.match(sample)) {
 				result.add(sample);
 			}
@@ -117,8 +118,8 @@ public class InstrumentationStatisticsCache {
 	public synchronized void exportSamples(File file) throws IOException {
 		BufferedWriter writer = new BufferedWriter(new FileWriter(file)); 
 		DateFormat format = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss.SSS");
-		for(InstrumentationSample sample:samples) {
-			writer.write(format.format(new Date(sample.getStart()))+","+sample.getClassname()+","+sample.getMethodname()+","+sample.getDuration()+","+sample.getAtributesHolder().getThreadID());
+		for(InstrumentationEvent sample:samples) {
+			writer.write(format.format(new Date(sample.getStart()))+","+sample.getClassname()+","+sample.getMethodname()+","+sample.getDuration()+","+sample.getThreadID());
 			writer.newLine();
 		}
 		writer.close();

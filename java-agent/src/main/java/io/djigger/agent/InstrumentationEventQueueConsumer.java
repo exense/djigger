@@ -17,49 +17,37 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.store.filter;
+package io.djigger.agent;
 
+import io.djigger.monitoring.eventqueue.EventQueue.EventQueueConsumer;
+import io.djigger.monitoring.java.agent.JavaAgentMessageType;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
-import io.djigger.monitoring.java.model.ThreadInfo;
 
-import java.util.Set;
+import java.util.LinkedList;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.smb.core.Message;
 
-public class IdStoreFilter implements StoreFilter {
-
-	private final Set<Long> threadIds;
-
-	private final Long threadDumpId1;
-
-	private final Long threadDumpId2;
-
-	public IdStoreFilter(Set<Long> threadIds, Long threadDumpId1,
-			Long threadDumpId2) {
+public class InstrumentationEventQueueConsumer implements EventQueueConsumer<InstrumentationEvent> {
+	
+	private static final Logger logger = LoggerFactory.getLogger(InstrumentationEventQueueConsumer.class);
+	
+	private final AgentSession session;
+		
+	public InstrumentationEventQueueConsumer(AgentSession session) {
 		super();
-		this.threadIds = threadIds;
-		this.threadDumpId1 = threadDumpId1;
-		this.threadDumpId2 = threadDumpId2;
-	}
-
-	public Set<Long> getThreadIds() {
-		return threadIds;
-	}
-
-	public Long getThreadDumpId1() {
-		return threadDumpId1;
-	}
-
-	public Long getThreadDumpId2() {
-		return threadDumpId2;
+		this.session = session;
 	}
 
 	@Override
-	public boolean match(InstrumentationEvent sample) {
-		throw new RuntimeException("Not implemented");
-	}
-
-	@Override
-	public boolean match(ThreadInfo dump) {
-		return threadIds.contains(dump.getId());
+	public void processBuffer(LinkedList<InstrumentationEvent> buffer) {
+		if(buffer.size()>0) {
+			long t1 = System.nanoTime();
+			session.getMessageRouter().send(new Message(JavaAgentMessageType.INSTRUMENT_SAMPLE,buffer));
+			if(logger.isDebugEnabled()) {
+				logger.debug("Sent "+buffer.size()+" instrumentation events in "+((System.nanoTime()-t1)/1000000));				
+			}
+		}
 	}
 }

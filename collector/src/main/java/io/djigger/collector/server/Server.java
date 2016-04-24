@@ -41,7 +41,7 @@ import io.djigger.collector.server.conf.Connection;
 import io.djigger.collector.server.conf.ConnectionGroupNode;
 import io.djigger.collector.server.conf.ConnectionsConfig;
 import io.djigger.collector.server.services.ServiceServer;
-import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.ThreadInfo;
 
 public class Server {
@@ -147,7 +147,7 @@ public class Server {
 			}
 
 			@Override
-			public void instrumentationSamplesReceived(List<InstrumentationSample> samples) {}
+			public void instrumentationSamplesReceived(List<InstrumentationEvent> samples) {}
 
 			@Override
 			public void connectionEstablished() {}

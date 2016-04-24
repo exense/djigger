@@ -25,7 +25,7 @@ import io.djigger.aggregation.filter.NodeFilterFactory;
 import io.djigger.aggregation.filter.ParsingException;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.subscription.RealNodePathSubscription;
-import io.djigger.monitoring.java.instrumentation.subscription.SimpleInstrumentationSubscription;
+import io.djigger.monitoring.java.instrumentation.subscription.SimpleSubscription;
 import io.djigger.ql.Filter;
 import io.djigger.ql.OQLFilterBuilder;
 import io.djigger.ui.Session;
@@ -191,12 +191,12 @@ public abstract class AnalyzerPane extends JPanel implements ActionListener, Ins
 	public void instrumentCurrentMethod() {
 		NodeID nodeID = getSelectedNode().getId();
 		
-		main.addSubscription(new SimpleInstrumentationSubscription(false, nodeID.getClassName(), nodeID.getMethodName()));
+		main.addSubscription(new SimpleSubscription(nodeID.getClassName(), nodeID.getMethodName()));
 	}	
 	
 	public void instrumentCurrentNode() {
 		if(nodeFilter==null) {
-			main.addSubscription(new RealNodePathSubscription(getSelectedNode().getRealNodePath().toStackTrace(), false));
+			main.addSubscription(new RealNodePathSubscription(getSelectedNode().getRealNodePath().toStackTrace()));
 		} else {
 			JOptionPane.showMessageDialog(this,
 				    "Instrumentation impossible when packages are skipped. Please remove the exclusion criteria and try again.",

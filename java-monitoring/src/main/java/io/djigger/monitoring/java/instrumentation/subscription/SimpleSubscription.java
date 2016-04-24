@@ -20,10 +20,9 @@
 package io.djigger.monitoring.java.instrumentation.subscription;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.InstrumentationAttributes;
-import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 
-public class SimpleInstrumentationSubscription extends InstrumentSubscription {
+public class SimpleSubscription extends InstrumentSubscription {
 
 	private static final long serialVersionUID = -1137052413341333149L;
 
@@ -31,20 +30,15 @@ public class SimpleInstrumentationSubscription extends InstrumentSubscription {
 	
 	private final String methodname;
 
-	public SimpleInstrumentationSubscription(boolean transactionEntryPoint, String classname, String methodname) {
-		super(transactionEntryPoint);
+	public SimpleSubscription(String classname, String methodname) {
+		super();
 		this.classname = classname;
 		this.methodname = methodname;
 	}
 
 	@Override
-	public boolean match(InstrumentationSample sample) {
+	public boolean match(InstrumentationEvent sample) {
 		return isRelatedToClass(sample.getClassname()) && isRelatedToMethod(sample.getMethodname());
-	}
-
-	@Override
-	public InstrumentationAttributes getInstrumentationAttributes() {
-		return new InstrumentationAttributes();
 	}
 
 	@Override
@@ -76,7 +70,7 @@ public class SimpleInstrumentationSubscription extends InstrumentSubscription {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		SimpleInstrumentationSubscription other = (SimpleInstrumentationSubscription) obj;
+		SimpleSubscription other = (SimpleSubscription) obj;
 		if (classname == null) {
 			if (other.classname != null)
 				return false;
@@ -93,6 +87,11 @@ public class SimpleInstrumentationSubscription extends InstrumentSubscription {
 	@Override
 	public String getName() {
 		return classname + "." + methodname;
+	}
+
+	@Override
+	public boolean captureThreadInfo() {
+		return false;
 	}
 
 

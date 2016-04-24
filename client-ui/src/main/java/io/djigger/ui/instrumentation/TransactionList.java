@@ -20,7 +20,7 @@
 package io.djigger.ui.instrumentation;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.StackTraceElement;
 import io.djigger.store.filter.TimeStoreFilter;
 import io.djigger.ui.Session;
@@ -62,7 +62,7 @@ public class TransactionList extends JPanel {
 	
 	private final InstrumentationStatisticsCache cache;
 	
-	private List<InstrumentationSample> samples;
+	private List<InstrumentationEvent> samples;
 	
 	public TransactionList(final Session main, final InstrumentationPane pane, InstrumentationStatisticsCache cache) {
 		super(new BorderLayout());
@@ -78,9 +78,9 @@ public class TransactionList extends JPanel {
 		sampleListPopupMenu.add(new JMenuItem(new AbstractAction("Analyze") {	
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				InstrumentationSample sample = samples.get(sampleList.convertRowIndexToModel(sampleList.getSelectedRow()));
+				InstrumentationEvent sample = samples.get(sampleList.convertRowIndexToModel(sampleList.getSelectedRow()));
 				Set<Long> threadId = new HashSet<Long>();
-				threadId.add(sample.getAtributesHolder().getThreadID());
+				threadId.add(sample.getThreadID());
 				TransactionAnalyzerFrame analysisFrame = new TransactionAnalyzerFrame(main, new TimeStoreFilter(null, threadId, sample.getStart(), sample.getEnd()));
 			}
 		}));
@@ -97,18 +97,18 @@ public class TransactionList extends JPanel {
 	public void reloadSamples() {
 		status.setText("");
 		
-		samples = new ArrayList<InstrumentationSample>();
+		samples = new ArrayList<InstrumentationEvent>();
 		for(InstrumentSubscription subscription:pane.getTransactionTable().getSelection()) {
 			InstrumentationStatistics stats = cache.getInstrumentationStatistics(subscription);
-			List<InstrumentationSample> subscriptionSamples = cache.getInstrumentationSamples(subscription);
-			for(InstrumentationSample sample:subscriptionSamples) {
+			List<InstrumentationEvent> subscriptionSamples = cache.getInstrumentationSamples(subscription);
+			for(InstrumentationEvent sample:subscriptionSamples) {
 				samples.add(sample);
 			}
 		}
 		
-		Collections.sort(samples, new Comparator<InstrumentationSample>() {
+		Collections.sort(samples, new Comparator<InstrumentationEvent>() {
 			@Override
-			public int compare(InstrumentationSample o1, InstrumentationSample o2) {
+			public int compare(InstrumentationEvent o1, InstrumentationEvent o2) {
 				if(o1.getDuration()<o2.getDuration()) {
 					return 1;
 				} else {
@@ -128,15 +128,10 @@ public class TransactionList extends JPanel {
 		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
 		for(int i=0;i<Math.min(samples.size(), MAX_SAMPLES);i++) {
 			Vector<Object> vector = new Vector<Object>(3);
-			InstrumentationSample sample = samples.get(i);
-			if(sample.getAtributesHolder()!=null && sample.getAtributesHolder().getStacktrace()!=null) {
-				StackTraceElement lastNode = sample.getAtributesHolder().getStacktrace().getStackTrace()[0];
-				vector.add(lastNode.getClassName()+"."+sample.getMethodname());
-			} else {
-				vector.add(sample.getClassname()+"."+sample.getMethodname());
-			}
+			InstrumentationEvent sample = samples.get(i);
+			vector.add(sample.getClassname()+"."+sample.getMethodname());
 			vector.add(new Date(sample.getStart()));
-			vector.add(sample.getDuration());
+			vector.add(sample.getDuration()/1000000.0);
 			data.add(vector);
 		}
 		

@@ -20,7 +20,7 @@
 package io.djigger.ui.instrumentation;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.subscription.NodeSubscription;
+import io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription;
 import io.djigger.store.filter.StoreFilter;
 import io.djigger.ui.Session;
 import io.djigger.ui.common.NodePresentationHelper;
@@ -207,7 +207,7 @@ public class InstrumentationPane extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			if(e.getActionCommand().equals("Add")) {
-				InstrumentSubscription subscription = new NodeSubscription(classname.getText(), methodname.getText(), false);
+				InstrumentSubscription subscription = new RegexSubscription(classname.getText(), methodname.getText());
 				session.addSubscription(subscription);
 				frame.setVisible(false);
 			}

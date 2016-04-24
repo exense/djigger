@@ -19,7 +19,6 @@
  *******************************************************************************/
 package io.djigger.ui.threadselection;
 
-import io.djigger.aggregation.filter.ParsingException;
 import io.djigger.model.Capture;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.model.ThreadInfo;
@@ -206,10 +205,10 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 	    		ThreadInfo threadDump2 = null;
 	        	for(ThreadInfo dump:dumps) {
 	        		if(timeBasedAxis) {
-		    			if(threadDump1 == null || dump.getTimestamp().before(threadDump1.getTimestamp())) {
+		    			if(threadDump1 == null || dump.getTimestamp()<threadDump1.getTimestamp()) {
 		    				threadDump1 = dump;
 		    			}
-		    			if(threadDump2 == null || dump.getTimestamp().after(threadDump2.getTimestamp())) {
+		    			if(threadDump2 == null || dump.getTimestamp()>threadDump2.getTimestamp()) {
 		    				threadDump2 = dump;
 		    			}
 	        		} else {
@@ -222,7 +221,7 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 	        		}
 	        	}
 	        	if(timeBasedAxis) {
-	        		currentRange = new Range(threadDump1.getTimestamp().getTime(),threadDump2.getTimestamp().getTime());
+	        		currentRange = new Range(threadDump1.getTimestamp(),threadDump2.getTimestamp());
 	        	} else {
 	        		currentRange = new Range(threadDump1.getId(),threadDump2.getId());
 	        	}
@@ -261,7 +260,7 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
     				blockMap.put(threadId, block);
     			}
     			if(timeBasedAxis) {
-    				block.add(thread.getTimestamp().getTime(), thread);
+    				block.add(thread.getTimestamp(), thread);
     			} else {
     				// TODO
     			}

@@ -22,6 +22,16 @@ public class TestApp {
 				}
 			}
 		})).start();;
+		
+		(new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				while(true) {
+					testMethod();
+				}
+			}
+		})).start();;
 	}
 	
 	public static void testMethod1ms() {
@@ -40,5 +50,36 @@ public class TestApp {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	private static long tRef = System.currentTimeMillis();
+	private static long tRefNano = System.nanoTime();
+	
+	
+	private static long convertToTime(long tNano) {
+		return (tNano-tRefNano)/1000000+tRef;
+	}
+	
+	public static void testMethod() {
+		long t1 = System.nanoTime();
+		for(int i=0;i<10000;i++) {
+			//convertToTime(i);
+			//System.nanoTime();
+			testMethodAdd();
+		}
+		//System.out.println("TestMethod (ms)" + ((System.nanoTime()-t1)/1000000.0));
+	}
+	
+	public static double testMethodAdd() {
+		double sum=System.currentTimeMillis();
+		for(long i=0;i<1000;i++) {
+			sum+=dummyCalc(i);
+		}
+		return sum;
+		
+	}
+	
+	public static double dummyCalc(long i) {
+		return i*10;
 	}
 }

@@ -19,11 +19,10 @@
  *******************************************************************************/
 package io.djigger.store.filter;
 
-import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.ql.Filter;
 
-import java.util.Date;
 import java.util.Set;
 
 
@@ -52,8 +51,8 @@ public class TimeStoreFilter implements StoreFilter {
 
 	@Override
 	public boolean match(ThreadInfo thread) {
-		if((startDate == null || thread.getTimestamp().after(new Date(startDate)))
-			&& (endDate == null || thread.getTimestamp().before(new Date(endDate)))) {
+		if((startDate == null || thread.getTimestamp()>startDate)
+			&& (endDate == null || thread.getTimestamp()<endDate)) {
 			return ((threadIds==null || threadIds.contains(thread.getId())) && 
 					(threadnameFilter==null || threadnameFilter.isValid(thread)));
 		} else {
@@ -62,8 +61,8 @@ public class TimeStoreFilter implements StoreFilter {
 	}
 
 	@Override
-	public boolean match(InstrumentationSample sample) {
-		return (threadIds==null || threadIds.contains(sample.getAtributesHolder().getThreadID()))
+	public boolean match(InstrumentationEvent sample) {
+		return (threadIds==null || threadIds.contains(sample.getThreadID()))
 				&& (startDate == null || sample.getStart()>=startDate)
 				&& (endDate == null || sample.getEnd()<=endDate);
 	}

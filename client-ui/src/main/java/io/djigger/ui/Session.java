@@ -41,7 +41,7 @@ import io.djigger.client.ProcessAttachFacade;
 import io.djigger.db.client.StoreClient;
 import io.djigger.model.Capture;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.parser.Parser;
 import io.djigger.parser.Parser.Format;
@@ -399,10 +399,9 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 	}
 
 	@Override
-	public void instrumentationSamplesReceived(
-			List<InstrumentationSample> samples) {
+	public void instrumentationSamplesReceived(List<InstrumentationEvent> events) {
 		if(!main.isOutOfMemoryPreventionActive()) {
-	         store.addInstrumentationSamples(samples);
+	         store.addInstrumentationSamples(events);
 		} else {
 			System.out.println("Ignoring incoming message to prevent JVM from OutOfMemory!");
 		}

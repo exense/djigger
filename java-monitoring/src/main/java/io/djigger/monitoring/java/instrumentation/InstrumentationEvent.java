@@ -20,43 +20,63 @@
 package io.djigger.monitoring.java.instrumentation;
 
 import java.io.Serializable;
-import java.util.Arrays;
 
-public class InstrumentationAttributes implements Serializable {
-	
-	private static final long serialVersionUID = 974490523750684955L;
-	
-	/**
-	 * 0: stacktrace
-	 * 1: threadid
-	 */
-	boolean[] attributes;
 
-	public InstrumentationAttributes() {
+public class InstrumentationEvent implements Serializable {
+
+	private static final long serialVersionUID = 347226760314494168L;
+
+	private String classname;
+	
+	private String methodname;
+	
+	private final long start;
+
+	private final long duration;
+	
+	private long threadID;
+	
+	public InstrumentationEvent(String classname, String methodname, long start, long duration) {
 		super();
-		attributes = new boolean[1];
-		Arrays.fill(attributes, false);
+		this.classname = classname;
+		this.methodname = methodname;
+		this.start = start;
+		this.duration = duration;
+	}
+
+	public long getStart() {
+		return start;
 	}
 	
-	public void addStacktrace() {
-		attributes[0] = true;
+	public long getEnd() {
+		return start+duration/1000000;
+	}
+
+	public String getClassname() {
+		return classname;
+	}
+
+	public void setClassname(String classname) {
+		this.classname = classname;
+	}
+
+	public String getMethodname() {
+		return methodname;
+	}
+
+	public void setMethodname(String methodname) {
+		this.methodname = methodname;
 	}
 	
-	public static boolean hasStacktrace(boolean[] attributes) {
-		return attributes[0];
+	public long getDuration() {
+		return duration;
 	}
-	
-	public void addThreadId() {
-		//attributes[1] = true;
+
+	public long getThreadID() {
+		return threadID;
 	}
-	
-	public boolean[] getAttributes() {
-		return attributes;
-	}
-	
-	public void merge(InstrumentationAttributes attributesToMerge) {
-		for(int i=0;i<attributes.length;i++) {
-			attributes[i] = attributes[i] || attributesToMerge.attributes[i];			
-		}
+
+	public void setThreadID(long threadID) {
+		this.threadID = threadID;
 	}
 }
