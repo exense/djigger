@@ -149,7 +149,7 @@ public class Parser {
 		thread.setId(id);
 		thread.setName(name);
 		thread.setState(state);
-		thread.setTimestamp(timestamp);
+		thread.setTimestamp(timestamp.getTime());
 		return thread;
 	}
 

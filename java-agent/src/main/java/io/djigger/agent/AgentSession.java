@@ -19,13 +19,18 @@
  *******************************************************************************/
 package io.djigger.agent;
 
+import io.djigger.monitoring.eventqueue.EventQueue;
+import io.djigger.monitoring.eventqueue.EventQueue.EventQueueConsumer;
 import io.djigger.monitoring.java.agent.JavaAgentMessageType;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
+import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
+import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.monitoring.java.sampling.Sampler;
 
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.net.Socket;
+import java.util.concurrent.TimeUnit;
 
 import org.smb.core.Message;
 import org.smb.core.MessageListener;
@@ -45,7 +50,9 @@ public class AgentSession implements MessageListener, MessageRouterStateListener
 	
 	private final InstrumentationService instrumentationService;
 	
-	private final PostService postService;
+	private final EventQueue<InstrumentationSample> collector;
+	
+	private final EventQueue<ThreadInfo> threadInfoQueue;
 
 	public AgentSession(Socket socket, Instrumentation instrumentation) throws IOException {
 		super();
@@ -54,14 +61,19 @@ public class AgentSession implements MessageListener, MessageRouterStateListener
 		messageRouter.registerPermanentListenerForAllMessages(this);
 		this.isAlive = true;
 
-		samplerRunnable = new SamplerRunnable();
+		EventQueueConsumer<InstrumentationSample> queueConsumer = new InstrumentationEventQueueConsumer(this);
+		collector = new EventQueue<InstrumentationSample>(1, TimeUnit.SECONDS, queueConsumer);
+		InstrumentationEventCollector.setEventCollector(collector);
+		
+		EventQueueConsumer<ThreadInfo> threadInfoQueueConsumer = new ThreadInfoEventQueueConsumer(this);
+		threadInfoQueue = new EventQueue<ThreadInfo>(1, TimeUnit.SECONDS, threadInfoQueueConsumer);
+		
+		samplerRunnable = new SamplerRunnable(threadInfoQueue);
 		sampler = new Sampler(samplerRunnable);		
 		instrumentationService = new InstrumentationService(instrumentation);
-		postService = new PostService(this);
-
+		
 		messageRouter.start();
 		sampler.start();
-		postService.start();
 	}
 
 	public SamplerRunnable getSamplerRunnable() {
@@ -112,5 +124,6 @@ public class AgentSession implements MessageListener, MessageRouterStateListener
 		messageRouter.disconnect();
 		instrumentationService.destroy();
 		sampler.destroy();
+		collector.shutdown();
 	}
 }

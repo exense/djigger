@@ -88,18 +88,16 @@ public class ClassTransformer implements ClassFileTransformer {
 								attributesBuilder.append("}");
 								
 								method.addLocalVariable(START_TIMENANO_VAR, CtClass.longType);
-								method.addLocalVariable(START_TIME_VAR, CtClass.longType);
 								method.insertBefore(START_TIMENANO_VAR+" = System.nanoTime();");
-								method.insertBefore(START_TIME_VAR+" = System.currentTimeMillis();");
 								
-								if(!Modifier.isStatic(method.getModifiers())) {
-									method.insertBefore("io.djigger.agent.Collector.start(this, \"" + currentClass.getName() + "\",\"" + method.getName() + "\");");
-								} else {
-									method.insertBefore("io.djigger.agent.Collector.start(null, \"" + currentClass.getName() + "\",\"" + method.getName() + "\");");
-								}
+//								if(!Modifier.isStatic(method.getModifiers())) {
+//									method.insertBefore("io.djigger.agent.Collector.start(this, \"" + currentClass.getName() + "\",\"" + method.getName() + "\");");
+//								} else {
+//									method.insertBefore("io.djigger.agent.Collector.start(null, \"" + currentClass.getName() + "\",\"" + method.getName() + "\");");
+//								}
 
 								System.out.println("io.djigger.agent.Collector.report(\"" + currentClass.getName() + "\",\"" + method.getName() + "\", t1," + attributesBuilder.toString() + ");");
-								method.insertAfter("io.djigger.agent.Collector.report(\"" + currentClass.getName() + "\",\"" + method.getName() + "\","+START_TIME_VAR+", System.nanoTime()-"+START_TIMENANO_VAR+"," + attributesBuilder.toString() + ");");
+								method.insertAfter("io.djigger.agent.Collector.report(\"" + currentClass.getName() + "\",\"" + method.getName() + "\","+START_TIMENANO_VAR+", System.nanoTime()," + attributesBuilder.toString() + ");");
 							}
 						}
 

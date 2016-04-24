@@ -89,7 +89,7 @@ public class AnalyzerService {
 		Collections.sort(entry, new Comparator<ThreadInfo>() {
 			@Override
 			public int compare(ThreadInfo arg0, ThreadInfo arg1) {
-				return Long.compare(arg0.getTimestamp().getTime(), arg1.getTimestamp().getTime());
+				return Long.compare(arg0.getTimestamp(), arg1.getTimestamp());
 			}
 		});
 	}

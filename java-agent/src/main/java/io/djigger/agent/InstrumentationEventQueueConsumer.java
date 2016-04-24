@@ -19,27 +19,30 @@
  *******************************************************************************/
 package io.djigger.agent;
 
-import io.djigger.monitoring.eventqueue.EventQueue;
-import io.djigger.monitoring.java.sampling.ThreadDumpHelper;
+import io.djigger.monitoring.eventqueue.EventQueue.EventQueueConsumer;
+import io.djigger.monitoring.java.agent.JavaAgentMessageType;
+import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.ThreadInfo;
-import java.lang.management.ThreadMXBean;
+import java.util.LinkedList;
 
-public class SamplerRunnable implements Runnable {
+import org.smb.core.Message;
+
+public class InstrumentationEventQueueConsumer implements EventQueueConsumer<InstrumentationSample> {
 	
-	private final EventQueue<io.djigger.monitoring.java.model.ThreadInfo> threadInfoQueue;
-	
-	private ThreadMXBean mxBean = ManagementFactory.getThreadMXBean();
-	
-	public SamplerRunnable(EventQueue<io.djigger.monitoring.java.model.ThreadInfo> threadInfoQueue) {
+	private final AgentSession session;
+		
+	public InstrumentationEventQueueConsumer(AgentSession session) {
 		super();
-		this.threadInfoQueue = threadInfoQueue;
+		this.session = session;
 	}
 
 	@Override
-	public void run() {
-		ThreadInfo[] infos = mxBean.dumpAllThreads(false, false);		
-		threadInfoQueue.add(ThreadDumpHelper.toThreadDump(infos));
+	public void processBuffer(LinkedList<InstrumentationSample> buffer) {
+		long t1 = System.nanoTime();
+		if(buffer.size()>0) {
+			t1 = System.nanoTime();
+			session.getMessageRouter().send(new Message(JavaAgentMessageType.INSTRUMENT_SAMPLE,buffer));
+			System.out.println("Sent "+buffer.size()+" events in "+((System.nanoTime()-t1)/1000000));
+		}
 	}
 }

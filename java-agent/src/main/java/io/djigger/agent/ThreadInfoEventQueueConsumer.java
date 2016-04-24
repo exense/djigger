@@ -19,27 +19,27 @@
  *******************************************************************************/
 package io.djigger.agent;
 
-import io.djigger.monitoring.eventqueue.EventQueue;
-import io.djigger.monitoring.java.sampling.ThreadDumpHelper;
+import io.djigger.monitoring.eventqueue.EventQueue.EventQueueConsumer;
+import io.djigger.monitoring.java.agent.JavaAgentMessageType;
+import io.djigger.monitoring.java.model.ThreadInfo;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.ThreadInfo;
-import java.lang.management.ThreadMXBean;
+import java.util.LinkedList;
 
-public class SamplerRunnable implements Runnable {
+import org.smb.core.Message;
+
+public class ThreadInfoEventQueueConsumer implements EventQueueConsumer<ThreadInfo> {
 	
-	private final EventQueue<io.djigger.monitoring.java.model.ThreadInfo> threadInfoQueue;
-	
-	private ThreadMXBean mxBean = ManagementFactory.getThreadMXBean();
-	
-	public SamplerRunnable(EventQueue<io.djigger.monitoring.java.model.ThreadInfo> threadInfoQueue) {
+	private final AgentSession session;
+		
+	public ThreadInfoEventQueueConsumer(AgentSession session) {
 		super();
-		this.threadInfoQueue = threadInfoQueue;
+		this.session = session;
 	}
 
 	@Override
-	public void run() {
-		ThreadInfo[] infos = mxBean.dumpAllThreads(false, false);		
-		threadInfoQueue.add(ThreadDumpHelper.toThreadDump(infos));
+	public void processBuffer(LinkedList<ThreadInfo> buffer) {
+		if(buffer.size()>0) {
+			session.getMessageRouter().send(new Message(JavaAgentMessageType.THREAD_SAMPLE,buffer));
+		}
 	}
 }

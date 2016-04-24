@@ -19,10 +19,12 @@
  *******************************************************************************/
 package io.djigger.monitoring.java.instrumentation;
 
+import io.djigger.monitoring.eventqueue.Event;
+
 import java.io.Serializable;
 
 
-public class InstrumentationSample implements Serializable {
+public class InstrumentationSample implements Event, Serializable {
 
 	private static final long serialVersionUID = 347226760314494168L;
 
@@ -75,5 +77,10 @@ public class InstrumentationSample implements Serializable {
 	
 	public long getDuration() {
 		return duration;
+	}
+
+	@Override
+	public long getTimestamp() {
+		return start;
 	}
 }
