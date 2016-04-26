@@ -51,6 +51,7 @@ public class CustomTreeUI extends MetalTreeUI {
 		}
 	}
 	
+	// This method should NEVER return a leaf as the tree.expandPath() only works with folder (nodes) 
 	private TreePath getExpandPath(AnalysisNode node) {
 		List<AnalysisNode> children = node.getChildren();
 		if(children.size()==1 && !children.get(0).isLeaf()) {
@@ -62,7 +63,7 @@ public class CustomTreeUI extends MetalTreeUI {
 					mostImportantNode = child;
 				}
 			}
-			if(mostImportantNode.getWeight()>node.getWeight()*0.8) {
+			if(mostImportantNode.getWeight()>node.getWeight()*0.8 && !mostImportantNode.isLeaf()) {
 				return getExpandPath(mostImportantNode);
 			} else {
 				return new TreePath(node.getTreePath().toArray());
