@@ -1,5 +1,5 @@
 <Collector>
-	<servicePort>80</servicePort>
+	<servicePort>8080</servicePort>
 	<dataTTL>60</dataTTL>
 	<db host="localhost" collection="djigger" />
 </Collector>

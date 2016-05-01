@@ -19,20 +19,10 @@
  *******************************************************************************/
 package io.djigger.collector.server;
 
-import java.lang.reflect.Constructor;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.mongodb.MongoException;
-
 import io.djigger.client.Facade;
 import io.djigger.client.FacadeListener;
+import io.djigger.collector.accessors.InstrumentationEventAccessor;
+import io.djigger.collector.accessors.MongoConnection;
 import io.djigger.collector.accessors.ThreadInfoAccessor;
 import io.djigger.collector.accessors.stackref.ThreadInfoAccessorImpl;
 import io.djigger.collector.server.conf.CollectorConfig;
@@ -41,8 +31,22 @@ import io.djigger.collector.server.conf.Connection;
 import io.djigger.collector.server.conf.ConnectionGroupNode;
 import io.djigger.collector.server.conf.ConnectionsConfig;
 import io.djigger.collector.server.services.ServiceServer;
+import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.ThreadInfo;
+
+import java.lang.reflect.Constructor;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.mongodb.MongoException;
 
 public class Server {
 
@@ -52,8 +56,12 @@ public class Server {
 		Server server = new Server();
 		server.start();
 	}
+	
+	private MongoConnection mongodbConnection;
 
 	private ThreadInfoAccessor threadInfoAccessor;
+	
+	private InstrumentationEventAccessor instrumentationEventsAccessor;
 
 	private List<Facade> clients = new ArrayList<>();
 
@@ -117,19 +125,23 @@ public class Server {
 	}
 
 	private void initAccessors(CollectorConfig config) throws Exception {
-		threadInfoAccessor = new ThreadInfoAccessorImpl();
+		mongodbConnection = new MongoConnection();
+		
 		try {
-			threadInfoAccessor.start(config.getDb().getHost(), config.getDb().getCollection());
-
+			mongodbConnection.connect(config.getDb().getHost());
+			
+			threadInfoAccessor = new ThreadInfoAccessorImpl(mongodbConnection.getDb());
 			threadInfoAccessor.createIndexesIfNeeded(config.getDataTTL());
-		} catch (UnknownHostException | MongoException e) {
+			
+			instrumentationEventsAccessor = new InstrumentationEventAccessor(mongodbConnection.getDb());
+		} catch (MongoException e) {
 			logger.error("An error occurred while connection to DB", e);
 			throw e;
 		}
 	}
 
 	private Facade createClient(final Map<String, String> attributes, Connection connectionConfig) throws Exception {
-		Constructor<?> c = Class.forName(connectionConfig.getConnectionClass()).getConstructors()[0];
+		Constructor<?> c = Class.forName(connectionConfig.getConnectionClass()).getDeclaredConstructor(Properties.class, boolean.class);
 		Facade client = (Facade) c.newInstance(connectionConfig.getConnectionProperties(), true);
 
 		client.addListener(new FacadeListener() {
@@ -147,7 +159,9 @@ public class Server {
 			}
 
 			@Override
-			public void instrumentationSamplesReceived(List<InstrumentationEvent> samples) {}
+			public void instrumentationSamplesReceived(List<InstrumentationEvent> samples) {
+				instrumentationEventsAccessor.save(samples);
+			}
 
 			@Override
 			public void connectionEstablished() {}
@@ -159,6 +173,12 @@ public class Server {
 		client.setSamplingInterval(connectionConfig.getSamplingParameters().getSamplingRate());
 		client.setSampling(true);
 
+		if(connectionConfig.getSubscriptions()!=null) {
+			for(InstrumentSubscription subscription:connectionConfig.getSubscriptions()) {
+				client.addInstrumentation(subscription);
+			}
+		}
+		
 		return client;
 	}
 

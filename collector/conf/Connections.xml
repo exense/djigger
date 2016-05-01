@@ -32,6 +32,27 @@
 								</entry>
 							</attributes>
 						</Connection>
+						<Connection connectionClass="io.djigger.client.AgentFacade">
+							<samplingParameters samplingRate="100" />
+							<connectionProperties>
+								<property name="host" value="localhost" />
+								<property name="port" value="12122" />
+								<property name="username" value="" />
+								<property name="password" value="" />
+							</connectionProperties>
+							<subscriptions>
+								<io.djigger.monitoring.java.instrumentation.subscription.SimpleSubscription>
+									<classname>io.djigger.test.e2e.TestApp</classname>
+									<methodname>testMethod1ms</methodname>
+								</io.djigger.monitoring.java.instrumentation.subscription.SimpleSubscription>
+							</subscriptions>
+							<attributes>
+								<entry>
+									<string>attributeKey3</string>
+									<string>attributeValue3</string>
+								</entry>
+							</attributes>
+						</Connection>
 					</groups>
 				</Group>
 			</groups>

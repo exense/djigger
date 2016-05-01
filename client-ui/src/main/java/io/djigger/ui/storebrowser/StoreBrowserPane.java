@@ -19,6 +19,7 @@
  *******************************************************************************/
 package io.djigger.ui.storebrowser;
 
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.ql.OQLMongoDBBuilder;
 import io.djigger.ui.Session;
@@ -183,7 +184,7 @@ public class StoreBrowserPane extends JPanel implements ActionListener, KeyListe
 		
 		final Bson query;
 		try {
-			query = OQLMongoDBBuilder.build(queryTextField.getText());
+			query = parseQuery();
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(parent, "Unable to parse query: "+e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			return;
@@ -223,6 +224,26 @@ public class StoreBrowserPane extends JPanel implements ActionListener, KeyListe
 	    				} catch (Exception e) {
 	    					logger.error("Error while fetching ThreadInfos from store",e); 
 	    				}
+	    				
+	    				execution.setText("Retrieving instrumentation events...");
+	    				execution.setIndeterminate();
+	    				try {
+	    					int count = 0;
+	    					Iterator<InstrumentationEvent> it = parent.getStoreClient().getInstrumentationAccessor().get(query, from, to);
+	    					
+	    					InstrumentationEvent event;
+	    					while(it.hasNext() && !execution.isInterrupted()) {
+	    						count++;
+	    						execution.setValue(count);
+	    						event=it.next();
+								parent.getStore().addInstrumentationEvent(event);
+	    					}
+	    					parent.getStore().processBuffers();
+	    				
+	    					logger.debug("Fetched " + count + " instrumentation events.");
+	    				} catch (Exception e) {
+	    					logger.error("Error while fetching ThreadInfos from store",e); 
+	    				}
 					} catch (TimeoutException e)  {
 						JOptionPane.showMessageDialog(parent, "Execution time limit exceeded. Try to reduce the time range, use more specific search criteria or create an index for the search criteria (see documentation)", "Error",
 						        JOptionPane.ERROR_MESSAGE);
@@ -236,6 +257,15 @@ public class StoreBrowserPane extends JPanel implements ActionListener, KeyListe
 			JOptionPane.showMessageDialog(parent, "Invalid timerange: MaxDate<MinDate", "Error",
 			        JOptionPane.ERROR_MESSAGE);
 		}
+	}
+	
+	private Bson parseQuery() {
+		Bson query=null;
+		String expression = queryTextField.getText();
+		if(expression!=null && expression.trim().length()>0) {
+			query = OQLMongoDBBuilder.build(queryTextField.getText());
+		}
+		return query;
 	}
 
 	@Override

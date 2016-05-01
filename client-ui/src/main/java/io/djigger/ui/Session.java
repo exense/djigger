@@ -282,10 +282,16 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 
     public void refreshAll() {
     	store.processBuffers();
+    	if(store.getInstrumentationSamplesCount()>0) {
+    		instrumentationPane.setVisible(true);
+    		splitPane.setDividerLocation(0.5);
+    	}
+
     	statisticsCache.reload();
     	threadSelectionPane.refresh();
     	analyzerGroupPane.refresh();
     	instrumentationPane.refresh();
+    	
     }
     
     public void showLineNumbers(boolean show) {

@@ -72,6 +72,12 @@ public class Store implements Serializable {
 		threadInfosBuffer.clear();
 	}
 
+	public synchronized void addInstrumentationEvent(InstrumentationEvent event) {
+		event.setClassname(event.getClassname().intern());
+		event.setMethodname(event.getMethodname().intern());
+		instrumentationSamplesBuffer.add(event);
+	}
+	
 	public synchronized void addInstrumentationSamples(List<InstrumentationEvent> events) {
 		for(InstrumentationEvent event:events) {
 			event.setClassname(event.getClassname().intern());

@@ -110,6 +110,10 @@ public class MonitoredExecution extends JDialog {
 		dpb.setMaximum((int) value);
 	}
 	
+	public void setIndeterminate() {
+		dpb.setIndeterminate(true);
+	}
+	
 	public void setValue(long value) {
 		dpb.setValue((int) value);
 	}

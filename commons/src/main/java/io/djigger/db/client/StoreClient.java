@@ -19,19 +19,28 @@
  *******************************************************************************/
 package io.djigger.db.client;
 
+import io.djigger.collector.accessors.InstrumentationEventAccessor;
+import io.djigger.collector.accessors.MongoConnection;
 import io.djigger.collector.accessors.stackref.ThreadInfoAccessorImpl;
 
 public class StoreClient {
 
 	ThreadInfoAccessorImpl threadInfoAccessor;
 	
+	InstrumentationEventAccessor instrumentationAccessor;
+	
 	public void connect(String host) throws Exception {
-		threadInfoAccessor = new ThreadInfoAccessorImpl();
-		// TODO Change!
-		threadInfoAccessor.start(host, "djigger");
+		MongoConnection connection = new MongoConnection();
+		connection.connect(host);
+		threadInfoAccessor = new ThreadInfoAccessorImpl(connection.getDb());
+		instrumentationAccessor = new InstrumentationEventAccessor(connection.getDb());
 	}
 
 	public ThreadInfoAccessorImpl getThreadInfoAccessor() {
 		return threadInfoAccessor;
+	}
+
+	public InstrumentationEventAccessor getInstrumentationAccessor() {
+		return instrumentationAccessor;
 	}
 }

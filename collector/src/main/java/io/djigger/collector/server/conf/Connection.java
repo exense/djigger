@@ -19,6 +19,8 @@
  *******************************************************************************/
 package io.djigger.collector.server.conf;
 
+import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -33,6 +35,8 @@ public class Connection implements ConnectionGroupNode {
 	private Properties connectionProperties;
 	
 	private SamplingParameters samplingParameters;
+	
+	private List<InstrumentSubscription> subscriptions;
 	
 	private Map<String, String> attributes;
 
@@ -58,6 +62,14 @@ public class Connection implements ConnectionGroupNode {
 
 	public void setSamplingParameters(SamplingParameters samplingParameters) {
 		this.samplingParameters = samplingParameters;
+	}
+
+	public List<InstrumentSubscription> getSubscriptions() {
+		return subscriptions;
+	}
+
+	public void setSubscriptions(List<InstrumentSubscription> subscriptions) {
+		this.subscriptions = subscriptions;
 	}
 
 	public Map<String, String> getAttributes() {

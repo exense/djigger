@@ -43,9 +43,9 @@ public class ThreadInfoAccessorTest {
 		
 		System.out.println("Mongo");
 		for(int i=0;i<10;i++) {		
-			ThreadInfoAccessorImpl b = new ThreadInfoAccessorImpl();
-			b.start("c600883", "djigger_test");
-			query(b, from, to);
+//			ThreadInfoAccessorImpl b = new ThreadInfoAccessorImpl();
+//			b.start("c600883", "djigger_test");
+//			query(b, from, to);
 		}
 		
 
