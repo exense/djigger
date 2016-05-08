@@ -72,7 +72,7 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     
     private StoreClient storeClient;
 
-    private final JSplitPane splitPane1;
+//    private final JSplitPane splitPane1;
 
 	private final JSplitPane splitPane;
 
@@ -83,8 +83,8 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     private final InstrumentationStatisticsCache statisticsCache;
 
     private final ArgumentParser options;
-
-    private final InstrumentationPane instrumentationPane;
+//
+//    private final InstrumentationPane instrumentationPane;
     
     private final StoreBrowserPane storeBrowserPane;
 
@@ -112,25 +112,27 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     		facade.addListener(this);
         }
 
-        splitPane1 = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-
-        threadSelectionPane = new ThreadSelectionPane(this);
-        splitPane1.add(threadSelectionPane);
+//        splitPane1 = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
         splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);        
+
+        threadSelectionPane = new ThreadSelectionPane(this);
+        splitPane.add(threadSelectionPane);
         
         analyzerGroupPane = new AnalyzerGroupPane(this, presentationHelper);
         splitPane.add(analyzerGroupPane);
-
-        instrumentationPane = new InstrumentationPane(this, presentationHelper);
-        splitPane.add(instrumentationPane);
-
-        instrumentationPane.setVisible(false);
         
-        splitPane1.add(splitPane);
-        splitPane1.setDividerLocation(300);
 
-        add(splitPane1);
+//        instrumentationPane = new InstrumentationPane(this, presentationHelper);
+//        splitPane.add(instrumentationPane);
+//
+//        instrumentationPane.setVisible(false);
+        
+//        splitPane1.add(splitPane);
+//        splitPane1.setDividerLocation(300);
+
+        splitPane.setDividerLocation(300);
+        add(splitPane);
 
         if(config.getType() == SessionType.STORE) {
         	storeBrowserPane = new StoreBrowserPane(this);
@@ -144,7 +146,7 @@ public class Session extends JPanel implements FacadeListener, Closeable {
         threadSelectionPane.initialize();
         analyzerGroupPane.initialize();
 
-    	splitPane.setDividerLocation(0.7);
+    	//splitPane.setDividerLocation(0.7);
     }
 
 	private Facade createFacade(SessionConfiguration config) {
@@ -217,13 +219,13 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     }
     
     public void configure() {
-        if(config.getType() == SessionType.AGENT) {
-        	instrumentationPane.setVisible(true);
-        } else if (config.getType() == SessionType.AGENT_CAPTURE && store.getInstrumentationSamplesCount()>0) {
-        	instrumentationPane.setVisible(true);
-        } else {
-        	instrumentationPane.setVisible(false);
-        }
+//        if(config.getType() == SessionType.AGENT) {
+//        	instrumentationPane.setVisible(true);
+//        } else if (config.getType() == SessionType.AGENT_CAPTURE && store.getInstrumentationSamplesCount()>0) {
+//        	instrumentationPane.setVisible(true);
+//        } else {
+//        	instrumentationPane.setVisible(false);
+//        }
     }
     
     private List<ThreadInfo> parseThreadDumpFile(File file) throws IOException {
@@ -283,14 +285,14 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     public void refreshAll() {
     	store.processBuffers();
     	if(store.getInstrumentationSamplesCount()>0) {
-    		instrumentationPane.setVisible(true);
+//    		instrumentationPane.setVisible(true);
     		splitPane.setDividerLocation(0.5);
     	}
 
     	statisticsCache.reload();
     	threadSelectionPane.refresh();
     	analyzerGroupPane.refresh();
-    	instrumentationPane.refresh();
+//    	instrumentationPane.refresh();
     	
     }
     
@@ -305,8 +307,8 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     	analyzerGroupPane.setStoreFilter(filter);
     	analyzerGroupPane.refresh();
     	
-    	instrumentationPane.setStoreFilter(filter);
-    	instrumentationPane.refresh();
+//    	instrumentationPane.setStoreFilter(filter);
+//    	instrumentationPane.refresh();
     }
 
     public void clear() {
@@ -317,10 +319,10 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 	public ArgumentParser getOptions() {
 		return options;
 	}
-
-	public InstrumentationPane getInstrumentationPane() {
-		return instrumentationPane;
-	}
+//
+//	public InstrumentationPane getInstrumentationPane() {
+//		return instrumentationPane;
+//	}
 	
 	Capture currentCapture;
 	public void setSampling(boolean state) {
@@ -353,11 +355,11 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 		if(facade!=null) {
 			facade.addInstrumentation(subscription);
 		}
-		instrumentationPane.setVisible(true);
-		if(splitPane.getHeight()-splitPane.getDividerLocation()<100) {
-			splitPane.setDividerLocation(0.7);
-		}
-		instrumentationPane.refresh();
+//		instrumentationPane.setVisible(true);
+//		if(splitPane.getHeight()-splitPane.getDividerLocation()<100) {
+//			splitPane.setDividerLocation(0.7);
+//		}
+//		instrumentationPane.refresh();
 		
 	}
 

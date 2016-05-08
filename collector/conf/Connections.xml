@@ -41,10 +41,16 @@
 								<property name="password" value="" />
 							</connectionProperties>
 							<subscriptions>
-								<io.djigger.monitoring.java.instrumentation.subscription.SimpleSubscription>
-									<classname>io.djigger.test.e2e.TestApp</classname>
-									<methodname>testMethod1ms</methodname>
-								</io.djigger.monitoring.java.instrumentation.subscription.SimpleSubscription>
+								<io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
+									<classNamePattern><pattern>io.djigger.test.e2e.TestApp</pattern><flags>0</flags></classNamePattern>
+									<methodNamePattern><pattern>testMethod.*</pattern><flags>0</flags></methodNamePattern>
+									<tagEvent>false</tagEvent>
+								</io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
+								<io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
+									<classNamePattern><pattern>io.djigger.test.e2e.TestApp</pattern><flags>0</flags></classNamePattern>
+									<methodNamePattern><pattern>testMethodRoot</pattern><flags>0</flags></methodNamePattern>
+									<tagEvent>true</tagEvent>
+								</io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
 							</subscriptions>
 							<attributes>
 								<entry>

@@ -19,22 +19,21 @@
  *******************************************************************************/
 package io.djigger.collector.accessors;
 
-import io.djigger.monitoring.java.model.ThreadInfo;
-
-import java.net.UnknownHostException;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.bson.conversions.Bson;
 
-import com.mongodb.MongoException;
+import io.djigger.monitoring.java.model.ThreadInfo;
 
 public interface ThreadInfoAccessor {
-
-	public void start(String host, String collection) throws UnknownHostException, MongoException;
 	
 	public void createIndexesIfNeeded(Long ttl);
 	
 	public Iterable<ThreadInfo> query(Bson mongoQuery, Date from, Date to);
+	
+	public long count(Bson mongoQuery, Date from, Date to, long timeout, TimeUnit timeUnit) throws TimeoutException;
 	
 	public void save(ThreadInfo threadInfo);
 }

@@ -17,45 +17,46 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.ui.analyzer;
+package io.djigger.sequencetree;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Set;
+import java.util.Iterator;
+import java.util.Stack;
+import java.util.UUID;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import io.djigger.aggregation.AnalyzerService;
-import io.djigger.aggregation.filter.BranchFilterFactory;
-import io.djigger.aggregation.filter.NodeFilterFactory;
-import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.subscription.SimpleSubscription;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.ql.Filter;
+import io.djigger.ql.FilterFactory;
 import io.djigger.ql.OQLFilterBuilder;
 import io.djigger.ui.Session;
+import io.djigger.ui.Session.SessionType;
+import io.djigger.ui.analyzer.AnalyzerGroupPane;
+import io.djigger.ui.analyzer.TreeType;
 import io.djigger.ui.common.EnhancedTextField;
 import io.djigger.ui.common.NodePresentationHelper;
-import io.djigger.ui.instrumentation.InstrumentationPaneListener;
 import io.djigger.ui.model.AnalysisNode;
-import io.djigger.ui.model.NodeID;
-import io.djigger.ui.model.RealNodePath;
 
 
-public abstract class AnalyzerPane extends JPanel implements ActionListener {
+public abstract class SequenceTreePane extends JPanel implements ActionListener {
 
 	private static final long serialVersionUID = -8452799701138552693L;
 
-	protected final Session main;
+	protected final Session session;
 
 	protected final AnalyzerGroupPane parent;
+	
+	protected final SequenceTreeService sequenceTreeService;
 
-	private Filter<NodeID> nodeFilter;
+	private Filter<InstrumentationEvent> nodeFilter;
 
-	protected AnalysisNode workNode;
+	protected SequenceTreeNode workNode;
 
 	private EnhancedTextField filterTextField;
 
@@ -68,12 +69,14 @@ public abstract class AnalyzerPane extends JPanel implements ActionListener {
 	private final String STACKTRACE_FILTER = "Stacktrace filter (and, or, not operators allowed)";
 	private final String NODE_FILTER = "Node filter (and, or, not operators allowed)";
 
-	protected AnalyzerPane(AnalyzerGroupPane parent, TreeType treeType) {
+	protected SequenceTreePane(AnalyzerGroupPane parent, TreeType treeType, UUID transactionID) {
 		super(new BorderLayout());
 
 		this.parent = parent;
-		this.main = parent.getMain();
+		this.session = parent.getMain();
 		this.treeType = treeType;
+		
+		this.sequenceTreeService = new SequenceTreeService(session.getStore());
 
 		JPanel filterPanel = new JPanel(new GridLayout(0,1));
 
@@ -94,9 +97,15 @@ public abstract class AnalyzerPane extends JPanel implements ActionListener {
 		add(filterPanel, BorderLayout.PAGE_START);
 		add(contentPanel, BorderLayout.CENTER);
 
+		if(session.getSessionType()==SessionType.STORE) {
+			Iterator<InstrumentationEvent> events = session.getStoreClient().getInstrumentationAccessor().getByTransactionId(transactionID);
+			while(events.hasNext()) {
+				session.getStore().addInstrumentationEvent(events.next());
+			};
+			session.getStore().processBuffers();
+		}
+		sequenceTreeService.load(transactionID, false);			
 		transform();
-
-//		main.getInstrumentationPane().addListener(this);
 	}
 
 	public void refresh() {
@@ -148,58 +157,89 @@ public abstract class AnalyzerPane extends JPanel implements ActionListener {
 		excludeTextField.setText(filter);
 	}
 
-	private Filter<RealNodePath> parseBranchFilter() {
-		Filter<RealNodePath> complexFilter = null;
+	private Filter<Stack<InstrumentationEvent>> parseBranchFilter() {
+		Filter<Stack<InstrumentationEvent>> complexFilter = null;
 		String filter = getStacktraceFilter();
 		if(filter!=null) {
-			BranchFilterFactory atomicFactory = new BranchFilterFactory(getPresentationHelper());
-			try {
-				complexFilter = OQLFilterBuilder.getFilter(filter, atomicFactory);
-			} catch (Exception e) {
-				JOptionPane.showMessageDialog(this,	e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-			}
+			complexFilter = parseBranchFilter(filter);
 		}
 		return complexFilter;
 	}
 
-	private Filter<NodeID> parseNodeFilter() {
+	private Filter<InstrumentationEvent> parseNodeFilter() {
 		String excludeFilter = getNodeFilter();
 		if(excludeFilter!=null) {
-			NodeFilterFactory atomicFactory = new NodeFilterFactory(getPresentationHelper());
-			try {
-				nodeFilter =  OQLFilterBuilder.getFilter(excludeFilter, atomicFactory);
-			} catch (Exception e) {
-				JOptionPane.showMessageDialog(this,	e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-				nodeFilter = null;
-			}
+			nodeFilter = parseFilter(excludeFilter);
 		} else {
 			nodeFilter = null;
 		}
 		return nodeFilter;
 	}
 
-	private void transform() {
-		Filter<RealNodePath> branchFilter = parseBranchFilter();
-		Filter<NodeID> nodeFilter = parseNodeFilter();
+	private Filter<InstrumentationEvent> parseFilter(String excludeFilter) {
+		final NodePresentationHelper presentationHelper = getPresentationHelper();
+		try {
+			 return OQLFilterBuilder.getFilter(excludeFilter, new FilterFactory<InstrumentationEvent>() {
 
-		AnalyzerService analyzerService = parent.getAnalyzerService();
-		workNode = analyzerService.buildTree(branchFilter, nodeFilter, treeType);
+				@Override
+				public Filter<InstrumentationEvent> createFullTextFilter(final String expression) {
+					return new Filter<InstrumentationEvent>() {
+						@Override
+						public boolean isValid(InstrumentationEvent input) {
+							return presentationHelper.getFullname(input).contains(expression);
+						}
+					};
+				}
+
+				@Override
+				public Filter<InstrumentationEvent> createAttributeFilter(String operator, String attribute,
+						String value) {
+					throw new RuntimeException("Attribute Filter not implemented in this context.");
+				}
+			});
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(this,	e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			return null;
+		}
+	}
+	
+	private Filter<Stack<InstrumentationEvent>> parseBranchFilter(String excludeFilter) {
+		final NodePresentationHelper presentationHelper = getPresentationHelper();
+		try {
+			 return OQLFilterBuilder.getFilter(excludeFilter, new FilterFactory<Stack<InstrumentationEvent>>() {
+
+				@Override
+				public Filter<Stack<InstrumentationEvent>> createFullTextFilter(final String expression) {
+					return new Filter<Stack<InstrumentationEvent>>() {
+						@Override
+						public boolean isValid(Stack<InstrumentationEvent> input) {
+							for (InstrumentationEvent instrumentationEvent : input) {
+								if(presentationHelper.getFullname(instrumentationEvent).contains(expression)) {
+									return true;
+								}
+							}
+							return false;
+						}
+					};
+				}
+
+				@Override
+				public Filter<Stack<InstrumentationEvent>> createAttributeFilter(String operator, String attribute,
+						String value) {
+					throw new RuntimeException("Attribute Filter not implemented in this context.");
+				}
+			});
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(this,	e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			return null;
+		}
 	}
 
-	public void instrumentCurrentMethod() {
-		NodeID nodeID = getSelectedNode().getId();
-		
-		main.addSubscription(new SimpleSubscription(nodeID.getClassName(), nodeID.getMethodName(), false));
-	}	
-	
-	public void instrumentCurrentNode() {
-		if(nodeFilter==null) {
-		} else {
-			JOptionPane.showMessageDialog(this,
-				    "Instrumentation impossible when packages are skipped. Please remove the exclusion criteria and try again.",
-				    "Error",
-				    JOptionPane.ERROR_MESSAGE);
-		}
+	private void transform() {
+		Filter<Stack<InstrumentationEvent>> branchFilter = parseBranchFilter();
+		Filter<InstrumentationEvent> nodeFilter = parseNodeFilter();
+
+		workNode = sequenceTreeService.buildTree(branchFilter, nodeFilter, treeType);
 	}
 
 	public abstract void refreshDisplay();
@@ -207,13 +247,9 @@ public abstract class AnalyzerPane extends JPanel implements ActionListener {
 	protected abstract AnalysisNode getSelectedNode();
 
 	public Session getMain() {
-		return main;
+		return session;
 	}
-
-//	public void onSelection(Set<InstrumentSubscription> subscriptions) {
-//		repaint();
-//	}
-
+	
 	public NodePresentationHelper getPresentationHelper() {
 		return parent.getPresentationHelper();
 	}

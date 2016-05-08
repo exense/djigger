@@ -38,6 +38,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import javax.swing.BoxLayout;
@@ -197,58 +198,62 @@ public class StoreBrowserPane extends JPanel implements ActionListener, KeyListe
 			
 			final MonitoredExecution execution = new MonitoredExecution(parent.getMain().getFrame(), "Opening session... Please wait.", new MonitoredExecutionRunnable() {
 				protected void run(MonitoredExecution execution) {
+					retrieveThreadInfos(query, from, to, execution);
+    				retrieveInstumentationEvents(query, from, to, execution);
+    			}
+
+				private void retrieveInstumentationEvents(final Bson query, final Date from, final Date to,	MonitoredExecution execution) {
+					execution.setText("Retrieving instrumentation events...");
+    				execution.setIndeterminate();
+    				try {
+    					int count = 0;
+    					Iterator<InstrumentationEvent> it = parent.getStoreClient().getInstrumentationAccessor().getTaggedEvents(query, from, to);
+    					
+    					InstrumentationEvent event;
+    					while(it.hasNext() && !execution.isInterrupted()) {
+    						count++;
+    						execution.setValue(count);
+    						event=it.next();
+							parent.getStore().addInstrumentationEvent(event);
+    					}
+    					parent.getStore().processBuffers();
     				
+    					logger.debug("Fetched " + count + " instrumentation events.");
+    				} catch (Exception e) {
+    					logger.error("Error while fetching ThreadInfos from store",e); 
+    				}
+				}
+
+				private void retrieveThreadInfos(final Bson query, final Date from, final Date to,
+						MonitoredExecution execution) {
 					execution.setText("Calculating execution time...");
 					try {
-	    				long maxValue = parent.getStoreClient().getThreadInfoAccessor().count(query, from, to);
+	    				long maxValue = parent.getStoreClient().getThreadInfoAccessor().count(query, from, to, 3, TimeUnit.SECONDS);
 	    				execution.setMaxValue(maxValue);
-	    				execution.setText("Retrieving data...");
-	    				
-	    				try {
-	    					int count = 0;
-	    					Iterator<ThreadInfo> it = parent.getStoreClient().getThreadInfoAccessor().query(query, from, to).iterator();
-	    					
-	    					ThreadInfo thread;
-	    					while(it.hasNext() && !execution.isInterrupted()) {
-	    						count++;
-	    						
-	    						execution.setValue(count);
-	    						
-	    						thread=it.next();
-	
-								parent.getStore().addThreadInfo(thread);
-	    					}
-	    					parent.getStore().processBuffers();
-	    				
-	    					System.out.println("Fetched " + count + " stacktraces.");
-	    				} catch (Exception e) {
-	    					logger.error("Error while fetching ThreadInfos from store",e); 
-	    				}
-	    				
-	    				execution.setText("Retrieving instrumentation events...");
-	    				execution.setIndeterminate();
-	    				try {
-	    					int count = 0;
-	    					Iterator<InstrumentationEvent> it = parent.getStoreClient().getInstrumentationAccessor().get(query, from, to);
-	    					
-	    					InstrumentationEvent event;
-	    					while(it.hasNext() && !execution.isInterrupted()) {
-	    						count++;
-	    						execution.setValue(count);
-	    						event=it.next();
-								parent.getStore().addInstrumentationEvent(event);
-	    					}
-	    					parent.getStore().processBuffers();
-	    				
-	    					logger.debug("Fetched " + count + " instrumentation events.");
-	    				} catch (Exception e) {
-	    					logger.error("Error while fetching ThreadInfos from store",e); 
-	    				}
 					} catch (TimeoutException e)  {
-						JOptionPane.showMessageDialog(parent, "Execution time limit exceeded. Try to reduce the time range, use more specific search criteria or create an index for the search criteria (see documentation)", "Error",
-						        JOptionPane.ERROR_MESSAGE);
+						execution.setIndeterminate();
+						logger.warn("Execution time limit exceeded while counting query results. Unable to calcultate max value of progress bar.");
 					}
-    			}
+	    			
+					execution.setText("Retrieving data...");
+    				try {
+    					int count = 0;
+    					Iterator<ThreadInfo> it = parent.getStoreClient().getThreadInfoAccessor().query(query, from, to).iterator();
+    					
+    					ThreadInfo thread;
+    					while(it.hasNext() && !execution.isInterrupted()) {
+    						count++;
+    						execution.setValue(count++);
+    						thread=it.next();
+							parent.getStore().addThreadInfo(thread);
+    					}
+    					parent.getStore().processBuffers();
+    				
+    					logger.debug("Fetched " + count + " stacktraces.");
+    				} catch (Exception e) {
+    					logger.error("Error while fetching ThreadInfos from store",e); 
+    				}
+				}
     		}, true);
     		execution.run();
     		

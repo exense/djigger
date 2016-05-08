@@ -17,25 +17,32 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.monitoring.java.instrumentation;
+package io.djigger.sequencetree;
 
-import io.djigger.monitoring.java.model.ThreadInfo;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public class InstrumentationEventWithThreadInfo extends InstrumentationEvent {
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 
-	private static final long serialVersionUID = 1408274617506009853L;
+public class RealNodeSequenceTreeBuilder {
 
-	private ThreadInfo threadInfo;
-	
-	public InstrumentationEventWithThreadInfo(String classname, String methodname) {
-		super(classname, methodname);
+	public InstrumentationEventNode buildRealNodeTree(List<InstrumentationEvent> events) {		
+			
+		Map<Long, InstrumentationEventNode> nodeIndex = new HashMap<>();
+		
+		for(InstrumentationEvent event:events) {
+			nodeIndex.put(event.getLocalID(), new InstrumentationEventNode(event));
+		}
+		
+		for(InstrumentationEventNode event:nodeIndex.values()) {
+			InstrumentationEventNode parent = nodeIndex.get(event.getEvent().getLocalParentID());
+			if(parent!=event) {
+				parent.add(event);
+			}
+		}
+		
+		return nodeIndex.get(new Long(0));
 	}
 
-	public ThreadInfo getThreadInfo() {
-		return threadInfo;
-	}
-
-	public void setThreadInfo(ThreadInfo threadInfo) {
-		this.threadInfo = threadInfo;
-	}
 }

@@ -207,7 +207,7 @@ public class InstrumentationPane extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			if(e.getActionCommand().equals("Add")) {
-				InstrumentSubscription subscription = new RegexSubscription(classname.getText(), methodname.getText());
+				InstrumentSubscription subscription = new RegexSubscription(classname.getText(), methodname.getText(), false);
 				session.addSubscription(subscription);
 				frame.setVisible(false);
 			}

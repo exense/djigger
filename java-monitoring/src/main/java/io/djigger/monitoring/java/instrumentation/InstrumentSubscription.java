@@ -33,16 +33,27 @@ public abstract class InstrumentSubscription implements Serializable {
 	public abstract boolean match(InstrumentationEvent sample);
 	
 	public abstract boolean captureThreadInfo();
+	
+	private boolean tagEvent;
 		
 	public abstract String getName();
 
-	public InstrumentSubscription() {
+	public InstrumentSubscription(boolean tagEvent) {
 		super();
+		this.tagEvent = tagEvent;
 	}
 
 	@Override
 	public String toString() {
 		return getName();
+	}
+
+	public boolean isTagEvent() {
+		return tagEvent;
+	}
+
+	public void setTagEvent(boolean tagEvent) {
+		this.tagEvent = tagEvent;
 	}
 
 	@Override

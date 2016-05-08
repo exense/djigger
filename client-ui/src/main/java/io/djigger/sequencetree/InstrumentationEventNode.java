@@ -17,25 +17,40 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.monitoring.java.instrumentation;
+package io.djigger.sequencetree;
 
-import io.djigger.monitoring.java.model.ThreadInfo;
+import java.util.LinkedList;
+import java.util.List;
 
-public class InstrumentationEventWithThreadInfo extends InstrumentationEvent {
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 
-	private static final long serialVersionUID = 1408274617506009853L;
-
-	private ThreadInfo threadInfo;
+public class InstrumentationEventNode {
 	
-	public InstrumentationEventWithThreadInfo(String classname, String methodname) {
-		super(classname, methodname);
+	private InstrumentationEvent event;
+
+	private LinkedList<InstrumentationEventNode> children = new LinkedList<>();
+
+	public InstrumentationEventNode(InstrumentationEvent event) {
+		super();
+		this.event = event;
 	}
 
-	public ThreadInfo getThreadInfo() {
-		return threadInfo;
+	public boolean add(InstrumentationEventNode e) {
+		return children.add(e);
+	}
+	
+	public List<InstrumentationEventNode> getChildren() {
+		return children;
 	}
 
-	public void setThreadInfo(ThreadInfo threadInfo) {
-		this.threadInfo = threadInfo;
+	public InstrumentationEvent getEvent() {
+		return event;
 	}
+
+	@Override
+	public String toString() {
+		return "InstrumentationEventNode [event=" + event + "]";
+	}
+	
+	
 }

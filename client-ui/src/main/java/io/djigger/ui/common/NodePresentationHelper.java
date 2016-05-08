@@ -19,6 +19,8 @@
  *******************************************************************************/
 package io.djigger.ui.common;
 
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.sequencetree.SequenceTreeNode;
 import io.djigger.ui.instrumentation.InstrumentationStatistics;
 import io.djigger.ui.instrumentation.InstrumentationStatisticsCache;
 import io.djigger.ui.model.AnalysisNode;
@@ -70,6 +72,10 @@ public class NodePresentationHelper {
 	public String toString(AnalysisNode node) {
 		return getFullname(node) + "()  " + getPercentage(node, node.getRoot()) ;
 	}
+	
+	public String toString(SequenceTreeNode node) {
+		return node.getEvent()!=null?getFullname(node.getEvent()) + "() - "+(node.getEvent().getDuration()/1000000)+"ms":"";
+	}
 
 	public String getFullname(AnalysisNode node) {
 		return getFullname(node.getId());
@@ -81,6 +87,10 @@ public class NodePresentationHelper {
 		} else {
 			return "Root";
 		}
+	}
+	
+	public String getFullname(InstrumentationEvent event) {
+		return event!=null?event.getClassname() + "." + event.getMethodname():"";
 	}
 	
 	

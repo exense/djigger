@@ -8,31 +8,50 @@ public class TestApp {
 			@Override
 			public void run() {
 				while(true) {
-					testMethod1ms();
+					testMethodRoot();
 				}
 			}
 		})).start();;
 		
-		(new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
-				while(true) {
-					testMethod1000nanos();
-				}
-			}
-		})).start();;
+//		(new Thread(new Runnable() {
+//			
+//			@Override
+//			public void run() {
+//				while(true) {
+//					testMethod1000nanos();
+//				}
+//			}
+//		})).start();;
 		
-		(new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
-				while(true) {
-					testMethod();
-				}
-			}
-		})).start();;
+//		(new Thread(new Runnable() {
+//			
+//			@Override
+//			public void run() {
+//				while(true) {
+//					testMethod();
+//				}
+//			}
+//		})).start();;
 	}
+	
+	public static void testMethodRoot() {
+		testMethod1();
+		testMethod1();
+	}
+	
+	public static void testMethod1() {
+		testMethod2_1();
+		testMethod2_2();
+	}
+	
+	public static void testMethod2_1() {
+		testMethod1ms();
+	}
+	
+	public static void testMethod2_2() {
+		testMethod1ms();
+	}
+	
 	
 	public static void testMethod1ms() {
 		try {

@@ -23,6 +23,7 @@ import io.djigger.model.Capture;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.ThreadInfo;
+import io.djigger.ql.Filter;
 import io.djigger.store.filter.StoreFilter;
 
 import java.io.ObjectStreamException;
@@ -137,6 +138,16 @@ public class Store implements Serializable {
 		List<InstrumentationEvent> result = new ArrayList<InstrumentationEvent>();
 		for(InstrumentationEvent sample:instrumentationSamples) {
 			if((filter==null || filter.match(sample))) {
+				result.add(sample);
+			}
+		}
+		return result;
+	}
+	
+	public synchronized List<InstrumentationEvent> queryInstrumentationEvents(Filter<InstrumentationEvent> filter) {
+		List<InstrumentationEvent> result = new ArrayList<InstrumentationEvent>();
+		for(InstrumentationEvent sample:instrumentationSamples) {
+			if((filter==null || filter.isValid(sample))) {
 				result.add(sample);
 			}
 		}

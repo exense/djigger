@@ -187,15 +187,15 @@ public class Block implements MouseListener {
 			graph.drawLine(x+width, y, x+width, y+height);
 		}
 
-		if(parentContainer.getMain().getInstrumentationPane().isSelected(node.getRealNodePath())) {
-			Color borderColor = parentContainer.getMain().getInstrumentationPane().getColor(node.getRealNodePath());
-			if(borderColor != null) {
-				graph.setColor(borderColor);
-			} else {
-				graph.setColor(Color.RED);
-			}
-			graph.drawRect(x+1, y+1, width-2, height-2);
-		}
+//		if(parentContainer.getMain().getInstrumentationPane().isSelected(node.getRealNodePath())) {
+//			Color borderColor = parentContainer.getMain().getInstrumentationPane().getColor(node.getRealNodePath());
+//			if(borderColor != null) {
+//				graph.setColor(borderColor);
+//			} else {
+//				graph.setColor(Color.RED);
+//			}
+//			graph.drawRect(x+1, y+1, width-2, height-2);
+//		}
 	}
 
 	public Block getBlock(int x, int y) {

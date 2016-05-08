@@ -33,8 +33,8 @@ public class RealNodePathSubscription extends InstrumentSubscription {
 
 	private final StackTraceElement[] path;
 
-	public RealNodePathSubscription(StackTraceElement[]  path) {
-		super();
+	public RealNodePathSubscription(StackTraceElement[]  path, boolean tagEvent) {
+		super(tagEvent);
 		this.path = path;
 	}
 

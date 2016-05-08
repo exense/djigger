@@ -25,6 +25,7 @@ import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
@@ -34,10 +35,13 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import io.djigger.aggregation.AnalyzerService;
+import io.djigger.sequencetree.SequenceTreeView;
 import io.djigger.store.filter.StoreFilter;
 import io.djigger.ui.Session;
+import io.djigger.ui.Session.SessionType;
 import io.djigger.ui.common.EnhancedTabbedPane;
 import io.djigger.ui.common.NodePresentationHelper;
+import io.djigger.ui.instrumentation.InstrumentationEventPane;
 import io.djigger.ui.model.AnalysisNode;
 
 
@@ -121,7 +125,42 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 				}
 
 			}));
+            add(new JMenuItem(new AbstractAction("Instrumentation events") {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					InstrumentationEventPane view = new InstrumentationEventPane(parent, groupPane);
+					addTab(view, e.getActionCommand(), true);
+			    	setVisible(false);
+				}
+
+			}));
+            
+//            add(new JMenuItem(new AbstractAction("Transaction Tree View") {
+//				@Override
+//				public void actionPerformed(ActionEvent e) {
+//					SequenceTreeView view = new SequenceTreeView(groupPane, TreeType.NORMAL);
+//					addTab(view, e.getActionCommand(), true);
+//			    	setVisible(false);
+//				}
+//
+//			}));
+            
+            
         }
+    }
+    
+    public void addTransactionPane(UUID trID) {
+    	SequenceTreeView view = new SequenceTreeView(this, TreeType.NORMAL, trID);
+    	//view.load(trID);
+		addTab(view, "Transaction Tree "+trID.toString(), true);
+    	
+//    	InstrumentationEventPane view = new InstrumentationEventPane(parent, "trid="+trID);
+//		addTab(view, trID.toString(), true);
+    }
+    
+    public void addInstrumentationEventPaneForTransaction(UUID trID) {
+    	InstrumentationEventPane view = new InstrumentationEventPane(parent, "trid="+trID, this);
+		addTab(view, trID.toString(), true);
     }
     
     public void setStoreFilter(StoreFilter storeFilter) {
@@ -146,6 +185,10 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
         addTab(blockPane, "Block view", true);
         BlockView testPane = new BlockView(this, TreeType.REVERSE);
         addTab(testPane, "Reverse block view", true);
+        if(parent.getSessionType()!=SessionType.JMX&&parent.getSessionType()!=SessionType.FILE) {
+        	InstrumentationEventPane view = new InstrumentationEventPane(parent, this);
+			addTab(view, "Instrumentation events", true);
+        }
         setSelectedIndex(0);
     }
 

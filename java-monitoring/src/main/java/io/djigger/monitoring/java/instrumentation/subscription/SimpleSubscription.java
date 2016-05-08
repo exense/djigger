@@ -30,8 +30,8 @@ public class SimpleSubscription extends InstrumentSubscription {
 	
 	private final String methodname;
 
-	public SimpleSubscription(String classname, String methodname) {
-		super();
+	public SimpleSubscription(String classname, String methodname, boolean tagEvent) {
+		super(tagEvent);
 		this.classname = classname;
 		this.methodname = methodname;
 	}

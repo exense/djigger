@@ -30,17 +30,25 @@ public class RegexSubscription extends InstrumentSubscription {
 
 	private static final long serialVersionUID = -1137052413341333149L;
 	
-	private final Pattern classNamePattern;
+	private Pattern classNamePattern;
 	private transient Matcher classNameMatcher;
 	
-	private final Pattern methodNamePattern;
+	private Pattern methodNamePattern;
 	private transient Matcher methodNameMatcher;
 
-	public RegexSubscription(String classNameRegex, String methodNameRegex) {
-		super();
-		classNamePattern = Pattern.compile(classNameRegex);
+	public RegexSubscription(String classNameRegex, String methodNameRegex, boolean tagEvent) {
+		super(tagEvent);
+		setClassNamePattern(classNameRegex);
+		setMethodNamePattern(methodNameRegex);
+	}
+	
+	public void setClassNamePattern(String pattern) {
+		classNamePattern = Pattern.compile(pattern);
 		classNameMatcher = classNamePattern.matcher("");
-		methodNamePattern = Pattern.compile(methodNameRegex);
+	}
+
+	public void setMethodNamePattern(String pattern) {
+		methodNamePattern = Pattern.compile(pattern);
 		methodNameMatcher = methodNamePattern.matcher("");
 	}
 	

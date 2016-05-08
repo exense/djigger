@@ -17,25 +17,29 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.monitoring.java.instrumentation;
+package io.djigger.model;
 
-import io.djigger.monitoring.java.model.ThreadInfo;
+import java.util.Map;
 
-public class InstrumentationEventWithThreadInfo extends InstrumentationEvent {
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 
-	private static final long serialVersionUID = 1408274617506009853L;
+public class TaggedInstrumentationEvent {
 
-	private ThreadInfo threadInfo;
+	private Map<String, String> tags;
 	
-	public InstrumentationEventWithThreadInfo(String classname, String methodname) {
-		super(classname, methodname);
+	private InstrumentationEvent event;
+
+	public TaggedInstrumentationEvent(Map<String, String> tags, InstrumentationEvent event) {
+		super();
+		this.tags = tags;
+		this.event = event;
 	}
 
-	public ThreadInfo getThreadInfo() {
-		return threadInfo;
+	public Map<String, String> getTags() {
+		return tags;
 	}
 
-	public void setThreadInfo(ThreadInfo threadInfo) {
-		this.threadInfo = threadInfo;
+	public InstrumentationEvent getEvent() {
+		return event;
 	}
 }

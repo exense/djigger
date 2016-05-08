@@ -44,8 +44,6 @@ public class ClassTransformer implements ClassFileTransformer {
 		super();
 		this.service = service;
 	}
-
-	private static final String START_TIMENANO_VAR = "$djigger$startnano";
 		
 	@Override
 	public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain,
@@ -84,21 +82,12 @@ public class ClassTransformer implements ClassFileTransformer {
 								}
 							}
 							if(matches && !Modifier.isNative(method.getModifiers())) {								
-								method.addLocalVariable(START_TIMENANO_VAR, CtClass.longType);
-								method.insertBefore(START_TIMENANO_VAR+" = System.nanoTime();");
-								
-//								if(!Modifier.isStatic(method.getModifiers())) {
-//									method.insertBefore("io.djigger.agent.Collector.start(this, \"" + currentClass.getName() + "\",\"" + method.getName() + "\");");
-//								} else {
-//									method.insertBefore("io.djigger.agent.Collector.start(null, \"" + currentClass.getName() + "\",\"" + method.getName() + "\");");
-//								}
-
-								String methodName = captureThreadInfo?"reportWithThreadInfo":"report";
-								String callStr = "io.djigger.agent.InstrumentationEventCollector."+methodName+"(\"" + currentClass.getName() + "\",\"" + method.getName() + "\","+START_TIMENANO_VAR+", System.nanoTime());";
 								if(logger.isDebugEnabled()) {
-									logger.debug("Transforming method '"+className+"."+method+"': inserting report call: "+callStr);
+									logger.debug("Transforming method '"+className+"."+method+"'");
 								}
-								method.insertAfter(callStr);
+
+								method.insertBefore("io.djigger.agent.InstrumentationEventCollector.enterMethod(\"" + currentClass.getName() + "\",\"" + method.getName() + "\","+Boolean.toString(captureThreadInfo)+");");
+								method.insertAfter("io.djigger.agent.InstrumentationEventCollector.leaveMethod();", false);
 							}
 						}
 

@@ -20,6 +20,7 @@
 package io.djigger.monitoring.java.instrumentation;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 
 public class InstrumentationEvent implements Serializable {
@@ -30,11 +31,25 @@ public class InstrumentationEvent implements Serializable {
 	
 	private String methodname;
 	
-	private final long start;
+	private long start;
 
-	private final long duration;
+	private long duration;
 	
 	private long threadID;
+	
+	private UUID transactionID;
+	
+	private long localID; 
+	
+	private long localParentID;
+	
+	private transient long startNano;
+	
+	public InstrumentationEvent(String classname, String methodname) {
+		super();
+		this.classname = classname;
+		this.methodname = methodname;
+	}
 	
 	public InstrumentationEvent(String classname, String methodname, long start, long duration) {
 		super();
@@ -78,5 +93,78 @@ public class InstrumentationEvent implements Serializable {
 
 	public void setThreadID(long threadID) {
 		this.threadID = threadID;
+	}
+
+	public UUID getTransactionID() {
+		return transactionID;
+	}
+
+	public void setTransactionID(UUID transactionID) {
+		this.transactionID = transactionID;
+	}
+
+	public long getLocalID() {
+		return localID;
+	}
+
+	public void setLocalID(long localID) {
+		this.localID = localID;
+	}
+
+	public long getLocalParentID() {
+		return localParentID;
+	}
+
+	public void setLocalParentID(long localParentID) {
+		this.localParentID = localParentID;
+	}
+
+	public void setStart(long start) {
+		this.start = start;
+	}
+
+	public long getStartNano() {
+		return startNano;
+	}
+
+	public void setStartNano(long startNano) {
+		this.startNano = startNano;
+	}
+
+	public void setDuration(long duration) {
+		this.duration = duration;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (int) (localID ^ (localID >>> 32));
+		result = prime * result + ((transactionID == null) ? 0 : transactionID.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		InstrumentationEvent other = (InstrumentationEvent) obj;
+		if (localID != other.localID)
+			return false;
+		if (transactionID == null) {
+			if (other.transactionID != null)
+				return false;
+		} else if (!transactionID.equals(other.transactionID))
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "InstrumentationEvent [classname=" + classname + ", methodname=" + methodname + "]";
 	}
 }

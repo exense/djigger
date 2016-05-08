@@ -23,13 +23,8 @@ import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.gt;
 import static com.mongodb.client.model.Filters.lt;
-import io.djigger.collector.accessors.ThreadInfoAccessor;
-import io.djigger.collector.accessors.stackref.dbmodel.StackTraceElementEntry;
-import io.djigger.collector.accessors.stackref.dbmodel.StackTraceEntry;
-import io.djigger.monitoring.java.model.ThreadInfo;
 
 import java.lang.Thread.State;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -44,15 +39,18 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
-import com.mongodb.MongoException;
 import com.mongodb.MongoExecutionTimeoutException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.CountOptions;
-import com.mongodb.client.model.IndexOptions;
+
+import io.djigger.collector.accessors.ThreadInfoAccessor;
+import io.djigger.collector.accessors.stackref.dbmodel.StackTraceElementEntry;
+import io.djigger.collector.accessors.stackref.dbmodel.StackTraceEntry;
+import io.djigger.monitoring.java.model.ThreadInfo;
 
 
-public class ThreadInfoAccessorImpl implements ThreadInfoAccessor {
+public class ThreadInfoAccessorImpl extends AbstractAccessor implements ThreadInfoAccessor {
 	
 	MongoDatabase db;
 	
@@ -69,73 +67,11 @@ public class ThreadInfoAccessorImpl implements ThreadInfoAccessor {
 		stackTracesCollection = db.getCollection("stacktraces");
 	}
 
-	public void start(String host, String collection) throws UnknownHostException, MongoException {
-
-		
-	}
-	
-	public void close() {
-	}
-
 	public void createIndexesIfNeeded(Long ttl) {
-		Document hashCodeIndex = getIndex(stackTracesCollection, "hashcode");
-		if(hashCodeIndex==null) {
-			stackTracesCollection.createIndex(new Document("hashcode",1));
-		}
-		
-		Document ttlIndex = getIndex(threadInfoCollection, "timestamp");
-		if(ttlIndex==null) {
-			if(ttl!=null && ttl>0) {
-				createTimestampIndexWithTTL(ttl);
-			} else {
-				createTimestampIndex();
-			}
-		} else {
-			if(ttl!=null && ttl>0) {
-				if(!ttlIndex.containsKey("expireAfterSeconds") || !ttlIndex.getLong("expireAfterSeconds").equals(ttl)) {
-					dropIndex(ttlIndex);
-					createTimestampIndexWithTTL(ttl);
-				}
-			} else {
-				if(ttlIndex.containsKey("expireAfterSeconds")) {
-					dropIndex(ttlIndex);
-					createTimestampIndex();
-				}
-			}
-		}
+		createOrUpdateIndex(stackTracesCollection, "hashcode");
+		createOrUpdateTTLIndex(threadInfoCollection, "timestamp", ttl);
 	}
 
-	private void dropIndex(Document ttlIndex) {
-		threadInfoCollection.dropIndex(ttlIndex.getString("name"));
-	}
-
-	private void createTimestampIndexWithTTL(Long ttl) {
-		IndexOptions options = new IndexOptions();
-		options.expireAfter(ttl, TimeUnit.SECONDS);
-		createTimestampIndexWithOptions(options);
-	}
-	
-	private void createTimestampIndex() {
-		IndexOptions options = new IndexOptions();
-		createTimestampIndexWithOptions(options);
-	}
-	
-	private void createTimestampIndexWithOptions(IndexOptions options) {
-		threadInfoCollection.createIndex(new Document("timestamp", 1), options);
-	}
-	
-	private Document getIndex(MongoCollection<Document> collection,String indexName) {
-		for(Document index:collection.listIndexes()) {
-			Object o = index.get("key");
-			if(o instanceof Document) {
-				if(((Document)o).containsKey(indexName)) {
-					return (Document) index;
-				}
-			}
-		}
-		return null;
-	}
-	
 	private Bson buildQuery(Bson mongoQuery, Date from, Date to) {
 		Bson result = and(gt("timestamp", from), lt("timestamp", to));
 		if(mongoQuery!=null) {
@@ -143,14 +79,12 @@ public class ThreadInfoAccessorImpl implements ThreadInfoAccessor {
 		}
 		return result;
 	}
-
-	private static long COUNT_MAXTIME_SECONDS=30; 
 	
-	public long count(Bson mongoQuery, Date from, Date to) throws TimeoutException {
+	public long count(Bson mongoQuery, Date from, Date to, long timeout, TimeUnit timeUnit) throws TimeoutException {
 		mongoQuery = buildQuery(mongoQuery, from, to);
 		
 		CountOptions options = new CountOptions();
-		options.maxTime(COUNT_MAXTIME_SECONDS, TimeUnit.SECONDS);
+		options.maxTime(timeout, timeUnit);
 		
 		try {
 			return threadInfoCollection.count(mongoQuery, options);

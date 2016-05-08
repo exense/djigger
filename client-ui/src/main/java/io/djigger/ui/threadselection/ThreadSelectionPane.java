@@ -171,7 +171,7 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
     
     public void initialize() {
 		main.getAnalyzerGroupPane().addListener(this);
-		main.getInstrumentationPane().addListener(this);
+//		main.getInstrumentationPane().addListener(this);
     }
 
     public void refresh() {
