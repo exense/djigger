@@ -19,12 +19,14 @@
  *******************************************************************************/
 package io.djigger.agent;
 
-import io.djigger.monitoring.eventqueue.EventQueue;
-import io.djigger.monitoring.java.sampling.ThreadDumpHelper;
-
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
+import java.util.UUID;
+
+import io.djigger.monitoring.eventqueue.EventQueue;
+import io.djigger.monitoring.java.instrumentation.Transaction;
+import io.djigger.monitoring.java.sampling.ThreadDumpHelper;
 
 public class SamplerRunnable implements Runnable {
 	
@@ -39,7 +41,14 @@ public class SamplerRunnable implements Runnable {
 
 	@Override
 	public void run() {
-		ThreadInfo[] infos = mxBean.dumpAllThreads(false, false);		
-		threadInfoQueue.add(ThreadDumpHelper.toThreadDump(infos));
+		ThreadInfo[] infos = mxBean.dumpAllThreads(false, false);
+		long timestamp = System.currentTimeMillis();
+		for (ThreadInfo threadInfo : infos) {
+			io.djigger.monitoring.java.model.ThreadInfo event = ThreadDumpHelper.toThreadInfo(timestamp, threadInfo);
+			Transaction currentTransaction = InstrumentationEventCollector.getCurrentTransaction(threadInfo.getThreadId());
+			UUID currentTrID = currentTransaction!=null?currentTransaction.getId():null;
+			event.setTransactionID(currentTrID);
+			threadInfoQueue.add(event);
+		}
 	}
 }

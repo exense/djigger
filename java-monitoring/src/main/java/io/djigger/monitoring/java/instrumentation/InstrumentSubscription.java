@@ -21,12 +21,22 @@ package io.djigger.monitoring.java.instrumentation;
 
 import java.io.Serializable;
 
+import javassist.CtClass;
+
 
 public abstract class InstrumentSubscription implements Serializable {
 
 	private static final long serialVersionUID = -299257813496574472L;
 	
 	public abstract boolean isRelatedToClass(String classname);
+	
+	public boolean isRelatedToClass(CtClass classname) {
+		return true;
+	}
+	
+	public boolean isRelatedToClass(Class<?> classname) {
+		return true;
+	}
 	
 	public abstract boolean isRelatedToMethod(String methodname);
 

@@ -138,7 +138,7 @@ public class TransactionTable extends JPanel {
 	            File file = FileChooserHelper.selectFile("Save transaction definitions", "Save");
 				if(file!=null) {
 	            	try {
-						xstream.toXML(parent.getSession().getStore().getSubscriptions(), new FileWriter(file));
+						xstream.toXML(parent.getSession().getSubscriptions(), new FileWriter(file));
 					} catch (IOException e) {
 						logger.error("Error while saving transaction definitions to file "+file, e);
 					}
@@ -184,7 +184,7 @@ public class TransactionTable extends JPanel {
 	}
 	
 	public void load() {
-		Set<InstrumentSubscription> subscriptions = parent.getSession().getStore().getSubscriptions();
+		Set<InstrumentSubscription> subscriptions = parent.getSession().getSubscriptions();
 		
 		Object[][] data = new Object[subscriptions.size()][4];
 		int i=0;

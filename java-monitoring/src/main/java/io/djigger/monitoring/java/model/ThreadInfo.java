@@ -21,6 +21,7 @@ package io.djigger.monitoring.java.model;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.UUID;
 
 public class ThreadInfo implements Serializable {
 
@@ -35,6 +36,8 @@ public class ThreadInfo implements Serializable {
 	private Map<String, String> attributes;
 	
 	private StackTraceElement[] stackTrace;
+	
+	private UUID transactionID;
 
 	public ThreadInfo(StackTraceElement[] stackTrace) {
 		super();
@@ -95,5 +98,13 @@ public class ThreadInfo implements Serializable {
 
 	public void setStackTrace(StackTraceElement[] stackTrace) {
 		this.stackTrace = stackTrace;
+	}
+
+	public UUID getTransactionID() {
+		return transactionID;
+	}
+
+	public void setTransactionID(UUID transactionID) {
+		this.transactionID = transactionID;
 	}
 }

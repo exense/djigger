@@ -42,6 +42,7 @@ import io.djigger.ui.Session.SessionType;
 import io.djigger.ui.common.EnhancedTabbedPane;
 import io.djigger.ui.common.NodePresentationHelper;
 import io.djigger.ui.instrumentation.InstrumentationEventPane;
+import io.djigger.ui.instrumentation.SubscriptionPane;
 import io.djigger.ui.model.AnalysisNode;
 
 
@@ -135,6 +136,15 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 
 			}));
             
+            add(new JMenuItem(new AbstractAction("Subscriptions") {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					addSubscriptionPane();
+			    	setVisible(false);
+				}
+
+			}));
+            
 //            add(new JMenuItem(new AbstractAction("Transaction Tree View") {
 //				@Override
 //				public void actionPerformed(ActionEvent e) {
@@ -163,6 +173,11 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 		addTab(view, trID.toString(), true);
     }
     
+    public void addSubscriptionPane() {
+    	SubscriptionPane pane = new SubscriptionPane(parent);
+    	addTab(pane, "Subscriptions", true);
+    }
+    
     public void setStoreFilter(StoreFilter storeFilter) {
     	this.storeFilter = storeFilter;
     }
@@ -170,8 +185,8 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
     public void refresh() {
     	analyzerService.load(storeFilter, includeLineNumbers);
     	for(Component component:getComponents()) {
-            if(component instanceof AnalyzerPane) {
-                ((AnalyzerPane)component).refresh();
+            if(component instanceof Dashlet) {
+                ((Dashlet)component).refresh();
             }
         }
     }
@@ -186,11 +201,16 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
         BlockView testPane = new BlockView(this, TreeType.REVERSE);
         addTab(testPane, "Reverse block view", true);
         if(parent.getSessionType()!=SessionType.JMX&&parent.getSessionType()!=SessionType.FILE) {
-        	InstrumentationEventPane view = new InstrumentationEventPane(parent, this);
-			addTab(view, "Instrumentation events", true);
+        	addInstrumentationEventPane();
+			addSubscriptionPane();
         }
         setSelectedIndex(0);
     }
+
+	private void addInstrumentationEventPane() {
+		InstrumentationEventPane view = new InstrumentationEventPane(parent, this);
+		addTab(view, "Instrumentation events", true);
+	}
 
 	@Override
 	public void stateChanged(ChangeEvent e) {		

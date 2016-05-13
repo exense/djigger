@@ -19,27 +19,22 @@
  *******************************************************************************/
 package io.djigger.store;
 
+import java.io.ObjectStreamException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
 import io.djigger.model.Capture;
-import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.ql.Filter;
 import io.djigger.store.filter.StoreFilter;
-
-import java.io.ObjectStreamException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 
 public class Store implements Serializable {
 
 	private static final long serialVersionUID = 8746530878726453216L;
 	
-	private final Set<InstrumentSubscription> subscriptions;
-
 	private List<Capture> captures;
 
 	private final List<ThreadInfo> threadInfos;
@@ -57,7 +52,6 @@ public class Store implements Serializable {
 		threadInfosBuffer = new ArrayList<>();
 		instrumentationSamples = new ArrayList<InstrumentationEvent>();
 		instrumentationSamplesBuffer = new ArrayList<InstrumentationEvent>();
-		subscriptions = new HashSet<InstrumentSubscription>();
 	}
 	
 	public synchronized void addThreadInfo(ThreadInfo threadInfo) {
@@ -65,6 +59,11 @@ public class Store implements Serializable {
 	}
 
 	public synchronized void addThreadInfos(List<ThreadInfo> threadInfos) {
+		for (ThreadInfo threadInfo : threadInfos) {
+			if(threadInfo.getTransactionID()!=null) {
+				System.out.println("Got thread "+ threadInfo.getName() + " trid: "+ threadInfo.getTransactionID());
+			}
+		}
 		threadInfosBuffer.addAll(threadInfos);
 	}
 	
@@ -97,7 +96,6 @@ public class Store implements Serializable {
 		instrumentationSamplesBuffer.clear();
 		threadInfos.clear();
 		instrumentationSamples = new ArrayList<InstrumentationEvent>();
-		subscriptions.clear();
 	}
 
 	public synchronized List<ThreadInfo> queryThreadDumps(StoreFilter filter) {
@@ -187,18 +185,4 @@ public class Store implements Serializable {
 		threadInfosBuffer.clear();
 		instrumentationSamplesBuffer.clear();
 	}
-
-	public void addSubscription(InstrumentSubscription subscription) {
-		subscriptions.add(subscription);
-	}
-	
-	public void removeSubscription(InstrumentSubscription subscription) {
-		subscriptions.remove(subscription);
-	}
-	
-	public Set<InstrumentSubscription> getSubscriptions() {
-		return subscriptions;
-	}
-	
-	
 }

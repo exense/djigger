@@ -37,7 +37,6 @@ import java.util.Vector;
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -47,18 +46,20 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.ql.Filter;
 import io.djigger.ql.FilterFactory;
 import io.djigger.ql.OQLFilterBuilder;
 import io.djigger.store.Store;
+import io.djigger.store.filter.StoreFilter;
 import io.djigger.store.filter.TimeStoreFilter;
 import io.djigger.ui.Session;
 import io.djigger.ui.analyzer.AnalyzerGroupPane;
+import io.djigger.ui.analyzer.Dashlet;
 import io.djigger.ui.analyzer.TransactionAnalyzerFrame;
 import io.djigger.ui.common.EnhancedTextField;
-import io.djigger.ui.common.NodePresentationHelper;
 
-public class InstrumentationEventPane extends JPanel {
+public class InstrumentationEventPane extends Dashlet {
 	
 	private final static Integer MAX_SAMPLES = 200;
 	
@@ -76,16 +77,18 @@ public class InstrumentationEventPane extends JPanel {
 	
 	private Session session;
 	
-	private final String STACKTRACE_FILTER = "Event filter (and, or, not operators allowed)";
+	private final String EVENT_FILTER = "Event filter (and, or, not operators allowed)";
 
 	public InstrumentationEventPane(final Session main, AnalyzerGroupPane parent) {
 		this(main, null, parent);
 	}
 	
+	@SuppressWarnings("serial")
 	public InstrumentationEventPane(final Session main, final String query, AnalyzerGroupPane parent) {
 		super(new BorderLayout());
 		
 		this.parent = parent;
+		this.session = main;
 		
 		store = main.getStore();
 		
@@ -93,8 +96,8 @@ public class InstrumentationEventPane extends JPanel {
 		status.setEditable(false);
 		
 		
-		filterTextField = new EnhancedTextField(STACKTRACE_FILTER);
-		filterTextField.setToolTipText(STACKTRACE_FILTER);
+		filterTextField = new EnhancedTextField(EVENT_FILTER);
+		filterTextField.setToolTipText(EVENT_FILTER);
 		filterTextField.setMaximumSize(new Dimension(Integer.MAX_VALUE,20));
 		filterTextField.addActionListener(new ActionListener() {
 			
@@ -111,9 +114,22 @@ public class InstrumentationEventPane extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				InstrumentationEvent sample = samples.get(sampleList.convertRowIndexToModel(sampleList.getSelectedRow()));
-				Set<Long> threadId = new HashSet<Long>();
-				threadId.add(sample.getThreadID());
-				TransactionAnalyzerFrame analysisFrame = new TransactionAnalyzerFrame(main, new TimeStoreFilter(null, threadId, sample.getStart(), sample.getEnd()));
+				final UUID transactionID = sample.getTransactionID();
+				if(transactionID!=null) {
+					new TransactionAnalyzerFrame(main, new StoreFilter() {
+						
+						@Override
+						public boolean match(InstrumentationEvent sample) {
+							return sample.getTransactionID().equals(transactionID);
+						}
+						
+						@Override
+						public boolean match(ThreadInfo dump) {
+							return transactionID.equals(dump.getTransactionID());
+						}
+					});
+					
+				}
 			}
 		}));
 		sampleListPopupMenu.add(new JMenuItem(new AbstractAction("Transaction tree") {	
@@ -146,10 +162,9 @@ public class InstrumentationEventPane extends JPanel {
 
 		if(query!=null) {
 			filterTextField.setText(query);
-			query();
 		}
 		
-		this.session = session;
+		query();
 	}
 
 	private void query() {
@@ -220,7 +235,7 @@ public class InstrumentationEventPane extends JPanel {
 			data.add(vector);
 		}
 		
-		Vector vector = new Vector(3);
+		Vector<String> vector = new Vector<>(3);
 		vector.add("Name");
 		vector.add("Time");
 		vector.add("Duration (ms)");
@@ -254,5 +269,10 @@ public class InstrumentationEventPane extends JPanel {
 		sampleList.getColumnModel().getColumn(1).setCellRenderer(tableCellRenderer);
 		sampleList.setAutoCreateRowSorter(true);
 
+	}
+
+	@Override
+	public void refresh() {
+		query();
 	}
 }

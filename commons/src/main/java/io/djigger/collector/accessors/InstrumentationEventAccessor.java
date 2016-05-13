@@ -100,8 +100,8 @@ public class InstrumentationEventAccessor extends AbstractAccessor {
 				InstrumentationEvent event = new InstrumentationEvent(doc.getString("class"), doc.getString("method"),
 						doc.getDate("start").getTime(), doc.getLong("duration"));
 
-				event.setLocalID(doc.getLong("localid"));
-				event.setLocalParentID(doc.getLong("localparentid"));
+				event.setId(doc.getObjectId("_id"));
+				event.setParentID(doc.getObjectId("parentid"));
 				event.setTransactionID((UUID) doc.get("trid"));
 				return event;
 			}
@@ -138,8 +138,8 @@ public class InstrumentationEventAccessor extends AbstractAccessor {
 		doc.append("duration", event.getDuration());
 		doc.append("threadid", event.getThreadID());
 		doc.append("trid", event.getTransactionID());
-		doc.append("localid", event.getLocalID());
-		doc.append("localparentid", event.getLocalParentID());
+		doc.append("_id", event.getId());
+		doc.append("parentid", event.getParentID());
 		if (taggedEvent.getTags() != null) {
 			doc.append("tagged", true);
 			doc.putAll(taggedEvent.getTags());

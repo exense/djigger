@@ -9,5 +9,15 @@
 	</parent>
 	<artifactId>java-monitoring-commons</artifactId>
 	<dependencies>
+		<dependency>
+			<groupId>javassist</groupId>
+			<artifactId>javassist</artifactId>
+			<version>3.12.1.GA</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>bson</artifactId>
+			<version>3.2.2</version>
+		</dependency>
 	</dependencies>
 </project>

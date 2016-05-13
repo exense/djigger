@@ -28,11 +28,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
+import io.djigger.monitoring.java.instrumentation.TransformingSubscription;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
-import javassist.LoaderClassPath;
-import javassist.Modifier;
 
 public class ClassTransformer implements ClassFileTransformer {
 
@@ -47,61 +46,54 @@ public class ClassTransformer implements ClassFileTransformer {
 		
 	@Override
 	public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain,
-			byte[] classfileBuffer) throws IllegalClassFormatException {
-		if(classBeingRedefined!=null) {
+		byte[] classfileBuffer) throws IllegalClassFormatException {
+
+		ClassPool pool = ClassPool.getDefault();
+//		if(loader!=null) {
+//			if(logger.isDebugEnabled()) {
+//				logger.debug("Appending classpath: " + loader);
+//			}
+//			pool.appendClassPath(new LoaderClassPath(loader));
+//		}
+		CtClass currentClass = null;
+		try {
+			currentClass = pool.makeClass(new java.io.ByteArrayInputStream(classfileBuffer));
+		
 			Set<InstrumentSubscription> subscriptions = service.getSubscriptions();
 			if(subscriptions!=null && subscriptions.size()>0) {
-				if(logger.isDebugEnabled()) {
-					logger.debug("Redefining " + classBeingRedefined.getName());
-				}
-				ClassPool pool = ClassPool.getDefault();
-				if(loader!=null) {
-					if(logger.isDebugEnabled()) {
-						logger.debug("Appending classpath: " + loader);
-					}
-					pool.appendClassPath(new LoaderClassPath(loader));
-				}
-				try {
-					CtClass ctClass = pool
-							.makeClass(new java.io.ByteArrayInputStream(
-									classfileBuffer));
-					CtClass currentClass = ctClass;
-					do {
-						for (CtMethod method : currentClass.getDeclaredMethods()) {							
-							boolean matches = false;
-							boolean captureThreadInfo = false;
-							
-							for(InstrumentSubscription subscription:subscriptions) {
-								if (subscription.isRelatedToClass(currentClass.getName()) && subscription.isRelatedToMethod(method.getName())) {
-									matches = true;
-									
-									if(subscription.captureThreadInfo()) {
-										captureThreadInfo = true;
-										break;
-									}
-								}
-							}
-							if(matches && !Modifier.isNative(method.getModifiers())) {								
-								if(logger.isDebugEnabled()) {
-									logger.debug("Transforming method '"+className+"."+method+"'");
-								}
+			
+				boolean transformed = false;
 
-								method.insertBefore("io.djigger.agent.InstrumentationEventCollector.enterMethod(\"" + currentClass.getName() + "\",\"" + method.getName() + "\","+Boolean.toString(captureThreadInfo)+");");
-								method.insertAfter("io.djigger.agent.InstrumentationEventCollector.leaveMethod();", false);
+				for(InstrumentSubscription subscription:subscriptions) {
+					if (subscription.isRelatedToClass(className) && subscription.isRelatedToClass(currentClass)) {
+						for (CtMethod method : currentClass.getDeclaredMethods()) {
+							if (subscription.isRelatedToMethod(method.getName())) {
+								if(subscription instanceof TransformingSubscription) {
+									if(logger.isDebugEnabled()) {
+										logger.debug("Transforming " + className);
+									}
+									((TransformingSubscription)subscription).transform(currentClass, method);
+									transformed = true;
+								}
 							}
 						}
+					}
+				}
 
-					} while ((currentClass = currentClass.getSuperclass()) != null);
-
-					byte[] result = ctClass.toBytecode();
-					ctClass.defrost();
-					return result;
-				} catch (Exception e) {
-					logger.error("An error occurred while transforming class "+className, e);
+				if(transformed) {
+					classfileBuffer = currentClass.toBytecode();	
 				}
 			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			logger.error("An error occurred while transforming class "+className, e);
+		} finally {
+			if(currentClass!=null) {
+				currentClass.detach();
+			}
+			
 		}
 
-		return null;
+		return classfileBuffer;
 	}
 }

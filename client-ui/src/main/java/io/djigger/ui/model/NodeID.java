@@ -74,9 +74,13 @@ public class NodeID implements Serializable, Poolable {
 	private final static String DELIMITER = ".";
 	
 	private String buildFullname() {
-		StringBuilder builder = new StringBuilder(className.length()+1+methodName.length());
-		builder.append(className).append(DELIMITER).append(methodName);
-		return builder.toString();
+		if(className!=null && methodName!=null) {
+			StringBuilder builder = new StringBuilder(className.length()+1+methodName.length());
+			builder.append(className).append(DELIMITER).append(methodName);
+			return builder.toString();			
+		} else {
+			return "";
+		}
 	}
 
 	public synchronized String getFullname() {

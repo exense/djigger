@@ -37,6 +37,8 @@ public abstract class Facade {
 	
 	private static final Logger logger = LoggerFactory.getLogger(Facade.class);
 	
+	private long runtimeID;
+	
 	private boolean connected;
 	
 	protected final Properties properties;
@@ -58,6 +60,9 @@ public abstract class Facade {
     public Facade(final Properties properties, boolean autoReconnect) {
 		super();
 		this.properties = properties;
+		
+		// TODO get this from a sequence to avoid collisions
+		this.runtimeID = System.currentTimeMillis();
 		
 		this.connected = false;
 		this.samplingRate = DEFAULT_RATE;
@@ -81,7 +86,15 @@ public abstract class Facade {
 		}
 	}
     
-    public Properties getProperties() {
+    public long getRuntimeID() {
+		return runtimeID;
+	}
+
+	public void setRuntimeID(long runtimeID) {
+		this.runtimeID = runtimeID;
+	}
+
+	public Properties getProperties() {
 		return properties;
 	}
 

@@ -24,8 +24,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
@@ -54,7 +56,6 @@ import io.djigger.ui.common.Closeable;
 import io.djigger.ui.common.MonitoredExecution;
 import io.djigger.ui.common.MonitoredExecutionRunnable;
 import io.djigger.ui.common.NodePresentationHelper;
-import io.djigger.ui.instrumentation.InstrumentationPane;
 import io.djigger.ui.instrumentation.InstrumentationStatisticsCache;
 import io.djigger.ui.model.SessionExport;
 import io.djigger.ui.storebrowser.StoreBrowserPane;
@@ -207,7 +208,6 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     					store.addThreadInfos(export.getStore().queryThreadDumps(null));
     					store.addCaptures(export.getStore().queryCaptures(0, Long.MAX_VALUE));
     					store.addInstrumentationSamples(export.getStore().queryInstrumentationSamples(null));
-    					store.getSubscriptions().addAll(export.getStore().getSubscriptions());
     				} catch (Exception e) {
     					logger.error("Error while opening session from file "+file, e);
     				}
@@ -349,11 +349,15 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 			}
 		}
 	}
+	
+	public Set<InstrumentSubscription> getSubscriptions() {
+		return facade!=null?facade.getInstrumentationSubscriptions():null;
+	}
 
 	public void addSubscription(InstrumentSubscription subscription) {
-		store.addSubscription(subscription);
 		if(facade!=null) {
 			facade.addInstrumentation(subscription);
+			fireSubscriptionChangeEvent();
 		}
 //		instrumentationPane.setVisible(true);
 //		if(splitPane.getHeight()-splitPane.getDividerLocation()<100) {
@@ -364,9 +368,21 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 	}
 
 	public void removeSubscription(InstrumentSubscription subscription) {
-		store.removeSubscription(subscription);
 		if(facade!=null) {
 			facade.removeInstrumentation(subscription);
+			fireSubscriptionChangeEvent();
+		}
+	}
+	
+	public List<SessionListener> listeners = new ArrayList<>();
+	
+	public void addListener(SessionListener listener) {
+		listeners.add(listener);
+	}
+	
+	public void fireSubscriptionChangeEvent() {
+		for (SessionListener sessionListener : listeners) {
+			sessionListener.subscriptionChange();
 		}
 	}
 

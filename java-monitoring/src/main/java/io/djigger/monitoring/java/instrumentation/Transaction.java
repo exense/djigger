@@ -22,25 +22,40 @@ package io.djigger.monitoring.java.instrumentation;
 import java.util.Stack;
 import java.util.UUID;
 
+import org.bson.types.ObjectId;
+
 public class Transaction {
 
-	private final UUID id;
+	private UUID id;
 	
-	private long localCallSequence = 0;
-
+	private ObjectId parentId;
+	
 	private Stack<InstrumentationEvent> eventStack = new Stack<>();
 	
+	public Transaction(UUID id) {
+		super();
+		this.id = id;
+	}
+
 	public Transaction() {
 		super();
 		id = UUID.randomUUID();
+	}
+
+	public void setId(UUID id) {
+		this.id = id;
 	}
 
 	public UUID getId() {
 		return id;
 	}
 	
-	public long getNextCallId() {
-		return localCallSequence++;
+	public ObjectId getParentId() {
+		return parentId;
+	}
+
+	public void setParentId(ObjectId parentId) {
+		this.parentId = parentId;
 	}
 
 	public void pushEvent(InstrumentationEvent currentEvent) {
@@ -53,6 +68,10 @@ public class Transaction {
 	
 	public InstrumentationEvent peekEvent() {
 		return eventStack.peek();
+	}
+	
+	public boolean isStackEmpty() {
+		return eventStack.isEmpty();
 	}
 
 

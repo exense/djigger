@@ -51,6 +51,13 @@
 									<methodNamePattern><pattern>testMethodRoot</pattern><flags>0</flags></methodNamePattern>
 									<tagEvent>true</tagEvent>
 								</io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
+								<!-- <io.djigger.monitoring.java.instrumentation.subscription.HttpClientTracer/> -->
+								<io.djigger.monitoring.java.instrumentation.subscription.ServletTracer/>
+								<io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
+					<classNamePattern><pattern>.*JettyTracerTest</pattern><flags>0</flags></classNamePattern>
+					<methodNamePattern><pattern>sleep</pattern><flags>0</flags></methodNamePattern>
+					<tagEvent>true</tagEvent>
+				</io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
 							</subscriptions>
 							<attributes>
 								<entry>
@@ -63,5 +70,58 @@
 				</Group>
 			</groups>
 		</Group>
+		<Connection connectionClass="io.djigger.client.AgentFacade">
+			<samplingParameters samplingRate="100" />
+			<connectionProperties>
+				<property name="host" value="localhost" />
+				<property name="port" value="12121" />
+				<property name="username" value="" />
+				<property name="password" value="" />
+			</connectionProperties>
+			<subscriptions>
+				<io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
+					<classNamePattern><pattern>.*jps.*</pattern><flags>0</flags></classNamePattern>
+					<methodNamePattern><pattern>.*</pattern><flags>0</flags></methodNamePattern>
+					<tagEvent>true</tagEvent>
+				</io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
+				<!-- <io.djigger.monitoring.java.instrumentation.subscription.HttpClientTracer/> -->
+				<io.djigger.monitoring.java.instrumentation.subscription.ServletTracer/>
+				
+<!-- 				<io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
+					<classNamePattern><pattern>io.djigger.test.e2e.TestApp</pattern><flags>0</flags></classNamePattern>
+					<methodNamePattern><pattern>testMethodRoot</pattern><flags>0</flags></methodNamePattern>
+					<tagEvent>true</tagEvent>
+				</io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription> -->
+			</subscriptions>
+<!-- 			<attributes>
+				<entry>
+					<string>attributeKey3</string>
+					<string>attributeValue3</string>
+				</entry>
+			</attributes> -->
+		</Connection>
+		<Connection connectionClass="io.djigger.client.AgentFacade">
+			<samplingParameters samplingRate="100" />
+			<connectionProperties>
+				<property name="host" value="localhost" />
+				<property name="port" value="12123" />
+				<property name="username" value="" />
+				<property name="password" value="" />
+			</connectionProperties>
+			<subscriptions>
+				<io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
+					<classNamePattern><pattern>.*JettyTracerClientTest</pattern><flags>0</flags></classNamePattern>
+					<methodNamePattern><pattern>call</pattern><flags>0</flags></methodNamePattern>
+					<tagEvent>true</tagEvent>
+				</io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
+				<io.djigger.monitoring.java.instrumentation.subscription.HttpClientTracer/>
+			</subscriptions>
+<!-- 			<attributes>
+				<entry>
+					<string>attributeKey3</string>
+					<string>attributeValue3</string>
+				</entry>
+			</attributes> -->
+		</Connection>
 	</groups>
 </Group>

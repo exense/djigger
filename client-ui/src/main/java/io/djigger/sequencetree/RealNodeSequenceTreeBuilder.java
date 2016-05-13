@@ -23,26 +23,40 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.bson.types.ObjectId;
+
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 
 public class RealNodeSequenceTreeBuilder {
 
 	public InstrumentationEventNode buildRealNodeTree(List<InstrumentationEvent> events) {		
 			
-		Map<Long, InstrumentationEventNode> nodeIndex = new HashMap<>();
+		Map<ObjectId, InstrumentationEventNode> nodeIndex = new HashMap<>();
 		
 		for(InstrumentationEvent event:events) {
-			nodeIndex.put(event.getLocalID(), new InstrumentationEventNode(event));
+			nodeIndex.put(event.getId(), new InstrumentationEventNode(event));
 		}
 		
-		for(InstrumentationEventNode event:nodeIndex.values()) {
-			InstrumentationEventNode parent = nodeIndex.get(event.getEvent().getLocalParentID());
-			if(parent!=event) {
-				parent.add(event);
+		InstrumentationEventNode lastNode = null;
+		for(InstrumentationEventNode node:nodeIndex.values()) {
+			InstrumentationEvent event = node.getEvent();
+			InstrumentationEventNode parent = nodeIndex.get(event.getParentID());
+			if(parent!=null && parent!=node) {
+				node.setParent(parent);
+				parent.add(node);
+				lastNode = node;
 			}
 		}
 		
-		return nodeIndex.get(new Long(0));
-	}
+		InstrumentationEventNode rootNode = lastNode;
+		while(rootNode.getParent()!=null) {
+			rootNode = rootNode.getParent();
+		}
+		
+		InstrumentationEventNode root = new InstrumentationEventNode(null);
+		root.add(rootNode);
+		rootNode.setParent(rootNode);
 
+		return root;
+	}
 }

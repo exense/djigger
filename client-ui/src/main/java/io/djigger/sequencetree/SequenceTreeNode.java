@@ -87,7 +87,7 @@ public class SequenceTreeNode implements Comparable<SequenceTreeNode> {
 
 	@Override
 	public int compareTo(SequenceTreeNode o) {
-		return Long.compare(event.getLocalID(), o.event.getLocalID());
+		return event.getId().compareTo(o.event.getId());
 	}
 
 	public NodeID getId() {

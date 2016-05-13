@@ -19,13 +19,14 @@
  *******************************************************************************/
 package io.djigger.agent;
 
-import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
+import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
+
+import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 
 
 public class InstrumentationService {
@@ -71,9 +72,9 @@ public class InstrumentationService {
 	private void applySubscriptionChange(InstrumentSubscription subscription) {
 		for(Class<?> clazz:instrumentation.getAllLoadedClasses()) {
 			try {
-					if(subscription.isRelatedToClass(clazz.getName())) {
-						instrumentation.retransformClasses(clazz);
-					}
+				if(subscription.isRelatedToClass(clazz.getName())&&subscription.isRelatedToClass(clazz)) {
+					instrumentation.retransformClasses(clazz);
+				}
 			} catch (UnmodifiableClassException e) {
 				System.err.println("Agent: unable to apply subscription "+subscription.getName()+ ". Class '"+clazz.getName()+"' unmodifiable.");
 			} catch(Throwable e) {

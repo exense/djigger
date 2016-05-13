@@ -13,15 +13,15 @@ public class TestApp {
 			}
 		})).start();;
 		
-//		(new Thread(new Runnable() {
-//			
-//			@Override
-//			public void run() {
-//				while(true) {
-//					testMethod1000nanos();
-//				}
-//			}
-//		})).start();;
+		(new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				while(true) {
+					testMethod1000ms();
+				}
+			}
+		})).start();;
 		
 //		(new Thread(new Runnable() {
 //			
@@ -56,6 +56,12 @@ public class TestApp {
 	public static void testMethod1ms() {
 		try {
 			Thread.sleep(1);
+		} catch (InterruptedException e) {}
+	}
+	
+	public static void testMethod1000ms() {
+		try {
+			Thread.sleep(1000);
 		} catch (InterruptedException e) {}
 	}
 	

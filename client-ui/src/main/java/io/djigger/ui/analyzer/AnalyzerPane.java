@@ -24,7 +24,6 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Set;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -32,20 +31,19 @@ import javax.swing.JPanel;
 import io.djigger.aggregation.AnalyzerService;
 import io.djigger.aggregation.filter.BranchFilterFactory;
 import io.djigger.aggregation.filter.NodeFilterFactory;
-import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
+import io.djigger.monitoring.java.instrumentation.subscription.RealNodePathSubscription;
 import io.djigger.monitoring.java.instrumentation.subscription.SimpleSubscription;
 import io.djigger.ql.Filter;
 import io.djigger.ql.OQLFilterBuilder;
 import io.djigger.ui.Session;
 import io.djigger.ui.common.EnhancedTextField;
 import io.djigger.ui.common.NodePresentationHelper;
-import io.djigger.ui.instrumentation.InstrumentationPaneListener;
 import io.djigger.ui.model.AnalysisNode;
 import io.djigger.ui.model.NodeID;
 import io.djigger.ui.model.RealNodePath;
 
 
-public abstract class AnalyzerPane extends JPanel implements ActionListener {
+public abstract class AnalyzerPane extends Dashlet implements ActionListener {
 
 	private static final long serialVersionUID = -8452799701138552693L;
 
@@ -97,11 +95,6 @@ public abstract class AnalyzerPane extends JPanel implements ActionListener {
 		transform();
 
 //		main.getInstrumentationPane().addListener(this);
-	}
-
-	public void refresh() {
-		transform();
-		refreshDisplay();
 	}
 
 	public void appendCurrentSelectionToBranchFilter(boolean negate) {
@@ -178,7 +171,7 @@ public abstract class AnalyzerPane extends JPanel implements ActionListener {
 		return nodeFilter;
 	}
 
-	private void transform() {
+	void transform() {
 		Filter<RealNodePath> branchFilter = parseBranchFilter();
 		Filter<NodeID> nodeFilter = parseNodeFilter();
 
@@ -194,6 +187,7 @@ public abstract class AnalyzerPane extends JPanel implements ActionListener {
 	
 	public void instrumentCurrentNode() {
 		if(nodeFilter==null) {
+			main.addSubscription(new RealNodePathSubscription(getSelectedNode().getRealNodePath().toStackTrace(), false));			
 		} else {
 			JOptionPane.showMessageDialog(this,
 				    "Instrumentation impossible when packages are skipped. Please remove the exclusion criteria and try again.",
@@ -220,5 +214,10 @@ public abstract class AnalyzerPane extends JPanel implements ActionListener {
 
 	public void resetFocus() {
 		requestFocusInWindow();
+	}
+	
+	public void refresh() {
+		transform();
+		refreshDisplay();
 	}
 }

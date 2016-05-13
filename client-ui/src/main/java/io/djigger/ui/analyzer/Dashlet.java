@@ -17,50 +17,30 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.sequencetree;
+package io.djigger.ui.analyzer;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.awt.LayoutManager;
 
-import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import javax.swing.JPanel;
 
-public class InstrumentationEventNode {
-	
-	private InstrumentationEvent event;
-	
-	private InstrumentationEventNode parent;
+public abstract class Dashlet extends JPanel {
 
-	private LinkedList<InstrumentationEventNode> children = new LinkedList<>();
-
-	public InstrumentationEventNode(InstrumentationEvent event) {
+	public Dashlet() {
 		super();
-		this.event = event;
 	}
 
-	public boolean add(InstrumentationEventNode e) {
-		return children.add(e);
-	}
-	
-	public List<InstrumentationEventNode> getChildren() {
-		return children;
+	public Dashlet(LayoutManager layout) {
+		super(layout);
 	}
 
-	public InstrumentationEventNode getParent() {
-		return parent;
+	public Dashlet(boolean isDoubleBuffered) {
+		super(isDoubleBuffered);
 	}
 
-	public void setParent(InstrumentationEventNode parent) {
-		this.parent = parent;
+	public Dashlet(LayoutManager layout, boolean isDoubleBuffered) {
+		super(layout, isDoubleBuffered);
 	}
 
-	public InstrumentationEvent getEvent() {
-		return event;
-	}
+	public abstract void refresh();
 
-	@Override
-	public String toString() {
-		return "InstrumentationEventNode [event=" + event + "]";
-	}
-	
-	
 }

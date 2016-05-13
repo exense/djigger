@@ -19,6 +19,12 @@
  *******************************************************************************/
 package io.djigger.agent;
 
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.bson.types.ObjectId;
+
 import io.djigger.monitoring.eventqueue.EventQueue;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEventWithThreadInfo;
@@ -35,6 +41,8 @@ public class InstrumentationEventCollector {
 	
 	private static ThreadLocal<Transaction> transactions = new ThreadLocal<>(); 
 	
+	private static Map<Long, Transaction> transactionMap = new ConcurrentHashMap<>();
+	
 	private static long convertToTime(long tNano) {
 		return (tNano-tRefNano)/1000000+tRef;
 	}
@@ -42,7 +50,30 @@ public class InstrumentationEventCollector {
 	public static void setEventCollector(EventQueue<InstrumentationEvent> eventCollector) {
 		InstrumentationEventCollector.eventCollector = eventCollector;
 	}
+	
+	public static String getCurrentTracer() {
+		Transaction tr = transactions.get();
+		return tr!=null?tr.getId().toString()+tr.peekEvent().getId().toString():null;
+	}
 
+	public static void applyTracer(String tracer) {
+		UUID trid = UUID.fromString(tracer.substring(0, 36));
+		ObjectId parentId = new ObjectId(tracer.substring(36));
+		Transaction tr = transactions.get();
+		if(tr==null) {
+			tr = new Transaction(trid);
+			setCurrentTransaction(tr);
+		} else {
+			tr.setId(trid);
+		}
+		tr.setParentId(parentId);
+	}
+	
+	public static void leaveTransaction() {
+		transactions.remove();
+		transactionMap.remove(Thread.currentThread().getId());
+	}
+	
 	public static void enterMethod(String classname, String method, boolean addThreadInfo) {
 		InstrumentationEvent event;
 		
@@ -54,27 +85,34 @@ public class InstrumentationEventCollector {
 			event = new InstrumentationEvent(classname, method);
 		}
 		
+		event.setId(new ObjectId());
+		
 		Transaction transaction = transactions.get();
 		if(transaction == null) {
 			transaction = new Transaction();
-			transactions.set(transaction);		
+			setCurrentTransaction(transaction);
 		} else {
-			InstrumentationEvent currentEvent = transaction.peekEvent();
-			
-			long localParentId = currentEvent.getLocalID();
-			event.setLocalParentID(localParentId);
+			if(transaction.getParentId()!=null) {
+				event.setParentID(transaction.getParentId());
+				transaction.setParentId(null);
+			} else {
+				InstrumentationEvent currentEvent = transaction.peekEvent();
+				event.setParentID(currentEvent.getId());				
+			}
 		}
 		
-		long localId = transaction.getNextCallId();
-		event.setLocalID(localId);
-		
-		event.setTransactionID(transaction.getId());
+		event.setThreadID(Thread.currentThread().getId());
 		
 		transaction.pushEvent(event);
 
 		long startNano = System.nanoTime();
 		event.setStartNano(System.nanoTime());
 		event.setStart(convertToTime(startNano));
+	}
+
+	private static void setCurrentTransaction(Transaction transaction) {
+		transactions.set(transaction);	
+		transactionMap.put(Thread.currentThread().getId(), transaction);
 	}
 	
 	public static void leaveMethod() {
@@ -84,11 +122,17 @@ public class InstrumentationEventCollector {
 		InstrumentationEvent event = transaction.popEvent();
 		event.setDuration(endNano-event.getStartNano());
 		
+		event.setTransactionID(transaction.getId());
+
 		eventCollector.add(event);
 
-		if(event.getLocalID()==0) {
-			transactions.remove();
+		if(transaction.isStackEmpty()) {
+			leaveTransaction();
 		}
+	}
+	
+	public static Transaction getCurrentTransaction(long threadID) {
+		return transactionMap.get(threadID);
 	}
 
 

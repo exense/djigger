@@ -25,8 +25,12 @@ import java.util.regex.Pattern;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.instrumentation.TransformingSubscription;
+import javassist.CannotCompileException;
+import javassist.CtClass;
+import javassist.CtMethod;
 
-public class RegexSubscription extends InstrumentSubscription {
+public class RegexSubscription extends InstrumentSubscription implements TransformingSubscription {
 
 	private static final long serialVersionUID = -1137052413341333149L;
 	
@@ -114,6 +118,11 @@ public class RegexSubscription extends InstrumentSubscription {
 		} else if (!methodNamePattern.pattern().equals(other.methodNamePattern.pattern()))
 			return false;
 		return true;
+	}
+
+	@Override
+	public void transform(CtClass clazz, CtMethod method) {
+		TimeMeasureTransformer.transform(clazz, method, captureThreadInfo());
 	}
 
 	@Override
