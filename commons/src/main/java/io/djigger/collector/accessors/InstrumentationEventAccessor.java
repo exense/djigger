@@ -64,7 +64,7 @@ public class InstrumentationEventAccessor extends AbstractAccessor {
 	}
 
 	public Iterator<InstrumentationEvent> getByTransactionId(UUID transactionIDd) {
-		Bson filter = new Document("trid", transactionIDd);
+		Bson filter = new Document("trid", transactionIDd.toString());
 		return query(filter);
 	}
 
@@ -102,7 +102,9 @@ public class InstrumentationEventAccessor extends AbstractAccessor {
 
 				event.setId(doc.getObjectId("_id"));
 				event.setParentID(doc.getObjectId("parentid"));
-				event.setTransactionID((UUID) doc.get("trid"));
+//				event.setTransactionID((UUID) doc.get("trid"));
+				event.setTransactionID(UUID.fromString(doc.getString("trid")));
+
 				return event;
 			}
 
@@ -137,7 +139,7 @@ public class InstrumentationEventAccessor extends AbstractAccessor {
 		doc.append("start", new Date(event.getStart()));
 		doc.append("duration", event.getDuration());
 		doc.append("threadid", event.getThreadID());
-		doc.append("trid", event.getTransactionID());
+		doc.append("trid", event.getTransactionID().toString());
 		doc.append("_id", event.getId());
 		doc.append("parentid", event.getParentID());
 		if (taggedEvent.getTags() != null) {

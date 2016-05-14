@@ -103,11 +103,11 @@ public class ServletTracer extends InstrumentSubscription implements Transformin
 	@Override
 	public void transform(CtClass clazz, CtMethod method) {
 		try {
+			TimeMeasureTransformer.transform(clazz, method, false);
 			method.insertBefore("if(arg0 instanceof javax.servlet.http.HttpServletRequest) {"+
 					"String tr = ((javax.servlet.http.HttpServletRequest) $1).getHeader(\"djigger\");"+
 					"io.djigger.agent.InstrumentationEventCollector.applyTracer(tr);"+
-				"}");
-			TimeMeasureTransformer.transform(clazz, method, false);
+					"}");
 			//method.insertBefore("if(!$1.containsHeader(\"djigger\")){$1.addHeader(\"djigger\",\"TEST\");};");
 		} catch (CannotCompileException e) {
 			// TODO Auto-generated catch block

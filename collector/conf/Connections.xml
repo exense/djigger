@@ -111,7 +111,7 @@
 			<subscriptions>
 				<io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
 					<classNamePattern><pattern>.*JettyTracerClientTest</pattern><flags>0</flags></classNamePattern>
-					<methodNamePattern><pattern>call</pattern><flags>0</flags></methodNamePattern>
+					<methodNamePattern><pattern>call.*</pattern><flags>0</flags></methodNamePattern>
 					<tagEvent>true</tagEvent>
 				</io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
 				<io.djigger.monitoring.java.instrumentation.subscription.HttpClientTracer/>

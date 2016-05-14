@@ -72,6 +72,9 @@ public class SequenceTreeService {
 		SequenceTreeBuilder treeBuilder = new SequenceTreeBuilder();
 
 		SequenceTreeNode aggregationTreeNode = treeBuilder.build(realTree, branchFilter, nodeFilter);
+		
+		aggregationTreeNode.sort();
+		
 		return aggregationTreeNode;
 	}
 	

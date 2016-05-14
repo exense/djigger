@@ -57,16 +57,18 @@ public class InstrumentationEventCollector {
 	}
 
 	public static void applyTracer(String tracer) {
-		UUID trid = UUID.fromString(tracer.substring(0, 36));
-		ObjectId parentId = new ObjectId(tracer.substring(36));
-		Transaction tr = transactions.get();
-		if(tr==null) {
-			tr = new Transaction(trid);
-			setCurrentTransaction(tr);
-		} else {
-			tr.setId(trid);
+		if(tracer!=null) {
+			UUID trid = UUID.fromString(tracer.substring(0, 36));
+			ObjectId parentId = new ObjectId(tracer.substring(36));
+			Transaction tr = transactions.get();
+			if(tr==null) {
+				tr = new Transaction(trid);
+				setCurrentTransaction(tr);
+			} else {
+				tr.setId(trid);
+			}
+			tr.setParentId(parentId);
 		}
-		tr.setParentId(parentId);
 	}
 	
 	public static void leaveTransaction() {

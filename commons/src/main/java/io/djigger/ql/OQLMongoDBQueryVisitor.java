@@ -31,7 +31,7 @@ public class OQLMongoDBQueryVisitor extends OQLBaseVisitor<Bson>{
 		String op = ctx.op.getText();
 		String value = ctx.expr(1).getText();
 	       // strip quotes
-		value = value.substring(1, value.length() - 1).replace("\"\"", "\"");
+		value = value.replace("\"\"", "\"");
 		
 		if(op.equals("=")) 
     		return new Document(ctx.expr(0).getText(), value);
