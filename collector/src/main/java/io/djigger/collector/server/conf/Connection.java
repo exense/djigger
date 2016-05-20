@@ -21,6 +21,7 @@ package io.djigger.collector.server.conf;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -83,6 +84,15 @@ public class Connection implements ConnectionGroupNode {
 	@Override
 	public List<ConnectionGroupNode> getGroups() {
 		return null;
+	}
+	
+	public String toString(){
+		Properties hiddenPassword = ((Properties)connectionProperties.clone());
+		hiddenPassword.setProperty("password", "***");
+		return connectionClass + ";" +
+			   hiddenPassword + ";" + 
+			   samplingParameters.toString() + ";" + 
+			   subscriptions + ";";
 	}
 
 }

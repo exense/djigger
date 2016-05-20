@@ -33,4 +33,16 @@ public class SamplingParameters {
 	public void setSamplingRate(int samplingRate) {
 		this.samplingRate = samplingRate;
 	}
+	
+	/*
+	 * @author dcransac
+	 * @since 20.05.2015
+	 * 
+	 * 	For debug purposes
+	 * 
+	 */
+	
+	public String toString(){
+		return "samplingRate=" + samplingRate;
+	}
 }
