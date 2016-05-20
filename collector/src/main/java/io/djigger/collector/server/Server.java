@@ -75,7 +75,7 @@ public class Server {
 			String connectionsConfigFilename = System.getProperty("connectionsConfig");
 
 			CollectorConfig config = Configurator.parseCollectorConfiguration(collConfigFilename);
-			ConnectionsConfig cc = Configurator.parseConnectionsConfiguration(connectionsConfigFilename);
+			ConnectionsConfig cc = Configurator.parseConnectionsConfiguration(config.getConnectionFiles());
 
 			initAccessors(config);
 

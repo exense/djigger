@@ -28,4 +28,6 @@ public interface ConnectionGroupNode {
 	
 	public List<ConnectionGroupNode> getGroups();
 	
+	public String toString();
+	
 }

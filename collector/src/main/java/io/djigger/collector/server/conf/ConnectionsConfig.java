@@ -25,6 +25,9 @@
 
 package io.djigger.collector.server.conf;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ConnectionsConfig {
 
 	ConnectionGroup connectionGroup;
@@ -38,5 +41,18 @@ public class ConnectionsConfig {
 		this.connectionGroup = connectionGroup;
 	}
 
+	/*
+	 * @author dcransac
+	 * @since 20.05.2016
+	 * 
+	 * 	For debugging purposes
+	 */
+	
+	public String toString(){
+		List<String> result = new ArrayList<String>();
+		for ( ConnectionGroupNode cgn : connectionGroup.getGroups())
+			result.add(cgn.toString());
+		return result.toString();
+	}
 	
 }

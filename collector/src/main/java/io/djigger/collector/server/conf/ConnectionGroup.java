@@ -19,6 +19,7 @@
  *******************************************************************************/
 package io.djigger.collector.server.conf;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -27,6 +28,10 @@ public class ConnectionGroup implements ConnectionGroupNode {
 	Map<String, String> attributes;
 	
 	List<ConnectionGroupNode> groups;
+	
+	ConnectionGroup(){
+		this.groups = new ArrayList<ConnectionGroupNode>();
+	}
 	
 	public Map<String, String> getAttributes() {
 		return attributes;
@@ -42,5 +47,29 @@ public class ConnectionGroup implements ConnectionGroupNode {
 
 	public void setGroups(List<ConnectionGroupNode> groups) {
 		this.groups = groups;
+	}
+	
+	/*
+	 * @author dcransac
+	 * @since 20.05.2016
+	 * 
+	 *  For merger case
+	 */
+	public void addGroup(ConnectionGroupNode group) {
+		this.groups.add(group);
+	}
+	
+	/*
+	 * @author dcransac
+	 * @since 20.05.2016
+	 * 
+	 *  For debugging purposes
+	 */
+	
+	public String toString(){
+		List<String> result = new ArrayList<String>();
+		for ( ConnectionGroupNode cgn : groups)
+			result.add(cgn.toString());
+		return result.toString();
 	}
 }

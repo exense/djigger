@@ -55,30 +55,66 @@ public class Configurator {
 		try {
 			XStream xstream = new XStream();
 			xstream.alias("Collector", CollectorConfig.class);
-			// [dcransac] Since connections and collector settings are now decoupled
-			//xstream.alias("Group", ConnectionGroup.class);
-			//xstream.alias("Connection", Connection.class);
-			//xstream.processAnnotations(Connection.class);
-			//xstream.processAnnotations(SamplingParameters.class);
 			xstream.processAnnotations(MongoDBParameters.class);
 			return (CollectorConfig) xstream.fromXML(new File(collConfigFilename));
 		} catch (Exception e) {
-			logger.error("Unable to load " + collConfigFilename + " from ClassLoader.", e);
-			throw new RuntimeException("Unable to load " + collConfigFilename + " from ClassLoader.", e);
+			/*
+			 * @author dcransac
+			 * @since 20.05.2016
+			 *	Error handling hides the actual xstream exceptions and is therefore very confusing in certain cases.
+			 */
+			 
+			String errorMessage = "XStream could not load the collector's config file located at " + collConfigFilename + ". Exception message was : " + e.getMessage();
+			logger.error(errorMessage, e);
+			throw new RuntimeException(errorMessage, e);
 		}
 	}
 
-	public static ConnectionsConfig parseConnectionsConfiguration(String connectionsConfigFilename) throws Exception {
+	public static ConnectionsConfig parseConnectionsConfiguration(List<String> connectionsConfigFiles) throws Exception {
 
-		if(connectionsConfigFilename == null || connectionsConfigFilename.trim().isEmpty())
-			throw new Exception("Invalid connections config file : " + connectionsConfigFilename  + ". Check your -DconnectionsConfig option.");
+		List<ConnectionsConfig> ccList = new ArrayList<ConnectionsConfig>();
+		
+		for(String connectionsFile : connectionsConfigFiles)
+		{
+		if(connectionsFile == null || connectionsFile.trim().isEmpty())
+			throw new Exception("Invalid connections config file : " + connectionsConfigFiles  + ". Check your -DconnectionsConfig option.");
 
-		if(connectionsConfigFilename.trim().toLowerCase().endsWith(".xml"))
-			return parseConnectionsXML(connectionsConfigFilename);
-		if(connectionsConfigFilename.trim().toLowerCase().endsWith(".csv"))
-			return parseConnectionsCSV(connectionsConfigFilename);
+				
+		if(connectionsFile.trim().toLowerCase().endsWith(".xml"))
+			ccList.add(parseConnectionsXML(connectionsFile));
+		if(connectionsFile.trim().toLowerCase().endsWith(".csv"))
+			ccList.add(parseConnectionsCSV(connectionsFile));
+		// if (isFolder) then do reccursive call
+		// if()
+		}
+		
+		logger.info("Parsed the following files:" + connectionsConfigFiles );
+		logger.info("Which resulted in the opening of the following connections:" + ccList );
+		
+		return mergeConnectionsConfigs(ccList);
+	}
+	
+	/*
+	 * @author dcransac
+	 * @since 20.05.2016
+	 *
+	 * For quick compatibility but also seperation of concerns,
+	 * another way to process multiple connection files would be to add the connections
+	 * "naturally" to a single ConnectionsConfig object in parseConnectionsConfiguration
+	 *
+	 */
+	private static ConnectionsConfig mergeConnectionsConfigs(
+			List<ConnectionsConfig> ccList) {
+		
+		ConnectionGroup topContainer = new ConnectionGroup(); 
+		
+		for (ConnectionsConfig cc : ccList)
+			topContainer.addGroup(cc.getConnectionGroup());
 
-		throw new Exception("Unknown connections config file type for file : " + connectionsConfigFilename + ". Please use a .xml or .csv file.");
+		ConnectionsConfig result = new ConnectionsConfig();
+		result.setConnectionGroup(topContainer);
+		
+		return result;
 	}
 
 	/*
