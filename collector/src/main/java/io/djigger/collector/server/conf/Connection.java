@@ -92,6 +92,7 @@ public class Connection implements ConnectionGroupNode {
 		return connectionClass + ";" +
 			   hiddenPassword + ";" + 
 			   samplingParameters.toString() + ";" + 
+			   attributes  + ";" +
 			   subscriptions + ";";
 	}
 

@@ -69,7 +69,7 @@ public class ConnectionGroup implements ConnectionGroupNode {
 	public String toString(){
 		List<String> result = new ArrayList<String>();
 		for ( ConnectionGroupNode cgn : groups)
-			result.add(cgn.toString());
+			result.add(cgn.toString() + ";" + attributes);
 		return result.toString();
 	}
 }
