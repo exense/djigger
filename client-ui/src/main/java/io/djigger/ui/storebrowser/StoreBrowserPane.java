@@ -19,14 +19,6 @@
  *******************************************************************************/
 package io.djigger.ui.storebrowser;
 
-import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
-import io.djigger.monitoring.java.model.ThreadInfo;
-import io.djigger.ql.OQLMongoDBBuilder;
-import io.djigger.ui.Session;
-import io.djigger.ui.common.EnhancedTextField;
-import io.djigger.ui.common.MonitoredExecution;
-import io.djigger.ui.common.MonitoredExecutionRunnable;
-
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -50,12 +42,18 @@ import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.ListCellRenderer;
 import javax.swing.SpinnerDateModel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.model.ThreadInfo;
+import io.djigger.ql.OQLMongoDBBuilder;
+import io.djigger.ui.Session;
+import io.djigger.ui.common.EnhancedTextField;
+import io.djigger.ui.common.MonitoredExecution;
+import io.djigger.ui.common.MonitoredExecutionRunnable;
 
 @SuppressWarnings("serial")
 public class StoreBrowserPane extends JPanel implements ActionListener, KeyListener {
@@ -71,11 +69,9 @@ public class StoreBrowserPane extends JPanel implements ActionListener, KeyListe
 	private final JSpinner toDateSpinner;
 	
 	private final JComboBox<DatePresets> datePresets;
-	
-	private boolean changeLock = false;
 
 	enum DatePresets {
-
+		MINS5("Last 5 mins", 300000, 0),
 		MINS15("Last 15 mins", 900000, 0),
 		MINS60("Last 60 mins", 3600000, 0),
 		HOURS4("Last 4 hours", 14400000, 0),
@@ -123,55 +119,50 @@ public class StoreBrowserPane extends JPanel implements ActionListener, KeyListe
 			@Override
 			public void itemStateChanged(ItemEvent event) {
 				if (event.getStateChange() == ItemEvent.SELECTED) {					
-					DatePresets preset = (DatePresets) event.getItem();
-					applyPreset(preset);
+					onDatePresetSelection();
 				}				
 			}
 		}); 
 	    
+		
+		
 		add(datePresets);
 		setLayout(new BoxLayout(this,BoxLayout.LINE_AXIS));
 		
-		applyPreset((DatePresets) datePresets.getSelectedItem());
+		onDatePresetSelection();
 	}
 
 	private JSpinner initSpinner() {
 		JSpinner spinner = new JSpinner();
 		
 		spinner.setModel(new SpinnerDateModel());
-		spinner.getModel().addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent arg0) {
-				selectCustomPresetIfNeeded();
-			}
-		});
 		spinner.setEditor(new JSpinner.DateEditor(spinner, "dd.MM.yyyy HH:mm"));
 		((JSpinner.DefaultEditor)spinner.getEditor()).getTextField().addKeyListener(this);
 	    add(spinner);
 	    
 	    return spinner;
 	}
-
-	private void applyPreset(DatePresets preset) {
+	
+	private void onDatePresetSelection() {
+		DatePresets preset = (DatePresets) datePresets.getSelectedItem();
 		if(preset!=DatePresets.CUSTOM) {
-			changeLock = true;
-			try {	
-				Calendar cal = new GregorianCalendar();
-				cal.add(Calendar.MILLISECOND, -preset.fromOffset);
-				fromDateSpinner.getModel().setValue(cal.getTime());
-				cal.setTime(new Date());
-				cal.add(Calendar.MILLISECOND, -preset.toOffset);
-				toDateSpinner.getModel().setValue(cal.getTime());
-				
-			} finally {
-				changeLock = false;
-			}
+			fromDateSpinner.setVisible(false);
+			toDateSpinner.setVisible(false);
+		} else {
+			fromDateSpinner.setVisible(true);
+			toDateSpinner.setVisible(true);
 		}
 	}
 
-	private void selectCustomPresetIfNeeded() {
-		if(datePresets!=null && !changeLock) {	
-			datePresets.setSelectedIndex(datePresets.getItemCount()-1);
+	private void applyPreset() {
+		DatePresets preset = (DatePresets) datePresets.getSelectedItem();
+		if(preset!=DatePresets.CUSTOM) {
+			Calendar cal = new GregorianCalendar();
+			cal.add(Calendar.MILLISECOND, -preset.fromOffset);
+			fromDateSpinner.getModel().setValue(cal.getTime());
+			cal.setTime(new Date());
+			cal.add(Calendar.MILLISECOND, -preset.toOffset);
+			toDateSpinner.getModel().setValue(cal.getTime());
 		}
 	}
 
@@ -182,6 +173,8 @@ public class StoreBrowserPane extends JPanel implements ActionListener, KeyListe
 
 	private void search() {
 		parent.clear();
+		
+		applyPreset();
 		
 		final Bson query;
 		try {
