@@ -73,8 +73,6 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     
     private StoreClient storeClient;
 
-//    private final JSplitPane splitPane1;
-
 	private final JSplitPane splitPane;
 
     private final AnalyzerGroupPane analyzerGroupPane;
@@ -84,8 +82,6 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     private final InstrumentationStatisticsCache statisticsCache;
 
     private final ArgumentParser options;
-//
-//    private final InstrumentationPane instrumentationPane;
     
     private final StoreBrowserPane storeBrowserPane;
 
@@ -113,8 +109,6 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     		facade.addListener(this);
         }
 
-//        splitPane1 = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-
         splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);        
 
         threadSelectionPane = new ThreadSelectionPane(this);
@@ -122,16 +116,6 @@ public class Session extends JPanel implements FacadeListener, Closeable {
         
         analyzerGroupPane = new AnalyzerGroupPane(this, presentationHelper);
         splitPane.add(analyzerGroupPane);
-        
-
-//        instrumentationPane = new InstrumentationPane(this, presentationHelper);
-//        splitPane.add(instrumentationPane);
-//
-//        instrumentationPane.setVisible(false);
-        
-//        splitPane1.add(splitPane);
-//        splitPane1.setDividerLocation(300);
-
         splitPane.setDividerLocation(300);
         add(splitPane);
 
@@ -146,8 +130,6 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 
         threadSelectionPane.initialize();
         analyzerGroupPane.initialize();
-
-    	//splitPane.setDividerLocation(0.7);
     }
 
 	private Facade createFacade(SessionConfiguration config) {
@@ -218,15 +200,7 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     	}
     }
     
-    public void configure() {
-//        if(config.getType() == SessionType.AGENT) {
-//        	instrumentationPane.setVisible(true);
-//        } else if (config.getType() == SessionType.AGENT_CAPTURE && store.getInstrumentationSamplesCount()>0) {
-//        	instrumentationPane.setVisible(true);
-//        } else {
-//        	instrumentationPane.setVisible(false);
-//        }
-    }
+    public void configure() {}
     
     private List<ThreadInfo> parseThreadDumpFile(File file) throws IOException {
         Format format = Parser.detectFormat(file);
@@ -284,16 +258,9 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 
     public void refreshAll() {
     	store.processBuffers();
-    	if(store.getInstrumentationSamplesCount()>0) {
-//    		instrumentationPane.setVisible(true);
-    		splitPane.setDividerLocation(0.5);
-    	}
-
     	statisticsCache.reload();
     	threadSelectionPane.refresh();
-    	analyzerGroupPane.refresh();
-//    	instrumentationPane.refresh();
-    	
+    	analyzerGroupPane.refresh();    	
     }
     
     public void showLineNumbers(boolean show) {
@@ -306,9 +273,6 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     	
     	analyzerGroupPane.setStoreFilter(filter);
     	analyzerGroupPane.refresh();
-    	
-//    	instrumentationPane.setStoreFilter(filter);
-//    	instrumentationPane.refresh();
     }
 
     public void clear() {
@@ -319,10 +283,6 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 	public ArgumentParser getOptions() {
 		return options;
 	}
-//
-//	public InstrumentationPane getInstrumentationPane() {
-//		return instrumentationPane;
-//	}
 	
 	Capture currentCapture;
 	public void setSampling(boolean state) {
@@ -358,13 +318,7 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 		if(facade!=null) {
 			facade.addInstrumentation(subscription);
 			fireSubscriptionChangeEvent();
-		}
-//		instrumentationPane.setVisible(true);
-//		if(splitPane.getHeight()-splitPane.getDividerLocation()<100) {
-//			splitPane.setDividerLocation(0.7);
-//		}
-//		instrumentationPane.refresh();
-		
+		}	
 	}
 
 	public void removeSubscription(InstrumentSubscription subscription) {
