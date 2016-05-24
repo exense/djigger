@@ -182,12 +182,12 @@ public abstract class AnalyzerPane extends Dashlet implements ActionListener {
 	public void instrumentCurrentMethod() {
 		NodeID nodeID = getSelectedNode().getId();
 		
-		main.addSubscription(new SimpleSubscription(nodeID.getClassName(), nodeID.getMethodName(), false));
+		main.addSubscription(new SimpleSubscription(nodeID.getClassName(), nodeID.getMethodName(), true));
 	}	
 	
 	public void instrumentCurrentNode() {
 		if(nodeFilter==null) {
-			main.addSubscription(new RealNodePathSubscription(getSelectedNode().getRealNodePath().toStackTrace(), false));			
+			main.addSubscription(new RealNodePathSubscription(getSelectedNode().getRealNodePath().toStackTrace(), true));			
 		} else {
 			JOptionPane.showMessageDialog(this,
 				    "Instrumentation impossible when packages are skipped. Please remove the exclusion criteria and try again.",

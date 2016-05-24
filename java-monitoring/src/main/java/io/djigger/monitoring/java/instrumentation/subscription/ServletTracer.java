@@ -20,7 +20,6 @@
 package io.djigger.monitoring.java.instrumentation.subscription;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.instrumentation.TransformingSubscription;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -29,14 +28,14 @@ import javassist.NotFoundException;
 
 public class ServletTracer extends InstrumentSubscription implements TransformingSubscription  {
 
+	private static final long serialVersionUID = 1170484117770802108L;
+
 	public ServletTracer() {
 		super(false);
-		// TODO Auto-generated constructor stub
 	}
 	
 	public ServletTracer(boolean tagEvent) {
 		super(tagEvent);
-		// TODO Auto-generated constructor stub
 	}
 	
 	@Override
@@ -56,7 +55,7 @@ public class ServletTracer extends InstrumentSubscription implements Transformin
 	}
 
 	@Override
-	public boolean isRelatedToClass(Class<?> class_) {
+	public boolean retransformClass(Class<?> class_) {
 		for(Class<?> interface_:class_.getInterfaces()) {
 			if(interface_.getName().equals("javax.servlet.Servlet")) {
 				return true;
@@ -67,59 +66,21 @@ public class ServletTracer extends InstrumentSubscription implements Transformin
 	}
 
 	@Override
-	public boolean isRelatedToMethod(String methodname) {
-		// TODO Auto-generated method stub
-		return methodname.equals("service");
+	public boolean isRelatedToMethod(CtMethod methodname) {
+		return methodname.getName().equals("service");
 	}
 
 	@Override
-	public boolean match(InstrumentationEvent sample) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public boolean captureThreadInfo() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public String getName() {
-		// TODO Auto-generated method stub
+	public String toString() {
 		return "Servlet Tracer";
 	}
 
 	@Override
-	public int hashCode() {
-		return 0;
+	public void transform(CtClass clazz, CtMethod method) throws CannotCompileException {
+		TimeMeasureTransformer.transform(clazz, method, this, false);
+		method.insertBefore("if(arg0 instanceof javax.servlet.http.HttpServletRequest) {"+
+				"String tr = ((javax.servlet.http.HttpServletRequest) $1).getHeader(\"djigger\");"+
+				"io.djigger.agent.InstrumentationEventCollector.applyTracer(tr);"+
+				"}");
 	}
-
-	@Override
-	public boolean equals(Object obj) {
-		return obj == this;
-	}
-
-	@Override
-	public void transform(CtClass clazz, CtMethod method) {
-		try {
-			TimeMeasureTransformer.transform(clazz, method, false);
-			method.insertBefore("if(arg0 instanceof javax.servlet.http.HttpServletRequest) {"+
-					"String tr = ((javax.servlet.http.HttpServletRequest) $1).getHeader(\"djigger\");"+
-					"io.djigger.agent.InstrumentationEventCollector.applyTracer(tr);"+
-					"}");
-			//method.insertBefore("if(!$1.containsHeader(\"djigger\")){$1.addHeader(\"djigger\",\"TEST\");};");
-		} catch (CannotCompileException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	@Override
-	public boolean isRelatedToClass(String classname) {
-		return true;
-	}
-	
-	
-
 }

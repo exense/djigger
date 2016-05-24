@@ -20,7 +20,6 @@
 package io.djigger.monitoring.java.instrumentation.subscription;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.instrumentation.TransformingSubscription;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -28,66 +27,43 @@ import javassist.CtMethod;
 
 public class HttpClientTracer extends InstrumentSubscription implements TransformingSubscription  {
 
+	private static final long serialVersionUID = 341521471983041872L;
+
 	public HttpClientTracer() {
 		super(false);
-		// TODO Auto-generated constructor stub
 	}
 	
 	public HttpClientTracer(boolean tagEvent) {
 		super(tagEvent);
-		// TODO Auto-generated constructor stub
+	}
+	
+	@Override
+	public boolean isRelatedToClass(CtClass clazz) {
+		return isRelatedToClass(clazz.getName());
 	}
 
 	@Override
-	public boolean isRelatedToClass(String classname) {
-		// TODO Auto-generated method stub
+	public boolean retransformClass(Class<?> clazz) {
+		return isRelatedToClass(clazz.getName());
+	}
+	
+	private boolean isRelatedToClass(String classname) {
 		return classname.contains("DefaultBHttpClientConnection");
 	}
 
 	@Override
-	public boolean isRelatedToMethod(String methodname) {
-		// TODO Auto-generated method stub
-		return methodname.equals("sendRequestHeader");
-	}
+	public boolean isRelatedToMethod(CtMethod method) {
+		return method.getName().equals("sendRequestHeader");
+	}	
 
 	@Override
-	public boolean match(InstrumentationEvent sample) {
-		// TODO Auto-generated method stub
-		return false;
+	public void transform(CtClass clazz, CtMethod method) throws CannotCompileException {
+		method.insertBefore("if(!$1.containsHeader(\"djigger\")){$1.addHeader(\"djigger\",io.djigger.agent.InstrumentationEventCollector.getCurrentTracer());};");
 	}
-
+	
 	@Override
-	public boolean captureThreadInfo() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@Override
-	public String getName() {
-		// TODO Auto-generated method stub
+	public String toString() {
 		return "Http Client Tracer";
 	}
-
-	@Override
-	public int hashCode() {
-		return 0;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		return obj == this;
-	}
-
-	@Override
-	public void transform(CtClass clazz, CtMethod method) {
-		try {
-			method.insertBefore("if(!$1.containsHeader(\"djigger\")){$1.addHeader(\"djigger\",io.djigger.agent.InstrumentationEventCollector.getCurrentTracer());};");
-		} catch (CannotCompileException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
-	
 
 }

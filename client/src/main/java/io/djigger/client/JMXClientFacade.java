@@ -21,9 +21,6 @@ package io.djigger.client;
 
 import static java.lang.management.ManagementFactory.THREAD_MXBEAN_NAME;
 import static java.lang.management.ManagementFactory.newPlatformMXBeanProxy;
-import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.sampling.Sampler;
-import io.djigger.monitoring.java.sampling.ThreadDumpHelper;
 
 import java.io.IOException;
 import java.lang.management.ThreadInfo;
@@ -41,6 +38,10 @@ import javax.management.remote.JMXServiceURL;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
+import io.djigger.monitoring.java.sampling.Sampler;
+import io.djigger.monitoring.java.sampling.ThreadDumpHelper;
 
 public class JMXClientFacade extends Facade implements NotificationListener {
 	
@@ -138,5 +139,7 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 		MBeanServerConnection connection = connector.getMBeanServerConnection();
 		
 		bean = newPlatformMXBeanProxy(connection, THREAD_MXBEAN_NAME, ThreadMXBean.class);
+
+//		MemoryMXBean bean2 = newPlatformMXBeanProxy(connection, ManagementFactory.MEMORY_MXBEAN_NAME, MemoryMXBean.class);
 	}
 }

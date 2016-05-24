@@ -19,34 +19,27 @@
  *******************************************************************************/
 package io.djigger.monitoring.java.instrumentation;
 
+import java.io.ObjectStreamException;
 import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javassist.CtClass;
+import javassist.CtMethod;
 
 
 public abstract class InstrumentSubscription implements Serializable {
 
 	private static final long serialVersionUID = -299257813496574472L;
 	
-	public abstract boolean isRelatedToClass(String classname);
-	
-	public boolean isRelatedToClass(CtClass classname) {
-		return true;
-	}
-	
-	public boolean isRelatedToClass(Class<?> classname) {
-		return true;
-	}
-	
-	public abstract boolean isRelatedToMethod(String methodname);
-
-	public abstract boolean match(InstrumentationEvent sample);
-	
-	public abstract boolean captureThreadInfo();
+	private int id;
 	
 	private boolean tagEvent;
-		
-	public abstract String getName();
+
+	public abstract boolean isRelatedToClass(CtClass clazz);
+	
+	public abstract boolean isRelatedToMethod(CtMethod method);
+	
+	public abstract boolean retransformClass(Class<?> clazz);
 
 	public InstrumentSubscription(boolean tagEvent) {
 		super();
@@ -55,7 +48,15 @@ public abstract class InstrumentSubscription implements Serializable {
 
 	@Override
 	public String toString() {
-		return getName();
+		return "InstrumentSubscription [id=" + id + "]";
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
 	}
 
 	public boolean isTagEvent() {
@@ -67,8 +68,24 @@ public abstract class InstrumentSubscription implements Serializable {
 	}
 
 	@Override
-	public abstract int hashCode();
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + id;
+		return result;
+	}
 
 	@Override
-	public abstract boolean equals(Object obj);
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		InstrumentSubscription other = (InstrumentSubscription) obj;
+		if (id != other.id)
+			return false;
+		return true;
+	}
 }

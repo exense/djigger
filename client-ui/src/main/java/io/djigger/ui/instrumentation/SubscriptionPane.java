@@ -161,12 +161,11 @@ public class SubscriptionPane extends JPanel {
 			for(InstrumentSubscription subscription:subscriptions) {
 				data[i][0] = subscription;
 				data[i][1] = subscription.isTagEvent();
-				data[i][2] = subscription.captureThreadInfo();
 				i++;
 	 		}
 			
 			
-			DefaultTableModel model = new DefaultTableModel(data, new Object[]{"Name", "Tagged", "Captures path"}) {
+			DefaultTableModel model = new DefaultTableModel(data, new Object[]{"Name", "Tagged"}) {
 				public Class getColumnClass(int c) {				
 		            switch(c) {
 		            case 0:return InstrumentSubscription.class;

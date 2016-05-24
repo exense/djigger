@@ -19,19 +19,15 @@
  *******************************************************************************/
 package io.djigger.monitoring.java.instrumentation.subscription;
 
+import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtMethod;
 
 public class TimeMeasureTransformer {
 
-	public static void transform(CtClass clazz, CtMethod method, boolean captureThreadInfos) {
-		try {
-			method.insertBefore("io.djigger.agent.InstrumentationEventCollector.enterMethod(\"" + clazz.getName() + "\",\"" + method.getName() + "\","+Boolean.toString(captureThreadInfos)+");");
-			method.insertAfter("io.djigger.agent.InstrumentationEventCollector.leaveMethod();", false);
-		} catch (CannotCompileException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	public static void transform(CtClass clazz, CtMethod method, InstrumentSubscription subscription, boolean captureThreadInfos) throws CannotCompileException {
+		method.insertBefore("io.djigger.agent.InstrumentationEventCollector.enterMethod(\"" + clazz.getName() + "\",\"" + method.getName() + "\","+Boolean.toString(captureThreadInfos)+","+subscription.getId()+");");
+		method.insertAfter("io.djigger.agent.InstrumentationEventCollector.leaveMethod();", false);
 	}
 }

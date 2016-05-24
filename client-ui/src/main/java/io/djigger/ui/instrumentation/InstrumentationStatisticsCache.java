@@ -96,7 +96,7 @@ public class InstrumentationStatisticsCache {
 	public synchronized InstrumentationStatistics getInstrumentationStatistics(InstrumentSubscription subscription) {
 		InstrumentationStatistics statistics = new InstrumentationStatistics();
 		for(InstrumentationEvent sample:samples) {
-			if(subscription.match(sample)) {
+			if(subscription.getId()==sample.getSubscriptionID()) {
 				statistics.update(sample);
 			}
 		}
@@ -107,7 +107,7 @@ public class InstrumentationStatisticsCache {
 	public synchronized List<InstrumentationEvent> getInstrumentationSamples(InstrumentSubscription subscription) {
 		List<InstrumentationEvent> result = new ArrayList<InstrumentationEvent>();
 		for(InstrumentationEvent sample:samples) {
-			if(subscription.match(sample)) {
+			if(subscription.getId()==sample.getSubscriptionID()) {
 				result.add(sample);
 			}
 		}

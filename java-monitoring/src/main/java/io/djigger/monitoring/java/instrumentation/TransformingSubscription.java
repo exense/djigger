@@ -19,10 +19,11 @@
  *******************************************************************************/
 package io.djigger.monitoring.java.instrumentation;
 
+import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtMethod;
 
 public interface TransformingSubscription {
 
-	public void transform(CtClass clazz, CtMethod method);
+	public void transform(CtClass clazz, CtMethod method) throws CannotCompileException;
 }

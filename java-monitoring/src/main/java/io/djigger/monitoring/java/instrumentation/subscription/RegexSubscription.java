@@ -24,7 +24,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.instrumentation.TransformingSubscription;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -55,79 +54,45 @@ public class RegexSubscription extends InstrumentSubscription implements Transfo
 		methodNamePattern = Pattern.compile(pattern);
 		methodNameMatcher = methodNamePattern.matcher("");
 	}
-	
+
 	@Override
-	public boolean match(InstrumentationEvent sample) {
-		return isRelatedToClass(sample.getClassname()) && isRelatedToMethod(sample.getMethodname());
+	public boolean isRelatedToClass(CtClass classname) {
+		return isRelatedToClass(classname.getName());
 	}
 
 	@Override
-	public boolean isRelatedToClass(String classname) {
+	public boolean retransformClass(Class<?> classname) {
+		return isRelatedToClass(classname.getName());
+	}
+
+	private boolean isRelatedToClass(String classname) {
 		classNameMatcher.reset(classname);
 		return classNameMatcher.matches();
 	}
 
 	@Override
-	public boolean isRelatedToMethod(String methodname) {
-		methodNameMatcher.reset(methodname);
+	public boolean isRelatedToMethod(CtMethod method) {
+		return isMethodMatch(method.getName());
+	}
+
+	private boolean isMethodMatch(String method) {
+		methodNameMatcher.reset(method);
 		return methodNameMatcher.matches();
 	}
 
 	@Override
-	public String getName() {
+	public String toString() {
 		return classNamePattern.pattern() + "/" + methodNamePattern.pattern();
 	}
 	
-	private Object readResolve() throws ObjectStreamException {
+	protected Object readResolve() throws ObjectStreamException {
 		classNameMatcher = classNamePattern.matcher("");
 		methodNameMatcher = methodNamePattern.matcher("");
 		return this;
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime
-				* result
-				+ ((classNamePattern == null) ? 0 : classNamePattern.pattern().hashCode());
-		result = prime
-				* result
-				+ ((methodNamePattern == null) ? 0 : methodNamePattern.pattern()
-						.hashCode());
-		return result;
+	public void transform(CtClass clazz, CtMethod method) throws CannotCompileException {
+		TimeMeasureTransformer.transform(clazz, method, this, false);
 	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		RegexSubscription other = (RegexSubscription) obj;
-		if (classNamePattern == null) {
-			if (other.classNamePattern != null)
-				return false;
-		} else if (!classNamePattern.pattern().equals(other.classNamePattern.pattern()))
-			return false;
-		if (methodNamePattern == null) {
-			if (other.methodNamePattern != null)
-				return false;
-		} else if (!methodNamePattern.pattern().equals(other.methodNamePattern.pattern()))
-			return false;
-		return true;
-	}
-
-	@Override
-	public void transform(CtClass clazz, CtMethod method) {
-		TimeMeasureTransformer.transform(clazz, method, captureThreadInfo());
-	}
-
-	@Override
-	public boolean captureThreadInfo() {
-		return false;
-	}
-
 }

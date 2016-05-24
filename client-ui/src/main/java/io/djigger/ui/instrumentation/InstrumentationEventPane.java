@@ -28,9 +28,7 @@ import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.Vector;
 
@@ -52,7 +50,6 @@ import io.djigger.ql.FilterFactory;
 import io.djigger.ql.OQLFilterBuilder;
 import io.djigger.store.Store;
 import io.djigger.store.filter.StoreFilter;
-import io.djigger.store.filter.TimeStoreFilter;
 import io.djigger.ui.Session;
 import io.djigger.ui.analyzer.AnalyzerGroupPane;
 import io.djigger.ui.analyzer.Dashlet;
@@ -61,7 +58,7 @@ import io.djigger.ui.common.EnhancedTextField;
 
 public class InstrumentationEventPane extends Dashlet {
 	
-	private final static Integer MAX_SAMPLES = 200;
+	private final static Integer MAX_SAMPLES = 1000;
 	
 	private AnalyzerGroupPane parent;
 	
@@ -209,20 +206,12 @@ public class InstrumentationEventPane extends Dashlet {
 		Collections.sort(samples, new Comparator<InstrumentationEvent>() {
 			@Override
 			public int compare(InstrumentationEvent o1, InstrumentationEvent o2) {
-				if(o1.getDuration()<o2.getDuration()) {
-					return 1;
-				} else {
-					if(o1.getDuration()==o2.getDuration()) {
-						return 0;
-					} else {
-						return -1;
-					}
-				}
+				return -Long.compare(o1.getStart(), o2.getStart());
 			}
 		});
 
 		if(samples.size()>MAX_SAMPLES) {
-			status.setText("Displaying the " + MAX_SAMPLES + " longest transactions.");
+			status.setText("Displaying the " + MAX_SAMPLES + " newest transactions.");
 		}
 		
 		Vector<Vector<Object>> data = new Vector<Vector<Object>>();

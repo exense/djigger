@@ -34,7 +34,7 @@ import javassist.CtClass;
 import javassist.CtMethod;
 
 public class ClassTransformer implements ClassFileTransformer {
-
+	
 	private static final Logger logger = LoggerFactory.getLogger(ClassTransformer.class);
 	
 	private final InstrumentationService service;
@@ -49,28 +49,20 @@ public class ClassTransformer implements ClassFileTransformer {
 		byte[] classfileBuffer) throws IllegalClassFormatException {
 
 		ClassPool pool = ClassPool.getDefault();
-//		if(loader!=null) {
-//			if(logger.isDebugEnabled()) {
-//				logger.debug("Appending classpath: " + loader);
-//			}
-//			pool.appendClassPath(new LoaderClassPath(loader));
-//		}
 		CtClass currentClass = null;
 		try {
 			currentClass = pool.makeClass(new java.io.ByteArrayInputStream(classfileBuffer));
 		
 			Set<InstrumentSubscription> subscriptions = service.getSubscriptions();
 			if(subscriptions!=null && subscriptions.size()>0) {
-			
 				boolean transformed = false;
-
 				for(InstrumentSubscription subscription:subscriptions) {
-					if (subscription.isRelatedToClass(className) && subscription.isRelatedToClass(currentClass)) {
+					if (subscription.isRelatedToClass(currentClass)) {
 						for (CtMethod method : currentClass.getDeclaredMethods()) {
-							if (subscription.isRelatedToMethod(method.getName())) {
+							if (subscription.isRelatedToMethod(method)) {
 								if(subscription instanceof TransformingSubscription) {
 									if(logger.isDebugEnabled()) {
-										logger.debug("Transforming " + className);
+										logger.debug("Transforming method " + className + "." + method.getLongName());
 									}
 									((TransformingSubscription)subscription).transform(currentClass, method);
 									transformed = true;
@@ -81,17 +73,18 @@ public class ClassTransformer implements ClassFileTransformer {
 				}
 
 				if(transformed) {
+					if(logger.isDebugEnabled()) {
+						logger.debug("Transforming " + className);
+					}
 					classfileBuffer = currentClass.toBytecode();	
 				}
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (Throwable e) {
 			logger.error("An error occurred while transforming class "+className, e);
 		} finally {
 			if(currentClass!=null) {
 				currentClass.detach();
-			}
-			
+			}	
 		}
 
 		return classfileBuffer;

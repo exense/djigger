@@ -19,25 +19,6 @@
  *******************************************************************************/
 package io.djigger.ui.threadselection;
 
-import io.djigger.model.Capture;
-import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.model.ThreadInfo;
-import io.djigger.ql.Filter;
-import io.djigger.ql.FilterFactory;
-import io.djigger.ql.OQLFilterBuilder;
-import io.djigger.store.Store;
-import io.djigger.store.filter.IdStoreFilter;
-import io.djigger.store.filter.StoreFilter;
-import io.djigger.store.filter.TimeStoreFilter;
-import io.djigger.ui.Session;
-import io.djigger.ui.analyzer.AnalyzerPaneListener;
-import io.djigger.ui.analyzer.TreeView;
-import io.djigger.ui.common.EnhancedTextField;
-import io.djigger.ui.instrumentation.InstrumentationPaneListener;
-import io.djigger.ui.instrumentation.InstrumentationStatistics;
-import io.djigger.ui.model.AnalysisNode;
-import io.djigger.ui.model.RealNodeAggregation;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -76,8 +57,24 @@ import javax.swing.border.EmptyBorder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.djigger.model.Capture;
+import io.djigger.monitoring.java.model.ThreadInfo;
+import io.djigger.ql.Filter;
+import io.djigger.ql.FilterFactory;
+import io.djigger.ql.OQLFilterBuilder;
+import io.djigger.store.Store;
+import io.djigger.store.filter.IdStoreFilter;
+import io.djigger.store.filter.StoreFilter;
+import io.djigger.store.filter.TimeStoreFilter;
+import io.djigger.ui.Session;
+import io.djigger.ui.analyzer.AnalyzerPaneListener;
+import io.djigger.ui.analyzer.TreeView;
+import io.djigger.ui.common.EnhancedTextField;
+import io.djigger.ui.model.AnalysisNode;
+import io.djigger.ui.model.RealNodeAggregation;
 
-public class ThreadSelectionPane extends JPanel implements MouseMotionListener, MouseListener, KeyListener, ComponentListener, InstrumentationPaneListener, AnalyzerPaneListener {
+
+public class ThreadSelectionPane extends JPanel implements MouseMotionListener, MouseListener, KeyListener, ComponentListener, AnalyzerPaneListener {
 
 	private static final Logger logger = LoggerFactory.getLogger(ThreadSelectionPane.class);
 	
@@ -740,22 +737,6 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 		INDIVIDUAL;
 	}
 
-	@Override
-	public void onSelection(Set<InstrumentSubscription> selectedSubscriptions) {
-    	for(ThreadBlock block:blocks) {
-			block.selectedInInstrumentationPane = false;
-    	}
-
-    	Set<Long> selectedInAnalyzerPane = getThreadsByInstrumentSubscription(selectedSubscriptions);
-    	for(ThreadBlock block:blocks) {
-    		if(selectedInAnalyzerPane.contains(block.id)) {
-    			block.selectedInInstrumentationPane = true;
-    		}
-    	}
-
-    	repaint();
-	}
-
 	private Set<Long> getAnalyzerPaneThreads() {
 		HashSet<Long> result = new HashSet<Long>();
 		Component _pane = main.getAnalyzerGroupPane().getCurrentTab();
@@ -782,18 +763,6 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 		}
 		return result;
 	}
-
-	private Set<Long> getThreadsByInstrumentSubscription(Set<InstrumentSubscription> subscriptions) {
-		HashSet<Long> result = new HashSet<Long>();
-		if(subscriptions!=null) {
-			for(InstrumentSubscription subscription:subscriptions) {
-				InstrumentationStatistics stats = main.getStatisticsCache().getInstrumentationStatistics(subscription);
-				result.addAll(stats.getThreadIds());
-			}
-		}
-		return result;
-	}
-
 
 	@Override
 	public void onSelection(AnalysisNode selectedNode) {

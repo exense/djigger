@@ -20,9 +20,12 @@
 package io.djigger.monitoring.java.instrumentation.subscription;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.instrumentation.TransformingSubscription;
+import javassist.CannotCompileException;
+import javassist.CtClass;
+import javassist.CtMethod;
 
-public class SimpleSubscription extends InstrumentSubscription {
+public class SimpleSubscription extends InstrumentSubscription implements TransformingSubscription {
 
 	private static final long serialVersionUID = -1137052413341333149L;
 
@@ -37,62 +40,31 @@ public class SimpleSubscription extends InstrumentSubscription {
 	}
 
 	@Override
-	public boolean match(InstrumentationEvent sample) {
-		return isRelatedToClass(sample.getClassname()) && isRelatedToMethod(sample.getMethodname());
+	public boolean isRelatedToClass(CtClass classname) {
+		return isRelatedToClass(classname.getName());
 	}
 
 	@Override
-	public boolean isRelatedToClass(String classname) {
+	public boolean retransformClass(Class<?> classname) {
+		return isRelatedToClass(classname.getName());
+	}
+
+	private boolean isRelatedToClass(String classname) {
 		return this.classname.equals(classname);
 	}
 
 	@Override
-	public boolean isRelatedToMethod(String methodname) {
-		return this.methodname.equals(methodname);
+	public boolean isRelatedToMethod(CtMethod method) {
+		return this.methodname.equals(method.getName());
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result
-				+ ((classname == null) ? 0 : classname.hashCode());
-		result = prime * result
-				+ ((methodname == null) ? 0 : methodname.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		SimpleSubscription other = (SimpleSubscription) obj;
-		if (classname == null) {
-			if (other.classname != null)
-				return false;
-		} else if (!classname.equals(other.classname))
-			return false;
-		if (methodname == null) {
-			if (other.methodname != null)
-				return false;
-		} else if (!methodname.equals(other.methodname))
-			return false;
-		return true;
-	}
-
-	@Override
-	public String getName() {
+	public String toString() {
 		return classname + "." + methodname;
 	}
 
 	@Override
-	public boolean captureThreadInfo() {
-		return false;
+	public void transform(CtClass clazz, CtMethod method) throws CannotCompileException {
+		TimeMeasureTransformer.transform(clazz, method, this, false);
 	}
-
-
 }

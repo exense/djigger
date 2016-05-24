@@ -169,7 +169,7 @@ public class Server {
 				for(InstrumentationEvent event:samples) {
 					boolean tagEvent = false;
 					for(InstrumentSubscription subscription:client.getInstrumentationSubscriptions()) {
-						if(subscription.match(event)) {
+						if(subscription.getId()==event.getSubscriptionID()) {
 							if(subscription.isTagEvent()) {
 								tagEvent = true;
 								break;

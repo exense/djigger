@@ -32,7 +32,8 @@ public class InstrumentationEvent implements Serializable {
 	private ObjectId id;
 	
 	private ObjectId parentID;
-
+	
+	private int subscriptionID;
 	
 	private UUID transactionID;
 	
@@ -60,6 +61,14 @@ public class InstrumentationEvent implements Serializable {
 		this.methodname = methodname;
 		this.start = start;
 		this.duration = duration;
+	}
+
+	public int getSubscriptionID() {
+		return subscriptionID;
+	}
+
+	public void setSubscriptionID(int subscriptionID) {
+		this.subscriptionID = subscriptionID;
 	}
 
 	public long getStart() {

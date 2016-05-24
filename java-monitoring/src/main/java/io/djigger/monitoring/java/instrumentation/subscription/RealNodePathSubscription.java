@@ -19,15 +19,14 @@
  *******************************************************************************/
 package io.djigger.monitoring.java.instrumentation.subscription;
 
-import java.util.Arrays;
-
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
-import io.djigger.monitoring.java.instrumentation.InstrumentationEventWithThreadInfo;
+import io.djigger.monitoring.java.instrumentation.TransformingSubscription;
 import io.djigger.monitoring.java.model.StackTraceElement;
-import io.djigger.monitoring.java.model.ThreadInfo;
+import javassist.CannotCompileException;
+import javassist.CtClass;
+import javassist.CtMethod;
 
-public class RealNodePathSubscription extends InstrumentSubscription {
+public class RealNodePathSubscription extends InstrumentSubscription implements TransformingSubscription {
 
 	static final long serialVersionUID = 173774663260136913L;
 
@@ -38,80 +37,39 @@ public class RealNodePathSubscription extends InstrumentSubscription {
 		this.path = path;
 	}
 
-	@Override
-	public boolean match(InstrumentationEvent sample) {
-		if(sample instanceof InstrumentationEventWithThreadInfo) {
-			ThreadInfo threadInfo = ((InstrumentationEventWithThreadInfo)sample).getThreadInfo();
-			StackTraceElement[] samplePath = threadInfo.getStackTrace();
-			if(path.length!=samplePath.length) {
-				return false;
-			} else {
-				int length = path.length;
-				for (int i=0; i<length; i++) {
-					StackTraceElement o1 = path[i];
-					StackTraceElement o2 = samplePath[i];
-					if(!o1.getMethodName().equals(o2.getMethodName())||!o1.getMethodName().equals(o2.getMethodName())) {
-						return false;
-					}
-				}
-			}
-		} else {
-			return false;
-		}
-		
-		// Arrays.equals(path, threadInfo.getStackTrace())
-		return true;
-	}
-
 	public StackTraceElement[]  getPath() {
 		return path;
 	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((path == null) ? 0 : Arrays.hashCode(path));
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		RealNodePathSubscription other = (RealNodePathSubscription) obj;
-		if (path == null) {
-			if (other.path != null)
-				return false;
-		} else if (!Arrays.equals(path,other.path))
-			return false;
-		return true;
-	}
 	
 	@Override
-	public boolean isRelatedToClass(String classname) {
+	public boolean isRelatedToClass(CtClass class_) {
+		return isRelatedToClassname(class_.getName());
+	}
+
+	private boolean isRelatedToClassname(String classname) {
 		StackTraceElement lastNode = path[0] ;
 		return lastNode.getClassName().equals(classname);
 	}
 
 	@Override
-	public boolean isRelatedToMethod(String methodname) {
+	public boolean isRelatedToMethod(CtMethod method) {
 		StackTraceElement lastNode = path[0] ;
-		return lastNode.getMethodName().equals(methodname);
+		return lastNode.getMethodName().equals(method.getName());
 	}
 
 	@Override
-	public String getName() {
+	public String toString() {
 		StackTraceElement lastNode = path[0] ;
 		return ".../" + lastNode.getClassName() + '.' + lastNode.getMethodName();
 	}
 
 	@Override
-	public boolean captureThreadInfo() {
-		return true;
+	public boolean retransformClass(Class<?> class_) {
+		return isRelatedToClassname(class_.getName());
+	}
+
+	@Override
+	public void transform(CtClass clazz, CtMethod method) throws CannotCompileException {
+		TimeMeasureTransformer.transform(clazz, method, this, true);
 	}
 }

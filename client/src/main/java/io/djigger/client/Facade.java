@@ -26,6 +26,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -129,7 +130,12 @@ public abstract class Facade {
 		listeners.add(listener);
 	}
 
+	private static AtomicInteger idSequence = new AtomicInteger();
+	
     public synchronized void addInstrumentation(InstrumentSubscription subscription) {
+    	if(subscription.getId()==0) {
+    		subscription.setId(idSequence.incrementAndGet());
+    	}
         subscriptions.add(subscription);
         addInstrumentation_(subscription);
     }

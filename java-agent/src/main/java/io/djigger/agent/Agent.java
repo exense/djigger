@@ -19,8 +19,6 @@
  *******************************************************************************/
 package io.djigger.agent;
 
-import io.djigger.monitoring.java.agent.JavaAgentMessageType;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -38,8 +36,10 @@ import java.util.regex.Pattern;
 
 import org.smb.core.Message;
 
-public class Agent extends Thread {
+import io.djigger.monitoring.java.agent.JavaAgentMessageType;
 
+public class Agent extends Thread {
+	
 	private final static Integer DEFAULT_PORT = 12121;
 
 	private final boolean agentToClientConnection;

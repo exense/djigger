@@ -76,7 +76,7 @@ public class InstrumentationEventAccessor extends AbstractAccessor {
 	
 	public Iterator<InstrumentationEvent> getTaggedEvents(Bson filter, Date from, Date to) {
 		Bson query = buildQuery(filter, from, to);
-		query = and(query,new Document("tagged", true));
+		//query = and(query,new Document("tagged", true));
 		return query(query);
 	}
 

@@ -76,7 +76,7 @@ public class InstrumentationEventCollector {
 		transactionMap.remove(Thread.currentThread().getId());
 	}
 	
-	public static void enterMethod(String classname, String method, boolean addThreadInfo) {
+	public static void enterMethod(String classname, String method, boolean addThreadInfo, int subscriptionId) {
 		InstrumentationEvent event;
 		
 		if(addThreadInfo) {
@@ -87,6 +87,7 @@ public class InstrumentationEventCollector {
 			event = new InstrumentationEvent(classname, method);
 		}
 		
+		event.setSubscriptionID(subscriptionId);
 		event.setId(new ObjectId());
 		
 		Transaction transaction = transactions.get();
