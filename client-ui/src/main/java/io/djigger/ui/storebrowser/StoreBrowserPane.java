@@ -30,8 +30,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
@@ -219,16 +217,8 @@ public class StoreBrowserPane extends JPanel implements ActionListener, KeyListe
 
 				private void retrieveThreadInfos(final Bson query, final Date from, final Date to,
 						MonitoredExecution execution) {
-					execution.setText("Calculating execution time...");
-					try {
-	    				long maxValue = parent.getStoreClient().getThreadInfoAccessor().count(query, from, to, 3, TimeUnit.SECONDS);
-	    				execution.setMaxValue(maxValue);
-					} catch (TimeoutException e)  {
-						execution.setIndeterminate();
-						logger.warn("Execution time limit exceeded while counting query results. Unable to calcultate max value of progress bar.");
-					}
-	    			
-					execution.setText("Retrieving data...");
+					execution.setText("Retrieving sampling events...");
+					execution.setIndeterminate();
     				try {
     					int count = 0;
     					Iterator<ThreadInfo> it = parent.getStoreClient().getThreadInfoAccessor().query(query, from, to).iterator();
@@ -236,7 +226,6 @@ public class StoreBrowserPane extends JPanel implements ActionListener, KeyListe
     					ThreadInfo thread;
     					while(it.hasNext() && !execution.isInterrupted()) {
     						count++;
-    						execution.setValue(count++);
     						thread=it.next();
 							parent.getStore().addThreadInfo(thread);
     					}
