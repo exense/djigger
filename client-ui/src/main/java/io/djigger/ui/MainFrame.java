@@ -32,14 +32,15 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
-import javax.swing.UIManager.LookAndFeelInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.thoughtworks.xstream.XStream;
 
+import io.djigger.ui.Session.SessionType;
 import io.djigger.ui.common.FileChooserHelper;
+import io.djigger.ui.common.Settings;
 
 public class MainFrame extends JPanel {
 	
@@ -121,8 +122,16 @@ public class MainFrame extends JPanel {
 			groupPane.addSession(session);
 			groupPane.selectSession(session);
 			exportSessions(new File("djigger_lastsession.xml"));
+    		displayWelcomeDialog(session);
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(this, e.toString(), "Error", JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+	private void displayWelcomeDialog(final Session session) {
+		if(session.getSessionType()==SessionType.STORE && Settings.getINSTANCE().getAsBoolean("browserpane.connectionconfirmation", true)) {
+			boolean showThisAgain = JOptionPane.showOptionDialog(this, "Connection succeeded\nEnter your query in the 'Store filter' (optional) and press enter retrieve your data.", "Connection succeeded", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE, null, new String[]{"OK","Don't show this again"}, "OK")==0;
+			Settings.getINSTANCE().put("browserpane.connectionconfirmation", Boolean.toString(showThisAgain));
 		}
 	}
 	
