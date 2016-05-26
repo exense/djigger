@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>io.djigger</groupId>
 		<artifactId>parent</artifactId>
-		<version>1.4.2</version>
+		<version>1.5.1</version>
 		<relativePath>../parent</relativePath>
 	</parent>
 	<artifactId>commons</artifactId>

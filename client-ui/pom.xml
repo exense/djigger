@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>io.djigger</groupId>
 		<artifactId>parent</artifactId>
-		<version>1.4.2</version>
+		<version>1.5.1</version>
 		<relativePath>../parent</relativePath>
 	</parent>
 	<artifactId>client-ui</artifactId>
@@ -140,6 +140,12 @@
 			<scope>system</scope>
 			<systemPath>${java.home}/../lib/tools.jar</systemPath>
 		</dependency>
-
+		
+		<dependency>
+		    <groupId>org.hsqldb</groupId>
+		    <artifactId>hsqldb</artifactId>
+		    <version>2.3.4</version>
+		    <scope>test</scope>
+		</dependency>
 	</dependencies>
 </project>
