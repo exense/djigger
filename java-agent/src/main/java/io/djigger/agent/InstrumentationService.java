@@ -46,29 +46,37 @@ public class InstrumentationService {
 		instrumentation.addTransformer(transformer, true);
 	}
 	
-	public synchronized void destroy() {
+	public void destroy() {
 		Set<InstrumentSubscription> previousSubscriptions = new HashSet<InstrumentSubscription>();
-		previousSubscriptions.addAll(subscriptions);
-		subscriptions.clear();
+		synchronized (subscriptions) {
+			previousSubscriptions.addAll(subscriptions);
+			subscriptions.clear();
+		}
 		for(InstrumentSubscription subscription:previousSubscriptions) {
 			applySubscriptionChange(subscription);
 		}
 	}
 	
-	public synchronized void addSubscription(InstrumentSubscription subscription) {
-		subscriptions.add(subscription);
+	public void addSubscription(InstrumentSubscription subscription) {
+		synchronized (subscriptions) {
+			subscriptions.add(subscription);			
+		}
 		applySubscriptionChange(subscription);
 	}
 	
-	public synchronized void removeSubscription(InstrumentSubscription subscription) {
-		subscriptions.remove(subscription);
+	public void removeSubscription(InstrumentSubscription subscription) {
+		synchronized (subscriptions) {
+			subscriptions.remove(subscription);
+		}
 		applySubscriptionChange(subscription);
 	}
 	
 	
-	public synchronized Set<InstrumentSubscription> getSubscriptions() {
+	public Set<InstrumentSubscription> getSubscriptions() {
 		HashSet<InstrumentSubscription> result = new HashSet<InstrumentSubscription>();
-		result.addAll(subscriptions);
+		synchronized (subscriptions) {
+			result.addAll(subscriptions);
+		}
 		return result;
 	}
 

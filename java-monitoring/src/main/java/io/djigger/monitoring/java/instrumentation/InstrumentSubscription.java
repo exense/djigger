@@ -19,9 +19,7 @@
  *******************************************************************************/
 package io.djigger.monitoring.java.instrumentation;
 
-import java.io.ObjectStreamException;
 import java.io.Serializable;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javassist.CtClass;
 import javassist.CtMethod;
@@ -44,11 +42,6 @@ public abstract class InstrumentSubscription implements Serializable {
 	public InstrumentSubscription(boolean tagEvent) {
 		super();
 		this.tagEvent = tagEvent;
-	}
-
-	@Override
-	public String toString() {
-		return "InstrumentSubscription [id=" + id + "]";
 	}
 
 	public int getId() {

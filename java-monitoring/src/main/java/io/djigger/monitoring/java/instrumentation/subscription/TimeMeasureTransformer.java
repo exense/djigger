@@ -27,7 +27,15 @@ import javassist.CtMethod;
 public class TimeMeasureTransformer {
 
 	public static void transform(CtClass clazz, CtMethod method, InstrumentSubscription subscription, boolean captureThreadInfos) throws CannotCompileException {
+		transform(clazz, method, subscription, captureThreadInfos, null);
+	}
+	
+	public static void transform(CtClass clazz, CtMethod method, InstrumentSubscription subscription, boolean captureThreadInfos, String capture) throws CannotCompileException {
 		method.insertBefore("io.djigger.agent.InstrumentationEventCollector.enterMethod(\"" + clazz.getName() + "\",\"" + method.getName() + "\","+Boolean.toString(captureThreadInfos)+","+subscription.getId()+");");
-		method.insertAfter("io.djigger.agent.InstrumentationEventCollector.leaveMethod();", false);
+		if(capture!=null) {
+			method.insertAfter("io.djigger.agent.InstrumentationEventCollector.leaveMethodAndCaptureToString("+capture+");", true);			
+		} else {
+			method.insertAfter("io.djigger.agent.InstrumentationEventCollector.leaveMethod();", true);						
+		}
 	}
 }

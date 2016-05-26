@@ -201,8 +201,8 @@ public class SubscriptionPane extends JPanel {
 		public NewInstrumentationPane(){
 			super();
 
-			classname = new JTextField("",20);
-			methodname = new JTextField("",20);
+			classname = new JTextField("",50);
+			methodname = new JTextField("",50);
 			button = new JButton("Add");
 
 			setLayout(new GridLayout(0,1,0,2));

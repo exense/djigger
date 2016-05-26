@@ -47,6 +47,8 @@ public class InstrumentationEvent implements Serializable {
 	
 	private long threadID;
 	
+	private InstrumentationEventData data;
+	
 	private transient long startNano;
 	
 	public InstrumentationEvent(String classname, String methodname) {
@@ -145,6 +147,14 @@ public class InstrumentationEvent implements Serializable {
 
 	public void setDuration(long duration) {
 		this.duration = duration;
+	}
+
+	public InstrumentationEventData getData() {
+		return data;
+	}
+
+	public void setData(InstrumentationEventData data) {
+		this.data = data;
 	}
 
 	@Override

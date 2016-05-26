@@ -44,6 +44,8 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEventData;
+import io.djigger.monitoring.java.instrumentation.StringInstrumentationEventData;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.ql.Filter;
 import io.djigger.ql.FilterFactory;
@@ -219,6 +221,14 @@ public class InstrumentationEventPane extends Dashlet {
 			Vector<Object> vector = new Vector<Object>(3);
 			InstrumentationEvent sample = samples.get(i);
 			vector.add(sample.getClassname()+"."+sample.getMethodname());
+			InstrumentationEventData eventData = sample.getData();
+			String eventDataStr = null;
+			if(eventData!=null) {
+				if(eventData instanceof StringInstrumentationEventData) {
+					eventDataStr = ((StringInstrumentationEventData)eventData).getPayload();
+				}
+			} 
+			vector.add(eventDataStr!=null?eventDataStr:"");
 			vector.add(new Date(sample.getStart()));
 			vector.add(sample.getDuration()/1000000.0);
 			data.add(vector);
@@ -226,14 +236,16 @@ public class InstrumentationEventPane extends Dashlet {
 		
 		Vector<String> vector = new Vector<>(3);
 		vector.add("Name");
+		vector.add("Data");
 		vector.add("Time");
 		vector.add("Duration (ms)");
 		DefaultTableModel model = new DefaultTableModel(data, vector) {
 			public Class getColumnClass(int c) {				
 	            switch(c) {
 	            case 0:return String.class;
-	            case 1:return Date.class;
-	            case 2:return Double.class;
+	            case 1:return String.class;
+	            case 2:return Date.class;
+	            case 3:return Double.class;
 	            default:throw new RuntimeException();
 	            }
 	        }

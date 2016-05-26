@@ -27,7 +27,9 @@ import org.bson.types.ObjectId;
 
 import io.djigger.monitoring.eventqueue.EventQueue;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEventData;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEventWithThreadInfo;
+import io.djigger.monitoring.java.instrumentation.StringInstrumentationEventData;
 import io.djigger.monitoring.java.instrumentation.Transaction;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.monitoring.java.sampling.ThreadDumpHelper;
@@ -52,7 +54,7 @@ public class InstrumentationEventCollector {
 	}
 	
 	public static String getCurrentTracer() {
-		Transaction tr = transactions.get();
+		Transaction tr = getCurrentTransaction();
 		return tr!=null?tr.getId().toString()+tr.peekEvent().getId().toString():null;
 	}
 
@@ -60,7 +62,7 @@ public class InstrumentationEventCollector {
 		if(tracer!=null) {
 			UUID trid = UUID.fromString(tracer.substring(0, 36));
 			ObjectId parentId = new ObjectId(tracer.substring(36));
-			Transaction tr = transactions.get();
+			Transaction tr = getCurrentTransaction();
 			if(tr==null) {
 				tr = new Transaction(trid);
 				setCurrentTransaction(tr);
@@ -68,6 +70,29 @@ public class InstrumentationEventCollector {
 				tr.setId(trid);
 			}
 			tr.setParentId(parentId);
+		}
+	}
+	
+	public static void attachData(Object object, InstrumentationEventData data) {
+		Transaction tr = getCurrentTransaction();
+		if(tr!=null) {
+			tr.attachData(object, data);
+		}
+	}
+	
+	public static InstrumentationEventData getAttachedData(Object object) {
+		Transaction tr = getCurrentTransaction();
+		if(tr!=null) {
+			return tr.getAttachedData(object);
+		} else {
+			return null;
+		}
+	}
+	
+	public static void addDataToCurrentTransaction(int dataid, InstrumentationEventData data) {
+		Transaction tr = getCurrentTransaction();
+		if(tr!=null) {
+			tr.addData(dataid, data);
 		}
 	}
 	
@@ -90,10 +115,9 @@ public class InstrumentationEventCollector {
 		event.setSubscriptionID(subscriptionId);
 		event.setId(new ObjectId());
 		
-		Transaction transaction = transactions.get();
+		Transaction transaction = getCurrentTransaction();
 		if(transaction == null) {
-			transaction = new Transaction();
-			setCurrentTransaction(transaction);
+			transaction = createNewTransaction();
 		} else {
 			if(transaction.getParentId()!=null) {
 				event.setParentID(transaction.getParentId());
@@ -113,19 +137,45 @@ public class InstrumentationEventCollector {
 		event.setStart(convertToTime(startNano));
 	}
 
+	private static Transaction createNewTransaction() {
+		Transaction transaction = new Transaction();
+		setCurrentTransaction(transaction);
+		return transaction;
+	}
+
+	private static Transaction getCurrentTransaction() {
+		return transactions.get();
+	}
+
 	private static void setCurrentTransaction(Transaction transaction) {
 		transactions.set(transaction);	
 		transactionMap.put(Thread.currentThread().getId(), transaction);
 	}
 	
 	public static void leaveMethod() {
+		leaveMethod(null);
+	}
+	
+	public static void leaveMethodAndCaptureToString(Object data) {
+		if(data!=null) {
+			leaveMethod(new StringInstrumentationEventData(data.toString()));
+		} else {
+			leaveMethod();
+		}
+	}
+	
+	public static void leaveMethod(InstrumentationEventData data) {
 		long endNano = System.nanoTime();
 
-		Transaction transaction = transactions.get();
+		Transaction transaction = getCurrentTransaction();
 		InstrumentationEvent event = transaction.popEvent();
 		event.setDuration(endNano-event.getStartNano());
 		
 		event.setTransactionID(transaction.getId());
+		
+		if(data!=null) {
+			event.setData(data);
+		}
 
 		eventCollector.add(event);
 

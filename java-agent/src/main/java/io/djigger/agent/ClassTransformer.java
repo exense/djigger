@@ -32,6 +32,7 @@ import io.djigger.monitoring.java.instrumentation.TransformingSubscription;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
+import javassist.LoaderClassPath;
 
 public class ClassTransformer implements ClassFileTransformer {
 	
@@ -49,6 +50,9 @@ public class ClassTransformer implements ClassFileTransformer {
 		byte[] classfileBuffer) throws IllegalClassFormatException {
 
 		ClassPool pool = ClassPool.getDefault();
+		if(loader!=null) {
+			pool.insertClassPath(new LoaderClassPath(loader));
+		}
 		CtClass currentClass = null;
 		try {
 			currentClass = pool.makeClass(new java.io.ByteArrayInputStream(classfileBuffer));

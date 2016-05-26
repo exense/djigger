@@ -19,6 +19,8 @@
  *******************************************************************************/
 package io.djigger.monitoring.java.instrumentation;
 
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Stack;
 import java.util.UUID;
 
@@ -31,6 +33,10 @@ public class Transaction {
 	private ObjectId parentId;
 	
 	private Stack<InstrumentationEvent> eventStack = new Stack<>();
+	
+	private HashMap<Integer, LinkedList<InstrumentationEventData>> data = null;
+	
+	private HashMap<Object, InstrumentationEventData> attachedData = null;
 	
 	public Transaction(UUID id) {
 		super();
@@ -73,7 +79,30 @@ public class Transaction {
 	public boolean isStackEmpty() {
 		return eventStack.isEmpty();
 	}
-
+	
+	public void attachData(Object object, InstrumentationEventData data) {
+		if(attachedData==null) {
+			attachedData = new HashMap<>();
+		}
+		this.attachedData.put(object, data);
+	}
+	
+	public InstrumentationEventData getAttachedData(Object object) {
+		return attachedData!=null?attachedData.get(object):null;
+	}
+	
+	public void addData(Integer dataid, InstrumentationEventData data) {
+		LinkedList<InstrumentationEventData> list = this.data.get(dataid);
+		if(list==null) {
+			list = new LinkedList<>();
+			this.data.put(dataid, list);
+		}
+		list.add(data);
+	}
+	
+	public LinkedList<InstrumentationEventData> collectData(Integer dataid) {
+		return this.data.get(dataid);
+	}
 
 	@Override
 	public int hashCode() {
