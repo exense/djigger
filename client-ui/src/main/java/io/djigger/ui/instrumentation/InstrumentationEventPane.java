@@ -267,7 +267,7 @@ public class InstrumentationEventPane extends Dashlet {
 		};
 
 		sampleList.setModel(model);
-		sampleList.getColumnModel().getColumn(1).setCellRenderer(tableCellRenderer);
+		sampleList.getColumnModel().getColumn(2).setCellRenderer(tableCellRenderer);
 		sampleList.setAutoCreateRowSorter(true);
 
 	}
