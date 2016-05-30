@@ -28,7 +28,9 @@ import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.Vector;
 
@@ -39,6 +41,9 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
@@ -109,7 +114,7 @@ public class InstrumentationEventPane extends Dashlet {
 		
 		
 		JPopupMenu sampleListPopupMenu = new JPopupMenu();
-		sampleListPopupMenu.add(new JMenuItem(new AbstractAction("Analyze") {	
+		sampleListPopupMenu.add(new JMenuItem(new AbstractAction("Build sampling trees for this transaction") {	
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				InstrumentationEvent sample = samples.get(sampleList.convertRowIndexToModel(sampleList.getSelectedRow()));
@@ -167,7 +172,7 @@ public class InstrumentationEventPane extends Dashlet {
 	}
 
 	private void query() {
-		Filter<InstrumentationEvent> eventFilter = null;
+		Filter<InstrumentationEvent> eventFilter=null;
 		String filter = filterTextField.getText();
 		if(filter!=null) {
 			try {
@@ -178,7 +183,7 @@ public class InstrumentationEventPane extends Dashlet {
 						return new Filter<InstrumentationEvent>() {
 							@Override
 							public boolean isValid(InstrumentationEvent input) {
-								return parent.getPresentationHelper().getFullname(input).contains(expression);
+								return parent.getPresentationHelper().getFullname(input).contains(expression) || instrumentationDataMatches(input.getData(), expression);
 							}
 						};
 					}
@@ -203,7 +208,17 @@ public class InstrumentationEventPane extends Dashlet {
 				JOptionPane.showMessageDialog(this,	e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			}
 		}
-		samples = store.queryInstrumentationEvents(eventFilter);
+		final StoreFilter storeFilter = this.parent.getStoreFilter();
+		final Filter<InstrumentationEvent> localFilter = eventFilter;
+		Filter<InstrumentationEvent> mergedFilter = new Filter<InstrumentationEvent>() {
+
+			@Override
+			public boolean isValid(InstrumentationEvent input) {
+				return (storeFilter==null||storeFilter.match(input))&&(localFilter==null||localFilter.isValid(input));
+			}
+		};
+		
+		samples = store.queryInstrumentationEvents(mergedFilter);
 		
 		Collections.sort(samples, new Comparator<InstrumentationEvent>() {
 			@Override
@@ -269,7 +284,29 @@ public class InstrumentationEventPane extends Dashlet {
 		sampleList.setModel(model);
 		sampleList.getColumnModel().getColumn(2).setCellRenderer(tableCellRenderer);
 		sampleList.setAutoCreateRowSorter(true);
-
+		ListSelectionModel cellSelectionModel = sampleList.getSelectionModel();
+	    cellSelectionModel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+	    cellSelectionModel.addListSelectionListener(new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				if(sampleList.getSelectedRow()!=-1) {
+					InstrumentationEvent event = samples.get(sampleList.convertRowIndexToModel(sampleList.getSelectedRow()));
+					Set<Long> selectedThreadIds = new HashSet<>();
+					selectedThreadIds.add(event.getThreadID());
+					parent.fireSelection(selectedThreadIds);					
+				}
+			}
+	    	
+	    });
+	}
+	
+	private boolean instrumentationDataMatches(InstrumentationEventData data, String expression) {
+		if(data!=null && data instanceof StringInstrumentationEventData) {
+			String payload = ((StringInstrumentationEventData)data).getPayload();
+			return payload!=null?payload.contains(expression):false;
+		} else {
+			return false;
+		}
 	}
 
 	@Override

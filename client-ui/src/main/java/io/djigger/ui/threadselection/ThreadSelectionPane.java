@@ -21,7 +21,6 @@ package io.djigger.ui.threadselection;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -68,10 +67,7 @@ import io.djigger.store.filter.StoreFilter;
 import io.djigger.store.filter.TimeStoreFilter;
 import io.djigger.ui.Session;
 import io.djigger.ui.analyzer.AnalyzerPaneListener;
-import io.djigger.ui.analyzer.TreeView;
 import io.djigger.ui.common.EnhancedTextField;
-import io.djigger.ui.model.AnalysisNode;
-import io.djigger.ui.model.RealNodeAggregation;
 
 
 public class ThreadSelectionPane extends JPanel implements MouseMotionListener, MouseListener, KeyListener, ComponentListener, AnalyzerPaneListener {
@@ -736,44 +732,15 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 
 		INDIVIDUAL;
 	}
-
-	private Set<Long> getAnalyzerPaneThreads() {
-		HashSet<Long> result = new HashSet<Long>();
-		Component _pane = main.getAnalyzerGroupPane().getCurrentTab();
-		if(_pane!=null && _pane instanceof TreeView) {
-			TreeView pane = (TreeView) _pane;
-			AnalysisNode selectedNode = pane.getSelectedNode();
-			if(selectedNode!=null) {
-				for(RealNodeAggregation aggregation:selectedNode.getAggregations()) {
-					for(io.djigger.aggregation.Thread thread:aggregation.getAggregation().getSamples()) {
-						result.add(thread.getId());
-					}
-				}
-				/*
-				RealNodePath path = selectedNode.getPath();
-				List<ThreadDump> dumps = store.getThreadDumps();
-				for(ThreadDump dump:dumps) {
-					for(ThreadSnapshot stacktrace:dump.getStackTraces()) {
-						if(stacktrace.getPath().containsPath(path)!=-1) {
-						}
-					}
-				}
-				*/
-			}
-		}
-		return result;
-	}
-
+	
 	@Override
-	public void onSelection(AnalysisNode selectedNode) {
-		Set<Long> selectedInAnalyzerPane = getAnalyzerPaneThreads();
-
+	public void onSelection(Set<Long> selectedThreadIds) {
     	for(ThreadBlock block:blocks) {
 			block.selectedInAnalyzerPane = false;
     	}
 
     	for(ThreadBlock block:blocks) {
-    		if(selectedInAnalyzerPane.contains(block.id)) {
+    		if(selectedThreadIds.contains(block.id)) {
     			block.selectedInAnalyzerPane = true;
     		}
     	}

@@ -25,6 +25,7 @@ import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.swing.AbstractAction;
@@ -43,7 +44,6 @@ import io.djigger.ui.common.EnhancedTabbedPane;
 import io.djigger.ui.common.NodePresentationHelper;
 import io.djigger.ui.instrumentation.InstrumentationEventPane;
 import io.djigger.ui.instrumentation.SubscriptionPane;
-import io.djigger.ui.model.AnalysisNode;
 
 
 public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListener {
@@ -182,7 +182,11 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
     	this.storeFilter = storeFilter;
     }
 
-    public void refresh() {
+    public StoreFilter getStoreFilter() {
+		return storeFilter;
+	}
+
+	public void refresh() {
     	analyzerService.load(storeFilter, includeLineNumbers);
     	for(Component component:getComponents()) {
             if(component instanceof Dashlet) {
@@ -245,9 +249,9 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 		listeners.add(listener);
 	}
 
-	protected void fireSelection(AnalysisNode node) {
+	public void fireSelection(Set<Long> selectedThreadIds) {
 		for(AnalyzerPaneListener listener:listeners) {
-			listener.onSelection(node);
+			listener.onSelection(selectedThreadIds);
 		}
 	}
 

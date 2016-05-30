@@ -20,6 +20,7 @@
 package io.djigger.ui.analyzer;
 
 import io.djigger.ui.model.AnalysisNode;
+import io.djigger.ui.model.RealNodeAggregation;
 
 import java.awt.Component;
 import java.awt.GridLayout;
@@ -27,6 +28,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
@@ -108,8 +111,23 @@ public class TreeView extends AnalyzerPane implements TreeSelectionListener {
 		TreePath newSelectionPath = e.getNewLeadSelectionPath();
 		if(newSelectionPath!=null) {
 			currentNode = (AnalysisNode) newSelectionPath.getLastPathComponent();
-			parent.fireSelection(currentNode);
+			parent.fireSelection(getSelectedThreadsIds());
 		}
+	}
+	
+	private Set<Long> getSelectedThreadsIds() {
+		HashSet<Long> result = new HashSet<Long>();
+
+		AnalysisNode selectedNode = getSelectedNode();
+		if(selectedNode!=null) {
+			for(RealNodeAggregation aggregation:selectedNode.getAggregations()) {
+				for(io.djigger.aggregation.Thread thread:aggregation.getAggregation().getSamples()) {
+					result.add(thread.getId());
+				}
+			}
+		}
+		
+		return result;
 	}
 
 	@Override
