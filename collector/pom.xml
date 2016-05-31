@@ -8,6 +8,41 @@
 		<relativePath>../parent</relativePath>
 	</parent>
 	<artifactId>collector</artifactId>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>2.10</version>
+				<executions>
+					<execution>
+						<id>copy</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+						<configuration>
+							<artifactItems>
+								<artifactItem>
+									<groupId>io.djigger</groupId>
+									<artifactId>java-agent</artifactId>
+									<version>${project.version}</version>
+									<type>jar</type>
+									<classifier>jar-with-dependencies</classifier>
+									<overWrite>false</overWrite>
+									<outputDirectory>${project.basedir}/src/main/resources</outputDirectory>
+									<destFileName>agent.jar</destFileName>
+								</artifactItem>
+							</artifactItems>
+							<overWriteReleases>true</overWriteReleases>
+							<overWriteSnapshots>true</overWriteSnapshots>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		
+		</plugins>
+	</build>
 	<dependencies>
 		<dependency>
 			<groupId>io.djigger</groupId>

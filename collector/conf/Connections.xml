@@ -17,6 +17,22 @@
 						</entry>
 					</attributes>
 					<groups>
+						<Connection connectionClass="io.djigger.client.ProcessAttachFacade">
+							<samplingParameters samplingRate="1000" />
+							<connectionProperties>
+								<property name="processNamePattern" value="TestApp" />
+							</connectionProperties>
+							<attributes>
+								<entry>
+									<string>attributeKey3</string>
+									<string>attributeValue3</string>
+								</entry>
+							</attributes>
+							<subscriptions>
+								<io.djigger.monitoring.java.instrumentation.subscription.SQLConnectionTracer/>
+								<io.djigger.monitoring.java.instrumentation.subscription.SQLPreparedStatementTracer/>
+							</subscriptions>
+						</Connection>
 						<Connection connectionClass="io.djigger.client.JMXClientFacade">
 							<samplingParameters samplingRate="100" />
 							<connectionProperties>
@@ -51,7 +67,7 @@
 									<methodNamePattern><pattern>testMethodRoot</pattern><flags>0</flags></methodNamePattern>
 									<tagEvent>true</tagEvent>
 								</io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
-								<!-- <io.djigger.monitoring.java.instrumentation.subscription.HttpClientTracer/> -->
+								<io.djigger.monitoring.java.instrumentation.subscription.HttpClientTracer/>
 								<io.djigger.monitoring.java.instrumentation.subscription.ServletTracer/>
 								<io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
 					<classNamePattern><pattern>.*JettyTracerTest</pattern><flags>0</flags></classNamePattern>
