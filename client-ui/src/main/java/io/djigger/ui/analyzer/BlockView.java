@@ -381,6 +381,11 @@ public class BlockView extends AnalyzerPane implements MouseListener, MouseMotio
 			exportButton.addActionListener(this);
 			exportButton.setActionCommand("export");
 			add(exportButton);
+			
+			CustomButton importButton = new CustomButton(new JLabel("Import legend"));
+			importButton.addActionListener(this);
+			importButton.setActionCommand("import");
+			add(importButton);
 	    }
 
 		@SuppressWarnings("serial")
@@ -438,6 +443,15 @@ public class BlockView extends AnalyzerPane implements MouseListener, MouseMotio
 				File file = FileChooserHelper.selectFile("Export Legend", "Save");
 				if(file!=null) {
 	            	blockColorer.export(file);
+	            }
+			} else if(e.getActionCommand().equals("import")) {
+				File file = FileChooserHelper.selectFile("Import Legend", "Open");
+				if(file!=null) {
+					blockColorer.clearFrameworks();
+					blockColorer.loadFrameworks(file);
+	            	
+					refreshDisplay();
+					reloadLegend();
 	            }
 			} else {
 				new EditFramework(null);
