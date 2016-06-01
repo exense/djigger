@@ -17,10 +17,7 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.parser;
-
-import io.djigger.monitoring.java.model.StackTraceElement;
-import io.djigger.monitoring.java.model.ThreadInfo;
+package io.djigger.client.jstack;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -28,7 +25,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,6 +33,9 @@ import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.djigger.monitoring.java.model.StackTraceElement;
+import io.djigger.monitoring.java.model.ThreadInfo;
 
 
 
@@ -47,83 +46,94 @@ public class Parser {
 	private final Format format;
 	
 	private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	
+	Matcher threadDumpStartMatcher;
+	Matcher threadDumpEndMatcher;
 
-	public Parser(Format format) {
+	Matcher startMatcher;
+	Matcher stateMatcher;
+	Matcher matcher;
+	Matcher separatorMatcher;
+	
+	List<StackTraceElement> stackTrace = null;
+	
+	String previousLine = null;
+	
+	Date date = null;
+	
+	boolean inThread = false;
+	boolean threadStateFound = false;
+	
+	ParserEventListener listener;
+
+	public Parser(Format format, ParserEventListener listener) {
 		super();
 		this.format = format;
+		this.listener = listener;
+		
+		threadDumpStartMatcher = format.getThreadDumpStartPattern().matcher("");
+		threadDumpEndMatcher = format.getThreadDumpEndPattern().matcher("");
+
+		startMatcher = format.getStartPattern().matcher("");
+		stateMatcher = format.getStatePattern().matcher("");
+		matcher = format.getMethodPattern().matcher("");
+		separatorMatcher = format.getSeparatorPattern().matcher("");
 	}
 
-	public List<ThreadInfo> parse(BufferedReader reader) throws IOException {
-		long t1 = System.currentTimeMillis();
-		List<StackTraceElement> stackTrace = null;
+	public void consumeLine(String line) throws IOException {
 
-		Matcher threadDumpStartMatcher = format.getThreadDumpStartPattern().matcher("");
-		Matcher threadDumpEndMatcher = format.getThreadDumpEndPattern().matcher("");
-
-		Matcher startMatcher = format.getStartPattern().matcher("");
-		Matcher stateMatcher = format.getStatePattern().matcher("");
-		Matcher matcher = format.getMethodPattern().matcher("");
-		Matcher separatorMatcher = format.getSeparatorPattern().matcher("");
-
-		List<ThreadInfo> threads = new ArrayList<>();
-
-		String line; String previousLine = null;
-		boolean inThread = false;
-		boolean threadStateFound = false;
-		Date date = null;
-		while((line=reader.readLine())!=null) {
-			threadDumpStartMatcher.reset(line);
-			threadDumpEndMatcher.reset(line);
-			matcher.reset(line);
-			separatorMatcher.reset(line);
-			if(threadDumpEndMatcher.find()) {
-				
-			}
-			if(threadDumpStartMatcher.find()) {
-				if(previousLine!=null) {
-					try {
-						date = dateFormat.parse(previousLine);
-					} catch (ParseException e) {
-						date = null;
-					}
+		threadDumpStartMatcher.reset(line);
+		threadDumpEndMatcher.reset(line);
+		matcher.reset(line);
+		separatorMatcher.reset(line);
+		if(threadDumpEndMatcher.find()) {
+			
+		}
+		if(threadDumpStartMatcher.find()) {
+			if(previousLine!=null) {
+				try {
+					date = dateFormat.parse(previousLine);
+				} catch (ParseException e) {
+					date = null;
 				}
 			}
+		}
 
-			if(!inThread) {
+		if(!inThread) {
+			startMatcher.reset(line);
+			if(startMatcher.find()) {
+				inThread = true;
+				stackTrace = new LinkedList<StackTraceElement>();
+			}
+		} else {
+			if(matcher.find()) {
+				stackTrace.add(new StackTraceElement(matcher.group(1), matcher.group(2), "", 0));
+			} else if(separatorMatcher.find()) {
+				if(stackTrace.size()>0) {
+					listener.onThreadParsed(toThread(startMatcher, threadStateFound, stateMatcher, stackTrace, date));
+				}
+				inThread = false;
+				threadStateFound = false;
+
 				startMatcher.reset(line);
 				if(startMatcher.find()) {
 					inThread = true;
-					stackTrace = new LinkedList<StackTraceElement>();
-				}
-			} else {
-				if(matcher.find()) {
-					stackTrace.add(new StackTraceElement(matcher.group(1), matcher.group(2), "", 0));
-				} else if(separatorMatcher.find()) {
-					if(stackTrace.size()>0) {
-						threads.add(toThread(startMatcher, threadStateFound, stateMatcher, stackTrace, date));
-					}
-					inThread = false;
-					threadStateFound = false;
-
-					startMatcher.reset(line);
-					if(startMatcher.find()) {
-						inThread = true;
-						stackTrace.clear();
-					}
+					stackTrace.clear();
 				}
 			}
-
-			if(inThread && !threadStateFound) {
-				stateMatcher.reset(line);
-				threadStateFound = stateMatcher.find();
-			}
-			
-			previousLine = line;
 		}
 
-		System.out.println("Parser (ms): " + (System.currentTimeMillis()-t1));
-
-		return threads;
+		if(inThread && !threadStateFound) {
+			stateMatcher.reset(line);
+			threadStateFound = stateMatcher.find();
+		}
+		
+		previousLine = line;
+	}
+	
+	public interface ParserEventListener {
+		
+		public void onThreadParsed(ThreadInfo thread);
 	}
 
 	public static ThreadInfo toThread(Matcher startMatcher, boolean stateFound, Matcher stateMatcher, List<StackTraceElement> stackTrace, Date timestamp) {

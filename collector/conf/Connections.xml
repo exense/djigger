@@ -17,6 +17,22 @@
 						</entry>
 					</attributes>
 					<groups>
+						<Connection connectionClass="io.djigger.client.JstackLogTailFacade">
+							<samplingParameters samplingRate="1000" />
+							<connectionProperties>
+								<property name="file" value="D:\Temp\jstack.log" />
+							</connectionProperties>
+							<attributes>
+								<entry>
+									<string>attributeKey3</string>
+									<string>attributeValue3</string>
+								</entry>
+							</attributes>
+							<subscriptions>
+								<io.djigger.monitoring.java.instrumentation.subscription.SQLConnectionTracer />
+								<io.djigger.monitoring.java.instrumentation.subscription.SQLPreparedStatementTracer />
+							</subscriptions>
+						</Connection>
 						<Connection connectionClass="io.djigger.client.ProcessAttachFacade">
 							<samplingParameters samplingRate="1000" />
 							<connectionProperties>

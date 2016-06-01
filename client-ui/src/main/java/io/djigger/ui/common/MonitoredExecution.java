@@ -130,9 +130,14 @@ public class MonitoredExecution extends JDialog {
 		return duration;
 	}
 
-	public void run() {
+	public void run() throws Exception {
         super.setVisible(true);
+        if(processingException!=null) {
+        	throw processingException;
+        }
     }
+	
+	private volatile Exception processingException;
 	
 	private class ProgressRunnable implements Runnable {
 		private final MonitoredExecutionRunnable runnable;
@@ -148,6 +153,7 @@ public class MonitoredExecution extends JDialog {
 			try {
 				runnable.run(execution);
 			} catch (Exception e) {
+				processingException = e;
 				logger.error("Error while running monitored execution",e);
 			}finally {
 				duration = (int) (start - System.currentTimeMillis());

@@ -21,5 +21,5 @@ package io.djigger.ui.common;
 
 public abstract class MonitoredExecutionRunnable {
 			
-	protected abstract void run(MonitoredExecution execution);
+	protected abstract void run(MonitoredExecution execution) throws Exception;
 }

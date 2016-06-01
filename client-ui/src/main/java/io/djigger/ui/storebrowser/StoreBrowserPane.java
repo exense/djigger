@@ -196,48 +196,46 @@ public class StoreBrowserPane extends JPanel implements ActionListener, KeyListe
 				private void retrieveInstumentationEvents(final Bson query, final Date from, final Date to,	MonitoredExecution execution) {
 					execution.setText("Retrieving instrumentation events...");
     				execution.setIndeterminate();
-    				try {
-    					int count = 0;
-    					Iterator<InstrumentationEvent> it = parent.getStoreClient().getInstrumentationAccessor().getTaggedEvents(query, from, to);
-    					
-    					InstrumentationEvent event;
-    					while(it.hasNext() && !execution.isInterrupted()) {
-    						count++;
-    						execution.setValue(count);
-    						event=it.next();
-							parent.getStore().addInstrumentationEvent(event);
-    					}
-    					parent.getStore().processBuffers();
-    				
-    					logger.debug("Fetched " + count + " instrumentation events.");
-    				} catch (Exception e) {
-    					logger.error("Error while fetching ThreadInfos from store",e); 
-    				}
+					int count = 0;
+					Iterator<InstrumentationEvent> it = parent.getStoreClient().getInstrumentationAccessor().getTaggedEvents(query, from, to);
+					
+					InstrumentationEvent event;
+					while(it.hasNext() && !execution.isInterrupted()) {
+						count++;
+						execution.setValue(count);
+						event=it.next();
+						parent.getStore().addInstrumentationEvent(event);
+					}
+					parent.getStore().processBuffers();
+				
+					logger.debug("Fetched " + count + " instrumentation events.");
 				}
 
 				private void retrieveThreadInfos(final Bson query, final Date from, final Date to,
 						MonitoredExecution execution) {
 					execution.setText("Retrieving sampling events...");
 					execution.setIndeterminate();
-    				try {
-    					int count = 0;
-    					Iterator<ThreadInfo> it = parent.getStoreClient().getThreadInfoAccessor().query(query, from, to).iterator();
-    					
-    					ThreadInfo thread;
-    					while(it.hasNext() && !execution.isInterrupted()) {
-    						count++;
-    						thread=it.next();
-							parent.getStore().addThreadInfo(thread);
-    					}
-    					parent.getStore().processBuffers();
-    				
-    					logger.debug("Fetched " + count + " stacktraces.");
-    				} catch (Exception e) {
-    					logger.error("Error while fetching ThreadInfos from store",e); 
-    				}
+					int count = 0;
+					Iterator<ThreadInfo> it = parent.getStoreClient().getThreadInfoAccessor().query(query, from, to).iterator();
+					
+					ThreadInfo thread;
+					while(it.hasNext() && !execution.isInterrupted()) {
+						count++;
+						thread=it.next();
+						parent.getStore().addThreadInfo(thread);
+					}
+					parent.getStore().processBuffers();
+				
+					logger.debug("Fetched " + count + " stacktraces.");
 				}
     		}, true);
-    		execution.run();
+			
+			try {
+				execution.run();
+			} catch (Exception e) {
+				JOptionPane.showMessageDialog(parent, "Error while fetching data: "+e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
     		
 			parent.refreshAll();
 		} else {

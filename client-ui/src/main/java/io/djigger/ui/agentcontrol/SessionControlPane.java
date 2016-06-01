@@ -19,14 +19,6 @@
  *******************************************************************************/
 package io.djigger.ui.agentcontrol;
 
-import io.djigger.ui.Session;
-import io.djigger.ui.Session.SessionType;
-import io.djigger.ui.common.CommandButton;
-import io.djigger.ui.common.FileChooserHelper;
-import io.djigger.ui.common.MonitoredExecution;
-import io.djigger.ui.common.MonitoredExecutionRunnable;
-import io.djigger.ui.model.SessionExport;
-
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -41,6 +33,14 @@ import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+
+import io.djigger.client.Facade;
+import io.djigger.ui.Session;
+import io.djigger.ui.common.CommandButton;
+import io.djigger.ui.common.FileChooserHelper;
+import io.djigger.ui.common.MonitoredExecution;
+import io.djigger.ui.common.MonitoredExecutionRunnable;
+import io.djigger.ui.model.SessionExport;
 
 
 public class SessionControlPane extends JPanel implements ActionListener {
@@ -68,37 +68,36 @@ public class SessionControlPane extends JPanel implements ActionListener {
 		this.parent = parent;
 
 		JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		        	
+		Facade facade = parent.getFacade();
 		
-		boolean realTimeSession = parent.getConfig().getType() == SessionType.AGENT || parent.getConfig().getType() == SessionType.JMX;
-        	
-		if(realTimeSession) {
-			startButton = new CommandButton("play.png", "Start capture", new Runnable() {
-				@Override
-				public void run() {
-					parent.setSamplingInterval(Integer.decode(samplerRateTextField.getText()));
-					parent.setSampling(true);
-					startButton.setEnabled(false);
-					stopButton.setEnabled(true);
-				}
-			});
-			stopButton = new CommandButton("stop.png", "Stop capture", new Runnable() {
-				@Override
-				public void run() {
-					parent.setSampling(false);
-	        		startButton.setEnabled(true);
-	        		stopButton.setEnabled(false);
-				}
-			});
-			stopButton.setEnabled(false);
-	
-			controlPanel.add(startButton);
-			controlPanel.add(stopButton);
-		}
+		if(facade!=null) {
+			if(facade.hasStartStopSupport()) {
+				startButton = new CommandButton("play.png", "Start capture", new Runnable() {
+					@Override
+					public void run() {
+						parent.setSamplingInterval(Integer.decode(samplerRateTextField.getText()));
+						parent.setSampling(true);
+						startButton.setEnabled(false);
+						stopButton.setEnabled(true);
+					}
+				});
+				stopButton = new CommandButton("stop.png", "Stop capture", new Runnable() {
+					@Override
+					public void run() {
+						parent.setSampling(false);
+		        		startButton.setEnabled(true);
+		        		stopButton.setEnabled(false);
+					}
+				});
+				stopButton.setEnabled(false);
 		
-		JSeparator separator = new JSeparator(SwingConstants.VERTICAL);
-		controlPanel.add(separator);
-
-		if(realTimeSession) {
+				controlPanel.add(startButton);
+				controlPanel.add(stopButton);
+			}
+			JSeparator separator = new JSeparator(SwingConstants.VERTICAL);
+			controlPanel.add(separator);
+			
 			controlPanel.add(new CommandButton("refresh.png", "Refresh", new Runnable() {
 				@Override
 				public void run() {
@@ -106,6 +105,7 @@ public class SessionControlPane extends JPanel implements ActionListener {
 				}
 			}));
 		}
+		
 		controlPanel.add(new CommandButton("saveas.png", "Save capture as", new Runnable() {
 			@Override
 			public void run() {
@@ -117,7 +117,12 @@ public class SessionControlPane extends JPanel implements ActionListener {
 			            	SessionExport.save(parent, file);							
 						}
 					});
-	            	execution.run();
+	            	try {
+	        			execution.run();
+	        		} catch (Exception e) {
+	        			JOptionPane.showMessageDialog(parent, "Error while saving capture: "+e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+	        			return;
+	        		}
 	            }
 			}
 		}));

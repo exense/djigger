@@ -20,10 +20,7 @@
 package io.djigger.ui;
 
 import java.awt.BorderLayout;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -39,14 +36,13 @@ import io.djigger.client.AgentFacade;
 import io.djigger.client.Facade;
 import io.djigger.client.FacadeListener;
 import io.djigger.client.JMXClientFacade;
+import io.djigger.client.JstackLogTailFacade;
 import io.djigger.client.ProcessAttachFacade;
 import io.djigger.db.client.StoreClient;
 import io.djigger.model.Capture;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.ThreadInfo;
-import io.djigger.parser.Parser;
-import io.djigger.parser.Parser.Format;
 import io.djigger.store.Store;
 import io.djigger.store.filter.StoreFilter;
 import io.djigger.ui.SessionConfiguration.SessionParameter;
@@ -144,6 +140,12 @@ public class Session extends JPanel implements FacadeListener, Closeable {
         		prop.put("port", config.getParameters().get(SessionParameter.PORT));
         		facade = new AgentFacade(prop, false);
         	}
+        } else if (config.getType() == SessionType.FILE) {
+        	Properties prop = new Properties();
+        	prop.put(JstackLogTailFacade.FILE_PARAM, config.getParameters().get(SessionParameter.FILE));
+        	prop.put(JstackLogTailFacade.START_AT_FILE_BEGIN_PARAM, "true");
+
+        	facade = new JstackLogTailFacade(prop, false);
         } else if (config.getType() == SessionType.JMX) {
         	Properties prop = new Properties();
         	prop.put("host", config.getParameters().get(SessionParameter.HOSTNAME));
@@ -159,60 +161,41 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     
     public void start() throws Exception {
     	if(facade!=null) {
-    		facade.connect();
-    	}
-    	
-    	if(getSessionType()==SessionType.STORE) {
-    		storeClient = new StoreClient();
-    		storeClient.connect(config.getParameters().get(SessionParameter.HOSTNAME));
-    	} else if (getSessionType()==SessionType.FILE) {
-    		final File file = new File(config.getParameters().get(SessionParameter.FILE));
-    		MonitoredExecution execution = new MonitoredExecution(main.getFrame(), "Parsing threaddumps... Please wait.", new MonitoredExecutionRunnable() {
+    		MonitoredExecution execution = new MonitoredExecution(main.getFrame(), "Connecting... Please wait.", new MonitoredExecutionRunnable() {
     			@Override
-    			public void run(MonitoredExecution execution) {
-    				try {
-    	    			List<ThreadInfo> dumps = parseThreadDumpFile(file);
-    	    			threadInfosReceived(dumps);
-    				} catch (IOException e) {
-    					logger.error("Error while parsing thread dumps from file "+file, e);
-    				}
+    			public void run(MonitoredExecution execution) throws Exception {
+    				facade.connect();
     			}
     		});
     		execution.run();
     		refreshAll();
-    	} else if (getSessionType()==SessionType.AGENT_CAPTURE) {
-    		final File file = new File(config.getParameters().get(SessionParameter.FILE));
-    		MonitoredExecution execution = new MonitoredExecution(main.getFrame(), "Opening session... Please wait.", new MonitoredExecutionRunnable() {
-    			@Override
-    			public void run(MonitoredExecution execution) {
-    				try {
+    	} else {
+    		if(getSessionType()==SessionType.STORE) {
+    			storeClient = new StoreClient();
+    			storeClient.connect(config.getParameters().get(SessionParameter.HOSTNAME));
+    		} else if (getSessionType()==SessionType.AGENT_CAPTURE) {
+    			final File file = new File(config.getParameters().get(SessionParameter.FILE));
+    			MonitoredExecution execution = new MonitoredExecution(main.getFrame(), "Opening session... Please wait.", new MonitoredExecutionRunnable() {
+    				@Override
+    				public void run(MonitoredExecution execution) {
     					SessionExport export = SessionExport.read(file);
     					store.addThreadInfos(export.getStore().queryThreadDumps(null));
     					store.addCaptures(export.getStore().queryCaptures(0, Long.MAX_VALUE));
     					store.addInstrumentationSamples(export.getStore().queryInstrumentationSamples(null));
-    				} catch (Exception e) {
-    					logger.error("Error while opening session from file "+file, e);
     				}
-    			}
-    		});
-    		execution.run();
-    		refreshAll();
+    			});
+    			execution.run();
+    			refreshAll();
+    		}    		
     	}
+    	
     }
     
     public void configure() {}
     
-    private List<ThreadInfo> parseThreadDumpFile(File file) throws IOException {
-        Format format = Parser.detectFormat(file);
-        Parser parser = new Parser(format);
-
-        BufferedReader reader = new BufferedReader(new FileReader(file));
-
-        List<ThreadInfo> threadDumps = parser.parse(reader);
-        reader.close();
-        
-        return threadDumps;
-    }
+    public Facade getFacade() {
+		return facade;
+	}
 
     public MainFrame getMain() {
 		return main;

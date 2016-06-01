@@ -219,4 +219,8 @@ public abstract class Facade {
 			addInstrumentation_(s);
 		}
 	}
+	
+	public boolean hasStartStopSupport() {
+		return true;
+	}
 }
