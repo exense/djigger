@@ -4,4 +4,4 @@ JAVA_PATH=""
 JAVA_OPTS="-DcollectorConfig=../conf/Collector.xml -DconnectionsConfig=../conf/Connections.xml -Dlogback.configurationFile=logback-collector.xml"
 # Use -DconnectionsConfig=../conf/Connections.csv" if you wan't to use the CSV configuration format
 
-${JAVA_PATH}java ${JAVA_OPTS} -cp "../lib/*" io.djigger.collector.server.Server > ../log/collector_$(date +"%s").stdout 2>&1
+${JAVA_PATH}java ${JAVA_OPTS} -cp "../lib/*" io.djigger.collector.server.Server
