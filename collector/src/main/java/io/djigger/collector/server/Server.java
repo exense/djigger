@@ -94,14 +94,6 @@ public class Server {
 			attributes.putAll(attributeStack);
 		}
 		
-		/* 
-		 *  @author dcransac
-		 *  @bug
-		 *  @since 22.03.2016
-		 *  
-		 *  Since introduction of CSV version (null attributes are possible here)
-		 */
-		
 		if(groupNode.getAttributes() != null && groupNode.getAttributes().size() > 0)
 			attributes.putAll(groupNode.getAttributes());
 
