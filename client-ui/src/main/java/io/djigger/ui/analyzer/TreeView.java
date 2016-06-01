@@ -19,11 +19,9 @@
  *******************************************************************************/
 package io.djigger.ui.analyzer;
 
-import io.djigger.ui.model.AnalysisNode;
-import io.djigger.ui.model.RealNodeAggregation;
-
 import java.awt.Component;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -31,13 +29,20 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.InputMap;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreePath;
+
+import io.djigger.ui.model.AnalysisNode;
+import io.djigger.ui.model.RealNodeAggregation;
 
 
 @SuppressWarnings("serial")
@@ -86,6 +91,21 @@ public class TreeView extends AnalyzerPane implements TreeSelectionListener {
 		
 		contentPanel.setLayout(new GridLayout(0,1));
 		contentPanel.add(new JScrollPane(tree));
+		
+		
+		// OSX support for RIGHT and LEFT KeyStrokes
+		InputMap currentIm = tree.getInputMap();
+		
+		if(currentIm != null){
+			String keyMapping = (String)currentIm.get(KeyStroke.getKeyStroke("pressed RIGHT"));
+			if(keyMapping == null || keyMapping != "selectChild")
+				currentIm.put(KeyStroke.getKeyStroke("pressed RIGHT"), "selectChild");
+			
+			keyMapping = (String)currentIm.get(KeyStroke.getKeyStroke("pressed LEFT"));
+			if(keyMapping == null || keyMapping != "selectParent")
+				currentIm.put(KeyStroke.getKeyStroke("pressed LEFT"), "selectParent");
+		}
+
 	}
 
 	public void refreshDisplay() {
