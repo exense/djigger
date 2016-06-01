@@ -130,7 +130,7 @@ public class MainFrame extends JPanel {
 
 	private void displayWelcomeDialog(final Session session) {
 		if(session.getSessionType()==SessionType.STORE && Settings.getINSTANCE().getAsBoolean("browserpane.connectionconfirmation", true)) {
-			boolean showThisAgain = JOptionPane.showOptionDialog(this, "Connection succeeded\nEnter your query in the 'Store filter' (optional) and press enter retrieve your data.", "Connection succeeded", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE, null, new String[]{"OK","Don't show this again"}, "OK")==0;
+			boolean showThisAgain = JOptionPane.showOptionDialog(this, "Connection succeeded\nEnter your query in the 'Store filter' (optional) and press enter to retrieve your data.", "Connection succeeded", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE, null, new String[]{"OK","Don't show this again"}, "OK")==0;
 			Settings.getINSTANCE().put("browserpane.connectionconfirmation", Boolean.toString(showThisAgain));
 		}
 	}
