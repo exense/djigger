@@ -72,7 +72,6 @@ public class Server {
 		try {
 
 			String collConfigFilename = System.getProperty("collectorConfig");
-			String connectionsConfigFilename = System.getProperty("connectionsConfig");
 
 			CollectorConfig config = Configurator.parseCollectorConfiguration(collConfigFilename);
 			ConnectionsConfig cc = Configurator.parseConnectionsConfiguration(config.getConnectionFiles());

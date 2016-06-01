@@ -59,12 +59,6 @@ public class Configurator {
 			xstream.processAnnotations(MongoDBParameters.class);
 			return (CollectorConfig) xstream.fromXML(new File(collConfigFilename));
 		} catch (Exception e) {
-			/*
-			 * @author dcransac
-			 * @since 20.05.2016
-			 *	Error handling hides the actual xstream exceptions and is therefore very confusing in certain cases.
-			 */
-
 			String errorMessage = "XStream could not load the collector's config file located at " + collConfigFilename + ". Exception message was : " + e.getMessage();
 			logger.error(errorMessage, e);
 			throw new RuntimeException(errorMessage, e);
@@ -73,6 +67,9 @@ public class Configurator {
 
 	public static ConnectionsConfig parseConnectionsConfiguration(List<String> connectionsConfigFiles) throws Exception {
 
+		if(connectionsConfigFiles == null || connectionsConfigFiles.size() < 1)
+			throw new Exception("The connections config file is either empty or null. Please define a proper file location in in the <collectionFiles> block of your Collector.xml (see template in conf/ folder).");
+		
 		List<ConnectionsConfig> ccList = new ArrayList<ConnectionsConfig>();
 
 		for(String connectionsFile : connectionsConfigFiles)
@@ -104,15 +101,6 @@ public class Configurator {
 		return result;
 	}
 
-
-	/*
-	 * @author dcransac
-	 * @since 20.05.2016
-	 *
-	 *	Utils...
-	 *
-	 */
-
 	private static List<String> qualify(String[] list, String path) {
 
 		List<String> qualified = new ArrayList<String>();
@@ -123,15 +111,6 @@ public class Configurator {
 		return qualified;
 	}
 
-	/*
-	 * @author dcransac
-	 * @since 20.05.2016
-	 *
-	 * For quick compatibility but also seperation of concerns,
-	 * another way to process multiple connection files would be to add the connections
-	 * "naturally" to a single ConnectionsConfig object in parseConnectionsConfiguration
-	 *
-	 */
 	private static ConnectionsConfig mergeConnectionsConfigs(
 			List<ConnectionsConfig> ccList) {
 
@@ -146,13 +125,6 @@ public class Configurator {
 		return result;
 	}
 
-	/*
-	 * @author dcransac
-	 * @since 16.03.2016
-	 *
-	 * Provide a simpler mechanism based on CSV Files to specify and load JMX Connection information
-	 *
-	 */
 	private static ConnectionsConfig parseConnectionsCSV(String connectionsConfigFilename) {
 
 		ConnectionsConfig cc = new ConnectionsConfig();
