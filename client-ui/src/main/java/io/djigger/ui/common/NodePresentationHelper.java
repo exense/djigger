@@ -39,12 +39,18 @@ public class NodePresentationHelper {
 	private DecimalFormat format1 = new DecimalFormat("#");
 	
 	private DecimalFormat format2 = new DecimalFormat("#.####");
+	
+	private boolean showMinCallCounts;
 
 	public NodePresentationHelper(InstrumentationStatisticsCache statisticsCache) {
 		super();
 		this.statisticsCache = statisticsCache;
 		this.format1.setRoundingMode(RoundingMode.CEILING);
 		this.format2.setRoundingMode(RoundingMode.CEILING);
+	}
+
+	public void setShowMinCallCounts(boolean showMinCallCounts) {
+		this.showMinCallCounts = showMinCallCounts;
 	}
 
 	public String shortLabel(AnalysisNode node, AnalysisNode rootForCalculation) {
@@ -111,13 +117,18 @@ public class NodePresentationHelper {
 
 		int minCallCount = thisNode.getMinCallCount();
 		
-		String info;
-		if(statisctics!=null) {
-			info = percentage + "% [" + thisNode.getWeight() + "] <"+minCallCount+">"+ "  { " + statisctics.getRealCount() + " - " + format1.format(statisctics.getAverageResponseTime()) + "ms}";
-		} else {
-			info = percentage + "% [" + thisNode.getWeight() + "] <"+minCallCount+">";
+		StringBuilder builder = new StringBuilder();
+		builder.append(percentage).append("% [").append(thisNode.getWeight()).append("] ");
+		
+		if(showMinCallCounts) {
+			builder.append("<").append(minCallCount).append(">");
 		}
-		return info;
+		
+		if(statisctics!=null) {
+			builder.append("  { " + statisctics.getRealCount() + " - " + format1.format(statisctics.getAverageResponseTime()) + "ms}");
+		}
+
+		return builder.toString();
 	}
 
 	public boolean hasInstrumentationStatistics(AnalysisNode node) {

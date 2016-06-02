@@ -19,6 +19,7 @@
  *******************************************************************************/
 package io.djigger.ui.common;
 
+import java.awt.AlphaComposite;
 import java.awt.Component;
 import java.awt.Image;
 import java.awt.Insets;
@@ -33,7 +34,6 @@ import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JToggleButton;
-import javax.swing.plaf.basic.BasicButtonUI;
 
 public class CommandButton extends JToggleButton {
 
@@ -42,12 +42,13 @@ public class CommandButton extends JToggleButton {
 		init(null, action);
 	}
 	
+	boolean toggle = false;
+	
 	public CommandButton(String resourceName, String toolTip, final Runnable cmd, int size) {
 		super();
 		
-		java.net.URL imgURL = getClass().getResource(resourceName);
-		ImageIcon icon = new ImageIcon(imgURL, toolTip);
-		icon.setImage(icon.getImage().getScaledInstance(size, size, Image.SCALE_FAST));
+		ImageIcon icon = buildIcon(resourceName, toolTip, size);
+
 		AbstractAction action = new AbstractAction("", icon) {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -58,19 +59,45 @@ public class CommandButton extends JToggleButton {
         init(toolTip, action);
 	}
 	
+	public CommandButton(String resourceName, String toolTip, final Command cmd, int size) {
+		super();
+		
+		toggle = true;
+		
+		ImageIcon icon = buildIcon(resourceName, toolTip, size);
+		
+		final CommandButton me = this;
+		AbstractAction action = new AbstractAction("", icon) {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				cmd.execute(me.getModel().isSelected());
+			}
+		};
+		
+        init(toolTip, action);
+	}
+
+	private ImageIcon buildIcon(String resourceName, String toolTip, int size) {
+		java.net.URL imgURL = getClass().getResource(resourceName);
+		ImageIcon icon = new ImageIcon(imgURL, toolTip);
+		icon.setImage(icon.getImage().getScaledInstance(size, size, Image.SCALE_FAST));
+		return icon;
+	}
+	
 	public CommandButton(String resourceName, String toolTip, final Runnable cmd) {
 		this(resourceName, toolTip, cmd, 20);
 	}
 
 	private void init(String toolTip, Action action) {
 		//Make the button looks the same for all Laf's
-        setUI(new BasicButtonUI());
+        //setUI(new BasicToggleButtonUI());
         //Make it transparent
         setContentAreaFilled(false);
         //No need to be focusable
         setFocusable(false);
         setBorder(BorderFactory.createEtchedBorder());
         setBorderPainted(false);
+        
         //Making nice rollover effect
         //we use the same listener for all buttons
         addMouseListener(buttonMouseListener);
@@ -83,24 +110,60 @@ public class CommandButton extends JToggleButton {
 		}
 	}
 	
-    private final static MouseListener buttonMouseListener = new MouseAdapter() {
+	float alpha = 1f;
+	
+	protected float getAlpha() {
+		return alpha;
+	}
+
+	protected void setAlpha(float alpha) {
+		this.alpha = alpha;
+	}
+
+	public void paintComponent(java.awt.Graphics g)
+	  {
+	    java.awt.Graphics2D g2 = (java.awt.Graphics2D) g;
+	    g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+	    super.paintComponent(g2);
+	  }
+	
+    private final MouseListener buttonMouseListener = new MouseAdapter() {
         public void mouseEntered(MouseEvent e) {
-            Component component = e.getComponent();
-            if (component instanceof AbstractButton) {
-                AbstractButton button = (AbstractButton) component;
-                button.setBorderPainted(true);
-            }
+            setAlpha(0.7f);
+            repaint();
         }
 
         public void mouseExited(MouseEvent e) {
-            Component component = e.getComponent();
-            if (component instanceof AbstractButton) {
-                AbstractButton button = (AbstractButton) component;
-                button.setBorderPainted(false);
-            }
+        	setAlpha(1f);
+            repaint();
         }
+
+		@Override
+		public void mousePressed(MouseEvent e) {
+			setAlpha(0.5f);
+			if(toggle) {
+				Component component = e.getComponent();
+	            if (component instanceof AbstractButton) {
+	                AbstractButton button = (AbstractButton) component;
+	                button.setBorderPainted(!button.isSelected());
+	            }
+			}
+		}
+
+		@Override
+		public void mouseReleased(MouseEvent e) {
+			setAlpha(0.7f);
+		}
+
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			
+		}
     };
 	
-
+    public static interface Command {
+    	
+    	public void execute(boolean selected);
+    }
 	
 }

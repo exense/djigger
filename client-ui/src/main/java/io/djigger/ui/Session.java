@@ -249,6 +249,11 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     public void showLineNumbers(boolean show) {
     	analyzerGroupPane.showLineNumbers(show);
     }
+    
+    public void showMinCallCounts(boolean show) {
+    	presentationHelper.setShowMinCallCounts(show);
+    	refreshAll();
+    }
 
     public void onThreadSelection(StoreFilter filter) {
     	statisticsCache.setStoreFilter(filter);

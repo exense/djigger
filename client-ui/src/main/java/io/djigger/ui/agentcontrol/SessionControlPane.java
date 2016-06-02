@@ -37,6 +37,7 @@ import javax.swing.SwingConstants;
 import io.djigger.client.Facade;
 import io.djigger.ui.Session;
 import io.djigger.ui.common.CommandButton;
+import io.djigger.ui.common.CommandButton.Command;
 import io.djigger.ui.common.FileChooserHelper;
 import io.djigger.ui.common.MonitoredExecution;
 import io.djigger.ui.common.MonitoredExecutionRunnable;
@@ -55,8 +56,6 @@ public class SessionControlPane extends JPanel implements ActionListener {
 	
 	private CommandButton startButton;
 	private CommandButton stopButton;
-	private CommandButton showLinenumbers;
-	private CommandButton hideLinenumbers;
 	
 	public SessionControlPane(final Session parent) {
 		super();
@@ -147,30 +146,20 @@ public class SessionControlPane extends JPanel implements ActionListener {
 		}));
 
 		add(controlPanel);
-		
-		showLinenumbers = new CommandButton("numbered-list.png", "Show line numbers", new Runnable() {
-			@Override
-			public void run() {
-				parent.showLineNumbers(true);
-				hideLinenumbers.setVisible(true);
-				showLinenumbers.setVisible(false);
-			}
-		});
-		
-		hideLinenumbers = new CommandButton("list.png", "Hide line numbers", new Runnable() {
-			@Override
-			public void run() {
-				parent.showLineNumbers(false);
-				hideLinenumbers.setVisible(false);
-				showLinenumbers.setVisible(true);
-			}
-		});
-		hideLinenumbers.setVisible(false);
-		
-		controlPanel.add(showLinenumbers);
-		controlPanel.add(hideLinenumbers);
 
+		controlPanel.add(new CommandButton("numbered-list.png", "Show line numbers", new Command() {
+			@Override
+			public void execute(boolean selected) {
+				parent.showLineNumbers(selected);
+			}
+		},20));
 		
+		controlPanel.add(new CommandButton("calc.png", "Show minimum call counts", new Command() {
+			@Override
+			public void execute(boolean selected) {
+				parent.showMinCallCounts(selected);
+			}
+		},20));
 
 		samplerSettingPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		samplerSettingPanel.add(new JLabel("Sampler interval (ms)"));
