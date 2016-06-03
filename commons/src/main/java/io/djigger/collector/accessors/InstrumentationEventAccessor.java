@@ -39,6 +39,9 @@ import com.mongodb.client.MongoDatabase;
 import io.djigger.collector.accessors.stackref.AbstractAccessor;
 import io.djigger.model.TaggedInstrumentationEvent;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEventWithThreadInfo;
+import io.djigger.monitoring.java.model.StackTraceElement;
+import io.djigger.monitoring.java.model.ThreadInfo;
 
 public class InstrumentationEventAccessor extends AbstractAccessor {
 
@@ -97,15 +100,37 @@ public class InstrumentationEventAccessor extends AbstractAccessor {
 			}
 
 			private InstrumentationEvent fromDocument(Document doc) {
-				InstrumentationEvent event = new InstrumentationEvent(doc.getString("class"), doc.getString("method"),
-						doc.getDate("start").getTime(), doc.getLong("duration"));
+				
+				InstrumentationEvent event;
+				if(doc.containsKey("stacktrace")) {
+					event = new InstrumentationEventWithThreadInfo(doc.getString("class"), doc.getString("method"));
+					
+					StackTraceElement[] stacktrace = fromDBObject(doc.get("stacktrace"));
+					ThreadInfo info = new ThreadInfo(stacktrace);
+					((InstrumentationEventWithThreadInfo)event).setThreadInfo(info);
+				} else {
+					event = new InstrumentationEvent(doc.getString("class"), doc.getString("method"));
+				}
 
+				event.setStart(doc.getDate("start").getTime());
+				event.setDuration(doc.getLong("duration"));
 				event.setId(doc.getObjectId("_id"));
 				event.setParentID(doc.getObjectId("parentid"));
 //				event.setTransactionID((UUID) doc.get("trid"));
 				event.setTransactionID(UUID.fromString(doc.getString("trid")));
 
 				return event;
+			}
+			
+			private StackTraceElement[] fromDBObject(Object o) {
+				@SuppressWarnings("unchecked")
+				List<List<Object>> l = (List<List<Object>>) o;
+				StackTraceElement[] s = new StackTraceElement[l.size()];
+				for(int i=0;i<l.size();i++) {
+					List<Object> e = (List<Object>) l.get(i);
+					s[i] = new StackTraceElement((String)e.get(0), (String)e.get(1), (String)e.get(2), (int) e.get(3));
+				}
+				return s;
 			}
 
 			@Override
@@ -146,6 +171,27 @@ public class InstrumentationEventAccessor extends AbstractAccessor {
 			doc.append("tagged", true);
 			doc.putAll(taggedEvent.getTags());
 		}
+		if(event instanceof InstrumentationEventWithThreadInfo) {
+			List<Object> stacktrace = stackTraceAsTable(((InstrumentationEventWithThreadInfo)event).getThreadInfo());
+			doc.append("stacktrace", stacktrace);
+		}
+		
 		return doc;
+	}
+	
+	private static List<Object> stackTraceAsTable(ThreadInfo info) {
+		StackTraceElement[] stacktrace = info.getStackTrace();
+		ArrayList<Object> table = new ArrayList<>(stacktrace.length);
+		
+		for(int i=0;i<stacktrace.length;i++) {
+			StackTraceElement e = stacktrace[i];
+			ArrayList<Object> node = new ArrayList<Object>();
+			node.add(e.getClassName());
+			node.add(e.getMethodName());
+			node.add(e.getFileName());
+			node.add(e.getLineNumber());
+			table.add(node);
+		}
+		return table;
 	}
 }

@@ -32,7 +32,7 @@ public class Transaction {
 	
 	private ObjectId parentId;
 	
-	private Stack<InstrumentationEvent> eventStack = new Stack<>();
+	private Stack<InstrumentationEvent> eventStack = new Stack<InstrumentationEvent>();
 	
 	private HashMap<Integer, LinkedList<InstrumentationEventData>> data = null;
 	
@@ -82,7 +82,7 @@ public class Transaction {
 	
 	public void attachData(Object object, InstrumentationEventData data) {
 		if(attachedData==null) {
-			attachedData = new HashMap<>();
+			attachedData = new HashMap<Object, InstrumentationEventData>();
 		}
 		this.attachedData.put(object, data);
 	}
@@ -94,7 +94,7 @@ public class Transaction {
 	public void addData(Integer dataid, InstrumentationEventData data) {
 		LinkedList<InstrumentationEventData> list = this.data.get(dataid);
 		if(list==null) {
-			list = new LinkedList<>();
+			list = new LinkedList<InstrumentationEventData>();
 			this.data.put(dataid, list);
 		}
 		list.add(data);

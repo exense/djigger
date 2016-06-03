@@ -21,8 +21,8 @@ package io.djigger.monitoring.eventqueue;
 
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -33,7 +33,10 @@ public class EventQueue<T>  {
 	
 	private static final Logger logger = Logger.getLogger(EventQueue.class.getName());
 	
-	private final ConcurrentLinkedDeque<T> bufferIn = new ConcurrentLinkedDeque<T>();
+	// TODO: the following performs better but is not available in java versions <= 6. Implement a kind of switch
+	//private final ConcurrentLinkedDeque<T> bufferIn = new ConcurrentLinkedDeque<T>();
+	
+	private final LinkedBlockingDeque<T> bufferIn = new LinkedBlockingDeque<T>();
 		
 	private volatile boolean skip=false;
 	

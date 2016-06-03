@@ -13,7 +13,7 @@ public class SubscriptionsTest {
 
 	@Test
 	public void test1() {
-		Set<InstrumentSubscription> subscription = new HashSet<>();
+		Set<InstrumentSubscription> subscription = new HashSet<InstrumentSubscription>();
 		
 		StackTraceElement el = new StackTraceElement("Class1", "Method1", null, -1);
 		StackTraceElement[] els = new StackTraceElement[]{el};

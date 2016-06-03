@@ -41,9 +41,9 @@ public class InstrumentationEventCollector {
 	private static long tRef = System.currentTimeMillis();
 	private static long tRefNano = System.nanoTime();
 	
-	private static ThreadLocal<Transaction> transactions = new ThreadLocal<>(); 
+	private static ThreadLocal<Transaction> transactions = new ThreadLocal<Transaction>(); 
 	
-	private static Map<Long, Transaction> transactionMap = new ConcurrentHashMap<>();
+	private static Map<Long, Transaction> transactionMap = new ConcurrentHashMap<Long, Transaction>();
 	
 	private static long convertToTime(long tNano) {
 		return (tNano-tRefNano)/1000000+tRef;

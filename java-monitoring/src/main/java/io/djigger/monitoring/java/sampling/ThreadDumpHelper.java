@@ -32,7 +32,7 @@ public class ThreadDumpHelper {
 
 	public static List<io.djigger.monitoring.java.model.ThreadInfo> toThreadDump(ThreadInfo[] threadInfos) {
 		long timestamp = System.currentTimeMillis();
-		List<io.djigger.monitoring.java.model.ThreadInfo> snapshots = new ArrayList<>();
+		List<io.djigger.monitoring.java.model.ThreadInfo> snapshots = new ArrayList<io.djigger.monitoring.java.model.ThreadInfo>();
 		for (ThreadInfo info : threadInfos) {
 			io.djigger.monitoring.java.model.ThreadInfo i = toThreadInfo(timestamp, info);
 			snapshots.add(i);
