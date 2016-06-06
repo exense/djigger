@@ -54,7 +54,7 @@ public class TreeView extends AnalyzerPane implements TreeSelectionListener {
 
 	public TreeView(final AnalyzerGroupPane parent, TreeType treeType) {
 		super(parent, treeType);
-		
+
 		tree = new JTree(new NodeTreeModel(workNode));
 		tree.setUI(new CustomTreeUI());
 		tree.addTreeSelectionListener(this);
@@ -71,7 +71,7 @@ public class TreeView extends AnalyzerPane implements TreeSelectionListener {
 						sel, expanded, leaf, row, hasFocus);
 			}
 		});
-		
+
 		final TreePopupMenu popup = new TreePopupMenu(this);
 		// using the mouselistener instead of tree.setComponentPopupMenu() to also select items on right click
 		MouseListener ml = new MouseAdapter() {
@@ -88,19 +88,19 @@ public class TreeView extends AnalyzerPane implements TreeSelectionListener {
 			}
 		};
 		tree.addMouseListener(ml);
-		
+
 		contentPanel.setLayout(new GridLayout(0,1));
 		contentPanel.add(new JScrollPane(tree));
-		
-		
+
+
 		// OSX support for RIGHT and LEFT KeyStrokes
 		InputMap currentIm = tree.getInputMap();
-		
+
 		if(currentIm != null){
 			String keyMapping = (String)currentIm.get(KeyStroke.getKeyStroke("pressed RIGHT"));
 			if(keyMapping == null || keyMapping != "selectChild")
 				currentIm.put(KeyStroke.getKeyStroke("pressed RIGHT"), "selectChild");
-			
+
 			keyMapping = (String)currentIm.get(KeyStroke.getKeyStroke("pressed LEFT"));
 			if(keyMapping == null || keyMapping != "selectParent")
 				currentIm.put(KeyStroke.getKeyStroke("pressed LEFT"), "selectParent");
@@ -111,10 +111,10 @@ public class TreeView extends AnalyzerPane implements TreeSelectionListener {
 	public void refreshDisplay() {
 		Enumeration<TreePath> expandedDesc = tree.getExpandedDescendants(new TreePath(tree.getModel().getRoot()));
 		TreePath selectionPath = tree.getSelectionPath();
-		
+
 		NodeTreeModel model = new NodeTreeModel(workNode);
 		tree.setModel(model);
-		
+
 		if(expandedDesc!=null) {
 			while(expandedDesc.hasMoreElements()) {
 				TreePath path = expandedDesc.nextElement();
@@ -134,7 +134,7 @@ public class TreeView extends AnalyzerPane implements TreeSelectionListener {
 			parent.fireSelection(getSelectedThreadsIds());
 		}
 	}
-	
+
 	private Set<Long> getSelectedThreadsIds() {
 		HashSet<Long> result = new HashSet<Long>();
 
@@ -146,7 +146,7 @@ public class TreeView extends AnalyzerPane implements TreeSelectionListener {
 				}
 			}
 		}
-		
+
 		return result;
 	}
 
@@ -154,7 +154,7 @@ public class TreeView extends AnalyzerPane implements TreeSelectionListener {
 	public AnalysisNode getSelectedNode() {
 		return currentNode;
 	}
-	
+
 	public void expandAll() {
 		for (int i = 0; i < tree.getRowCount(); i++) {
 			tree.expandRow(i);
@@ -164,7 +164,7 @@ public class TreeView extends AnalyzerPane implements TreeSelectionListener {
 	public void expandChildrenOfCurrentSelection() {
 		expandChildren(getSelectedNode());
 	}
-	
+
 	private void expandChildren(AnalysisNode node) {
 		for(AnalysisNode child:node.getChildren()) {
 			if(child.isLeaf()) {
@@ -174,11 +174,11 @@ public class TreeView extends AnalyzerPane implements TreeSelectionListener {
 			}
 		}
 	}
-	
+
 	public void expandFirstChildrenOfCurrentSelection() {
 		expandFirstChildren(getSelectedNode());
 	}
-	
+
 	private void expandFirstChildren(AnalysisNode node) {
 		for(AnalysisNode child:node.getChildren()) {
 			if(child.isLeaf()) {
@@ -189,11 +189,11 @@ public class TreeView extends AnalyzerPane implements TreeSelectionListener {
 			break;
 		}
 	}
-	
+
 	public void collapseChildrenOfCurrentSelection() {
 		collapseChildren(getSelectedNode());
 	}
-	
+
 	private void collapseChildren(AnalysisNode node) {
 		for(AnalysisNode child:node.getChildren()) {
 			collapseChildren(child);
