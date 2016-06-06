@@ -6,5 +6,5 @@ SET JAVA_PATH=
 
 SET JAVA_OPTS=-Dlogback.configurationFile=logback-client.xml
 
-%JAVA_PATH%java.exe %JAVA_OPTS% -cp "..\lib\*" io.djigger.ui.MainFrame
+%JAVA_PATH%java.exe %JAVA_OPTS% -cp "..\lib\*;%JAVA_PATH%\..\lib\tools.jar" io.djigger.ui.MainFrame
 

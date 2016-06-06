@@ -84,4 +84,7 @@ public class FileChooserParameters implements ConnectionParameterFrame {
 		return panel;
 	}
 
+	@Override
+	public void setReloadListener(ReloadListener listener) {}
+
 }
