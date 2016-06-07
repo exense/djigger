@@ -59,11 +59,6 @@ public class Store implements Serializable {
 	}
 
 	public synchronized void addThreadInfos(List<ThreadInfo> threadInfos) {
-		for (ThreadInfo threadInfo : threadInfos) {
-			if(threadInfo.getTransactionID()!=null) {
-				System.out.println("Got thread "+ threadInfo.getName() + " trid: "+ threadInfo.getTransactionID());
-			}
-		}
 		threadInfosBuffer.addAll(threadInfos);
 	}
 	

@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -129,6 +130,10 @@ public class ThreadInfoAccessorImpl extends AbstractAccessor implements ThreadIn
 						info.setName(dbo.getString("name"));
 						info.setId(dbo.getLong("id"));
 						info.setState(State.valueOf(dbo.getString("state")));
+						
+						if(dbo.containsKey("trid")) {
+							info.setTransactionID(UUID.fromString(dbo.getString("trid")));
+						}
 
 						Map<String, String> attributes = new HashMap<String, String>();
 						for(String key:dbo.keySet()) {
@@ -175,6 +180,11 @@ public class ThreadInfoAccessorImpl extends AbstractAccessor implements ThreadIn
 		o.put("state", threadInfo.getState());
 		o.put("timestamp", new Date(threadInfo.getTimestamp()));
 		o.put("state", threadInfo.getState().toString());
+		
+		if(threadInfo.getTransactionID()!=null) {
+			o.put("trid", threadInfo.getTransactionID().toString());
+		}
+		
 		threadInfoCollection.insertOne(o);
 	}
 	

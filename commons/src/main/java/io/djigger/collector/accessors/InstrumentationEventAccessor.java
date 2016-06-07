@@ -39,7 +39,9 @@ import com.mongodb.client.MongoDatabase;
 import io.djigger.collector.accessors.stackref.AbstractAccessor;
 import io.djigger.model.TaggedInstrumentationEvent;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEventData;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEventWithThreadInfo;
+import io.djigger.monitoring.java.instrumentation.StringInstrumentationEventData;
 import io.djigger.monitoring.java.model.StackTraceElement;
 import io.djigger.monitoring.java.model.ThreadInfo;
 
@@ -119,6 +121,11 @@ public class InstrumentationEventAccessor extends AbstractAccessor {
 //				event.setTransactionID((UUID) doc.get("trid"));
 				event.setTransactionID(UUID.fromString(doc.getString("trid")));
 
+				if(doc.containsKey("data")) {
+					StringInstrumentationEventData data = new StringInstrumentationEventData(doc.getString("data"));
+					event.setData(data);
+				}
+				
 				return event;
 			}
 			
@@ -174,6 +181,12 @@ public class InstrumentationEventAccessor extends AbstractAccessor {
 		if(event instanceof InstrumentationEventWithThreadInfo) {
 			List<Object> stacktrace = stackTraceAsTable(((InstrumentationEventWithThreadInfo)event).getThreadInfo());
 			doc.append("stacktrace", stacktrace);
+		}
+		InstrumentationEventData data = event.getData();
+		if(data!=null) {
+			if(data instanceof StringInstrumentationEventData) {
+				doc.append("data", ((StringInstrumentationEventData)data).getPayload());
+			}
 		}
 		
 		return doc;
