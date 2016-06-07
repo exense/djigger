@@ -149,7 +149,7 @@ public abstract class AnalyzerPane extends Dashlet implements ActionListener {
 			try {
 				complexFilter = OQLFilterBuilder.getFilter(filter, atomicFactory);
 			} catch (Exception e) {
-				JOptionPane.showMessageDialog(this,	e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(this,	"Error parsing stacktrace filter '" + filter + "'. " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			}
 		}
 		return complexFilter;
@@ -162,7 +162,7 @@ public abstract class AnalyzerPane extends Dashlet implements ActionListener {
 			try {
 				nodeFilter =  OQLFilterBuilder.getFilter(excludeFilter, atomicFactory);
 			} catch (Exception e) {
-				JOptionPane.showMessageDialog(this,	e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(this,	"Error parsing node filter '" + excludeFilter + "'. " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 				nodeFilter = null;
 			}
 		} else {
