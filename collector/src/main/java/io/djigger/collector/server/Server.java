@@ -64,7 +64,7 @@ public class Server {
 	
 	private InstrumentationEventAccessor instrumentationEventsAccessor;
 
-	private List<Facade> clients = new ArrayList<>();
+	private List<ClientConnection> clients = new ArrayList<>();
 
 	private ServiceServer serviceServer;
 
@@ -108,7 +108,7 @@ public class Server {
 			try {
 				Facade client = createClient(attributes, connectionParam);
 				synchronized (clients) {
-					clients.add(client);
+					clients.add(new ClientConnection(client, attributes));
 				}
 			} catch (Exception e) {
 				logger.error("An error occurred while creating client " + connectionParam.toString(), e);
@@ -197,9 +197,9 @@ public class Server {
 		return client;
 	}
 
-	public List<Facade> getClients() {
+	public List<ClientConnection> getClients() {
 		synchronized (clients) {
-			return new ArrayList<Facade>(clients);
+			return new ArrayList<ClientConnection>(clients);
 		}
 	}
 }

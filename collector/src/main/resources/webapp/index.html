@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<link rel="stylesheet" type="text/css" href="jquery.dataTables.min.css">
+	<script type="text/javascript" language="javascript" src="jquery-1.12.0.min.js">
+	</script>
+	<script type="text/javascript" language="javascript" src="jquery.dataTables.min.js">
+	</script>
+	<script type="text/javascript" class="init">
+	
+
+$(document).ready(function() {
+
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (xhttp.readyState == 4 && xhttp.status == 200) {
+		
+      var list = JSON.parse(xhttp.responseText);
+	  
+	  var dataSet = [];
+	  for(i=0;i<list.length;i++) {
+		var entry = list[i];
+		dataSet.push([entry.facadeClass, JSON.stringify(entry.properties), JSON.stringify(entry.attributes), entry.connected]); 
+	  }
+	  
+	  $('#example').DataTable( {
+			data: dataSet,
+			columns: [
+				{ title: "Connection type" },
+				{ title: "Connection properties" },
+				{ title: "Attributes" },
+				{ title: "Connected" }
+			]
+		} );
+    }
+  };
+  xhttp.open("GET", "../rest/services/status", true);
+  xhttp.send();
+} );
+
+
+	</script>
+	
+</head>
+
+<body>
+<table width="100%"String class="display"String id="example"String></table>
+</body>
+</html>

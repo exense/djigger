@@ -19,9 +19,13 @@
  *******************************************************************************/
 package io.djigger.collector.server.services;
 
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.webapp.WebAppContext;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -48,6 +52,8 @@ public class ServiceServer {
 	
 	private Server configureServer() {
 		ResourceConfig resourceConfig = new ResourceConfig();
+		
+		
 		resourceConfig.packages(Services.class.getPackage().getName());
 		resourceConfig.register(JacksonFeature.class);
 		resourceConfig.register(new AbstractBinder() {	
@@ -60,9 +66,18 @@ public class ServiceServer {
 		ServletHolder sh = new ServletHolder(servletContainer);
 		Server server = new Server(serverPort);
 		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-		context.setContextPath("/");
+		context.setContextPath("/rest");
 		context.addServlet(sh, "/*");
-		server.setHandler(context);
+
+		WebAppContext bb = new WebAppContext();
+		bb.setServer(server);
+		bb.setContextPath("/djigger");
+		bb.setResourceBase(Resource.newClassPathResource("webapp").getURI().toString());
+		
+		ContextHandlerCollection contexts = new ContextHandlerCollection();
+        contexts.setHandlers(new Handler[] { context, bb });
+		server.setHandler(contexts);
+		
 		return server;
 	}
 }
