@@ -30,9 +30,9 @@ public class StoreClient {
 	
 	InstrumentationEventAccessor instrumentationAccessor;
 	
-	public void connect(String host) throws Exception {
+	public void connect(String host, int port) throws Exception {
 		MongoConnection connection = new MongoConnection();
-		connection.connect(host);
+		connection.connect(host, port);
 		threadInfoAccessor = new ThreadInfoAccessorImpl(connection.getDb());
 		instrumentationAccessor = new InstrumentationEventAccessor(connection.getDb());
 	}

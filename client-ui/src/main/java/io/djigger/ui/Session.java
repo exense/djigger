@@ -19,19 +19,6 @@
  *******************************************************************************/
 package io.djigger.ui;
 
-import java.awt.BorderLayout;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-
-import javax.swing.JPanel;
-import javax.swing.JSplitPane;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.djigger.client.AgentFacade;
 import io.djigger.client.Facade;
 import io.djigger.client.FacadeListener;
@@ -56,6 +43,20 @@ import io.djigger.ui.instrumentation.InstrumentationStatisticsCache;
 import io.djigger.ui.model.SessionExport;
 import io.djigger.ui.storebrowser.StoreBrowserPane;
 import io.djigger.ui.threadselection.ThreadSelectionPane;
+
+import java.awt.BorderLayout;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+
+import javax.swing.JPanel;
+import javax.swing.JSplitPane;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @SuppressWarnings("serial")
@@ -172,7 +173,16 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     	} else {
     		if(getSessionType()==SessionType.STORE) {
     			storeClient = new StoreClient();
-    			storeClient.connect(config.getParameters().get(SessionParameter.HOSTNAME));
+    			
+    			Map<SessionParameter,String> params = config.getParameters();
+    			String hostname = params.get(SessionParameter.HOSTNAME);
+    			int port;
+    			try{
+    			port = Integer.parseInt(params.get(SessionParameter.PORT));
+    			}catch(NumberFormatException e){
+    				port = 27017;
+    			}
+    			storeClient.connect(hostname, port);
     		} else if (getSessionType()==SessionType.AGENT_CAPTURE) {
     			final File file = new File(config.getParameters().get(SessionParameter.FILE));
     			MonitoredExecution execution = new MonitoredExecution(main.getFrame(), "Opening session... Please wait.", new MonitoredExecutionRunnable() {
