@@ -21,8 +21,6 @@ package io.djigger.collector.server.conf;
 
 import java.util.List;
 
-import com.thoughtworks.xstream.annotations.XStreamImplicit;
-
 
 public class CollectorConfig {
 	

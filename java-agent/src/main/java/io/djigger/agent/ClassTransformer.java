@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.TransformingSubscription;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
@@ -64,13 +63,11 @@ public class ClassTransformer implements ClassFileTransformer {
 					if (subscription.isRelatedToClass(currentClass)) {
 						for (CtMethod method : currentClass.getDeclaredMethods()) {
 							if (subscription.isRelatedToMethod(method)) {
-								if(subscription instanceof TransformingSubscription) {
-									if(logger.isDebugEnabled()) {
-										logger.debug("Transforming method " + className + "." + method.getLongName());
-									}
-									((TransformingSubscription)subscription).transform(currentClass, method);
-									transformed = true;
+								if(logger.isDebugEnabled()) {
+									logger.debug("Transforming method " + className + "." + method.getLongName());
 								}
+								subscription.transform(currentClass, method);
+								transformed = true;	
 							}
 						}
 					}
@@ -78,7 +75,7 @@ public class ClassTransformer implements ClassFileTransformer {
 
 				if(transformed) {
 					if(logger.isDebugEnabled()) {
-						logger.debug("Transforming " + className);
+						logger.debug("Transformed " + className);
 					}
 					classfileBuffer = currentClass.toBytecode();	
 				}

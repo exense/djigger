@@ -77,10 +77,10 @@ public class ServletTracer extends InstrumentSubscription implements Transformin
 
 	@Override
 	public void transform(CtClass clazz, CtMethod method) throws CannotCompileException {
-		TimeMeasureTransformer.transform(clazz, method, this, false);
 		method.insertBefore("if(arg0 instanceof javax.servlet.http.HttpServletRequest) {"+
 				"String tr = ((javax.servlet.http.HttpServletRequest) $1).getHeader(\"djigger\");"+
 				"io.djigger.agent.InstrumentationEventCollector.applyTracer(tr);"+
 				"}");
+		TimeMeasureTransformer.transform(clazz, method, this, false);
 	}
 }

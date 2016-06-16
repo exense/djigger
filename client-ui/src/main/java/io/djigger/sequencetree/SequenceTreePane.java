@@ -41,7 +41,6 @@ import io.djigger.ui.analyzer.AnalyzerGroupPane;
 import io.djigger.ui.analyzer.TreeType;
 import io.djigger.ui.common.EnhancedTextField;
 import io.djigger.ui.common.NodePresentationHelper;
-import io.djigger.ui.model.AnalysisNode;
 
 
 public abstract class SequenceTreePane extends JPanel implements ActionListener {
@@ -132,8 +131,15 @@ public abstract class SequenceTreePane extends JPanel implements ActionListener 
 		if(negate) {
 			filter.append("not ");
 		}
-		filter.append(getPresentationHelper().getFullname(getSelectedNode()));
+		filter.append(getPresentationHelper().toString(getSelectedNode()));
 		textField.setText(filter.toString().trim());
+	}
+	
+	public void drillDown() {
+		SequenceTreeNode node = getSelectedNode();
+		if(node!=null) {
+			parent.addDrilldownPane(node.getEvent().getId());
+		}
 	}
 
 	@Override
@@ -244,7 +250,7 @@ public abstract class SequenceTreePane extends JPanel implements ActionListener 
 
 	public abstract void refreshDisplay();
 
-	protected abstract AnalysisNode getSelectedNode();
+	protected abstract SequenceTreeNode getSelectedNode();
 
 	public Session getMain() {
 		return session;

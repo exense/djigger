@@ -24,18 +24,23 @@ import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.bson.types.ObjectId;
+
 import io.djigger.aggregation.AnalyzerService;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.sequencetree.SequenceTreeView;
 import io.djigger.store.filter.StoreFilter;
 import io.djigger.ui.Session;
@@ -157,6 +162,17 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
             
             
         }
+    }
+    
+    public void addDrilldownPane(ObjectId parentID) {
+    	Iterator<InstrumentationEvent> it = parent.getStoreClient().getInstrumentationAccessor().getByParentId(parentID);
+    	if(it.hasNext()) {
+    		InstrumentationEvent event = it.next();
+    		addTransactionPane(event.getTransactionID());
+    	} else {
+			JOptionPane.showMessageDialog(parent, "No child transaction found.", "Drilldown", JOptionPane.INFORMATION_MESSAGE);
+    	}
+    	
     }
     
     public void addTransactionPane(UUID trID) {

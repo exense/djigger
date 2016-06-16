@@ -21,11 +21,15 @@ package io.djigger.sequencetree;
 
 import java.awt.Component;
 import java.awt.GridLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.Enumeration;
 import java.util.UUID;
 
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
+import javax.swing.SwingUtilities;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultTreeCellRenderer;
@@ -33,7 +37,6 @@ import javax.swing.tree.TreePath;
 
 import io.djigger.ui.analyzer.AnalyzerGroupPane;
 import io.djigger.ui.analyzer.TreeType;
-import io.djigger.ui.model.AnalysisNode;
 
 
 @SuppressWarnings("serial")
@@ -63,22 +66,24 @@ public class SequenceTreeView extends SequenceTreePane implements TreeSelectionL
 			}
 		});
 		
+		final SequenceTreePopupMenu popup = new SequenceTreePopupMenu(this);
+		
 //		final TreePopupMenu popup = new TreePopupMenu(this);
-//		// using the mouselistener instead of tree.setComponentPopupMenu() to also select items on right click
-//		MouseListener ml = new MouseAdapter() {
-//			public void mousePressed(MouseEvent e) {
-//				if (SwingUtilities.isRightMouseButton(e)) {
-//					int selRow = tree.getRowForLocation(e.getX(), e.getY());
-//					TreePath selPath = tree.getPathForLocation(e.getX(),e.getY());
-//					tree.setSelectionPath(selPath);
-//					if (selRow > -1) {
-//						tree.setSelectionRow(selRow);
-//					}
-//					popup.show(tree, e.getX(), e.getY());
-//				}
-//			}
-//		};
-//		tree.addMouseListener(ml);
+		// using the mouselistener instead of tree.setComponentPopupMenu() to also select items on right click
+		MouseListener ml = new MouseAdapter() {
+			public void mousePressed(MouseEvent e) {
+				if (SwingUtilities.isRightMouseButton(e)) {
+					int selRow = tree.getRowForLocation(e.getX(), e.getY());
+					TreePath selPath = tree.getPathForLocation(e.getX(),e.getY());
+					tree.setSelectionPath(selPath);
+					if (selRow > -1) {
+						tree.setSelectionRow(selRow);
+					}
+					popup.show(tree, e.getX(), e.getY());
+				}
+			}
+		};
+		tree.addMouseListener(ml);
 		
 		contentPanel.setLayout(new GridLayout(0,1));
 		contentPanel.add(new JScrollPane(tree));
@@ -110,16 +115,10 @@ public class SequenceTreeView extends SequenceTreePane implements TreeSelectionL
 			//parent.fireSelection(currentNode);
 		}
 	}
-
 	
-	public AnalysisNode getSelectedNode() {
-		return null;
+	public void eventDetails() {
+		getSelectedNode().getEvent();
 	}
-	
-	public SequenceTreeNode getSelectedSequenceNode() {
-		return workNode;
-	}
-	
 	
 	public void expandAll() {
 		for (int i = 0; i < tree.getRowCount(); i++) {
@@ -128,7 +127,7 @@ public class SequenceTreeView extends SequenceTreePane implements TreeSelectionL
 	}
 
 	public void expandChildrenOfCurrentSelection() {
-		expandChildren(getSelectedSequenceNode());
+		expandChildren(getSelectedNode());
 	}
 	
 	private void expandChildren(SequenceTreeNode node) {
@@ -142,7 +141,7 @@ public class SequenceTreeView extends SequenceTreePane implements TreeSelectionL
 	}
 	
 	public void expandFirstChildrenOfCurrentSelection() {
-		expandFirstChildren(getSelectedSequenceNode());
+		expandFirstChildren(getSelectedNode());
 	}
 	
 	private void expandFirstChildren(SequenceTreeNode node) {
@@ -157,7 +156,7 @@ public class SequenceTreeView extends SequenceTreePane implements TreeSelectionL
 	}
 	
 	public void collapseChildrenOfCurrentSelection() {
-		collapseChildren(getSelectedSequenceNode());
+		collapseChildren(getSelectedNode());
 	}
 	
 	private void collapseChildren(SequenceTreeNode node) {
@@ -165,5 +164,10 @@ public class SequenceTreeView extends SequenceTreePane implements TreeSelectionL
 			collapseChildren(child);
 			tree.collapsePath(new TreePath(node.getTreePath().toArray()));
 		}
+	}
+
+	@Override
+	protected SequenceTreeNode getSelectedNode() {
+		return currentNode;
 	}	
 }

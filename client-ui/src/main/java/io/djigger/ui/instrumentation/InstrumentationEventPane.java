@@ -22,9 +22,11 @@ package io.djigger.ui.instrumentation;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Comparator;
@@ -35,17 +37,13 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.Vector;
 
-import javax.swing.AbstractAction;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -54,10 +52,7 @@ import javax.swing.table.TableCellRenderer;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEventData;
-import io.djigger.monitoring.java.instrumentation.InstrumentationEventWithThreadInfo;
 import io.djigger.monitoring.java.instrumentation.StringInstrumentationEventData;
-import io.djigger.monitoring.java.model.StackTraceElement;
-import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.ql.Filter;
 import io.djigger.ql.FilterFactory;
 import io.djigger.ql.OQLFilterBuilder;
@@ -66,8 +61,9 @@ import io.djigger.store.filter.StoreFilter;
 import io.djigger.ui.Session;
 import io.djigger.ui.analyzer.AnalyzerGroupPane;
 import io.djigger.ui.analyzer.Dashlet;
-import io.djigger.ui.analyzer.TransactionAnalyzerFrame;
 import io.djigger.ui.common.EnhancedTextField;
+import io.djigger.ui.menus.InstrumentationEventMenu;
+import io.djigger.ui.menus.InstrumentationEventMenu.InstrumentationEventMenuCallback;
 
 public class InstrumentationEventPane extends Dashlet {
 	
@@ -118,160 +114,28 @@ public class InstrumentationEventPane extends Dashlet {
 		});
 		add(filterTextField,BorderLayout.NORTH);
 		
+		final JPopupMenu menu = new JPopupMenu();
 		
-		JPopupMenu sampleListPopupMenu = new JPopupMenu();
-		
-		sampleListPopupMenu.add(new JMenuItem(new AbstractAction("Show event details") {	
+		new InstrumentationEventMenu(menu, session, new InstrumentationEventMenuCallback() {
 			@Override
-			public void actionPerformed(ActionEvent arg0) {
+			public InstrumentationEvent getCurrentEvent() {
 				final InstrumentationEvent event = samples.get(sampleList.convertRowIndexToModel(sampleList.getSelectedRow()));
-
-				Vector<Vector<Object>> data = new Vector<Vector<Object>>();
-				
-				Vector<String> header = new Vector<>(3);
-				header.add("Key");
-				header.add("Value");
-				DefaultTableModel model = new DefaultTableModel(data, header) {
-					public Class getColumnClass(int c) {				
-			            switch(c) {
-			            case 0:return String.class;
-			            case 1:return String.class;
-			            default:throw new RuntimeException();
-			            }
-			        }
-				};
-				
-				
-				
-				SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.S");
-				data.add(addEntry("Event ID:", event.getId().toString()));
-				data.add(addEntry("Transaction ID:", event.getTransactionID().toString()));
-
-				data.add(addEntry("Thread ID:", Long.toString(event.getThreadID())));
-				data.add(addEntry("Start:", format.format(new Date(event.getStart()))));
-				data.add(addEntry("Duration (ms):", Double.toString(event.getDuration() / 1000000.0)));
-				data.add(addEntry("Classname: ", event.getClassname()));
-				data.add(addEntry("Methodname: ", event.getMethodname()));
-
-				InstrumentationEventData eventData = event.getData();
-				if(eventData!=null) {
-					if(eventData instanceof StringInstrumentationEventData) {
-						data.add(addEntry("Data: ", ((StringInstrumentationEventData)eventData).getPayload()));
-					}
-				}
-				
-				JDialog dialog = new JDialog(parent.getMain().getMain().getFrame(), "New session", false);			
-				
-				JPanel panel = new JPanel(new GridLayout(2,1));
-				JTable table = new JTable(model);
-				
-				JPanel attributesPanel = new JPanel(new BorderLayout());
-				attributesPanel.add(new JLabel("Attributes"), BorderLayout.NORTH);
-				attributesPanel.add(new JScrollPane(table), BorderLayout.CENTER);
-				panel.add(attributesPanel);
-				
-				
-				if(event instanceof InstrumentationEventWithThreadInfo) {
-					ThreadInfo info = ((InstrumentationEventWithThreadInfo)event).getThreadInfo();
-					
-					Vector<Vector<Object>> stackTraceTableData = new Vector<Vector<Object>>();
-					
-					Vector<String> stacktraceTableHeader = new Vector<>(2);
-					stacktraceTableHeader.add("Class");
-					stacktraceTableHeader.add("Method");
-					DefaultTableModel stacktraceTableModel = new DefaultTableModel(stackTraceTableData, stacktraceTableHeader) {
-						public Class getColumnClass(int c) {				
-				            switch(c) {
-				            case 0:return String.class;
-				            case 1:return String.class;
-				            default:throw new RuntimeException();
-				            }
-				        }
-					};
-					
-					StackTraceElement[] stackstrace = info.getStackTrace();
-					
-					for(StackTraceElement el:stackstrace) {
-						Vector<Object> v = new Vector<>(2);
-						v.add(el.getClassName());
-						v.add(el.getMethodName());
-						stackTraceTableData.add(v);
-					}
-					
-					JTable stacktraceTable = new JTable(stacktraceTableModel);
-
-					JPanel stackTracePanel = new JPanel(new BorderLayout());
-					stackTracePanel.add(new JLabel("Stacktrace"), BorderLayout.NORTH);
-					stackTracePanel.add(new JScrollPane(stacktraceTable), BorderLayout.CENTER);
-					panel.add(stackTracePanel);
-					
-				}
-				
-				
-				dialog.setContentPane(panel);
-				
-				dialog.setResizable(true);
-				dialog.setVisible(true);
-				dialog.setSize(800, 500);
-				
+				return event;
 			}
-			
-			private Vector<Object> addEntry(String label, Object	 value) {
-				Vector<Object> v = new Vector<>(2);
-				v.add(label);
-				v.add(value);
-				return v;
-			}
-		}));
+		});
 		
-		
-		
-		sampleListPopupMenu.add(new JMenuItem(new AbstractAction("Build sampling trees for this transaction") {	
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				InstrumentationEvent sample = samples.get(sampleList.convertRowIndexToModel(sampleList.getSelectedRow()));
-				final UUID transactionID = sample.getTransactionID();
-				if(transactionID!=null) {
-					new TransactionAnalyzerFrame(main, new StoreFilter() {
-						
-						@Override
-						public boolean match(InstrumentationEvent sample) {
-							return sample.getTransactionID().equals(transactionID);
-						}
-						
-						@Override
-						public boolean match(ThreadInfo dump) {
-							return transactionID.equals(dump.getTransactionID());
-						}
-					});
-					
-				}
-			}
-		}));
-		sampleListPopupMenu.add(new JMenuItem(new AbstractAction("Transaction tree") {	
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				InstrumentationEvent sample = samples.get(sampleList.convertRowIndexToModel(sampleList.getSelectedRow()));
-				UUID transactionID = sample.getTransactionID();
-				
-				main.getAnalyzerGroupPane().addTransactionPane(transactionID);
-			}
-		}));
-		sampleListPopupMenu.add(new JMenuItem(new AbstractAction("List events in this transaction") {	
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				InstrumentationEvent sample = samples.get(sampleList.convertRowIndexToModel(sampleList.getSelectedRow()));
-				UUID transactionID = sample.getTransactionID();
-				
-				main.getAnalyzerGroupPane().addInstrumentationEventPaneForTransaction(transactionID);
-			}
-		}));
-		
-
 		sampleList = new JTable();
-		sampleList.setComponentPopupMenu(sampleListPopupMenu);
 		
-
+		sampleList.setComponentPopupMenu(menu);
+		MouseListener ml = new MouseAdapter() {
+			public void mousePressed(MouseEvent e) {
+				if (SwingUtilities.isRightMouseButton(e)) {
+					int row = sampleList.rowAtPoint(e.getPoint());
+					sampleList.getSelectionModel().setSelectionInterval(row, row);
+				}
+			}
+		};
+		sampleList.addMouseListener(ml);
 		
 		add(new JScrollPane(sampleList),BorderLayout.CENTER);
 		add(status,BorderLayout.SOUTH);

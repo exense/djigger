@@ -25,7 +25,7 @@ import javassist.CtClass;
 import javassist.CtMethod;
 
 
-public abstract class InstrumentSubscription implements Serializable {
+public abstract class InstrumentSubscription implements Serializable, TransformingSubscription {
 
 	private static final long serialVersionUID = -299257813496574472L;
 	

@@ -19,16 +19,19 @@
  *******************************************************************************/
 package io.djigger.ui.analyzer;
 
-import io.djigger.store.filter.StoreFilter;
-import io.djigger.ui.Session;
-import io.djigger.ui.common.NodePresentationHelper;
-import io.djigger.ui.instrumentation.InstrumentationStatisticsCache;
-
 import java.awt.Dimension;
+import java.util.UUID;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
+
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.model.ThreadInfo;
+import io.djigger.store.filter.StoreFilter;
+import io.djigger.ui.Session;
+import io.djigger.ui.common.NodePresentationHelper;
+import io.djigger.ui.instrumentation.InstrumentationStatisticsCache;
 
 public class TransactionAnalyzerFrame extends JPanel {
 	
@@ -37,25 +40,35 @@ public class TransactionAnalyzerFrame extends JPanel {
 	private JFrame frame;
 	
 	private  AnalyzerGroupPane analyzerGroupPane;
-	
-	private StoreFilter filter;
-	
+		
 	private final InstrumentationStatisticsCache statisticsCache;
 	
 	private final NodePresentationHelper presentationHelper;
 
-	public TransactionAnalyzerFrame(Session main, StoreFilter filter) {
+	public TransactionAnalyzerFrame(Session main, final UUID transactionID) {
 		super();
 		this.main = main;
-		this.filter = filter;
 		
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
             System.err.println("Couldn't use system look and feel.");
         }
+		
+		StoreFilter filter = new StoreFilter() {
+			
+			@Override
+			public boolean match(InstrumentationEvent sample) {
+				return sample.getTransactionID().equals(transactionID);
+			}
+			
+			@Override
+			public boolean match(ThreadInfo dump) {
+				return transactionID.equals(dump.getTransactionID());
+			}
+		};
 
-        frame = new JFrame("djigger - Transaction Details");
+        frame = new JFrame("djigger - Transaction "+transactionID.toString());
         frame.setPreferredSize(new Dimension(1300,700));
 
 		statisticsCache = new InstrumentationStatisticsCache(main.getStore());

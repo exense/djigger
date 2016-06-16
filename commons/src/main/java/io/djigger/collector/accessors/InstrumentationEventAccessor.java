@@ -31,6 +31,7 @@ import java.util.UUID;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
@@ -68,6 +69,11 @@ public class InstrumentationEventAccessor extends AbstractAccessor {
 		instrumentationEventsCollection.insertOne(doc);
 	}
 
+	public Iterator<InstrumentationEvent> getByParentId(ObjectId parentId) {
+		Bson filter = new Document("parentid", parentId);
+		return query(filter);
+	}
+	
 	public Iterator<InstrumentationEvent> getByTransactionId(UUID transactionIDd) {
 		Bson filter = new Document("trid", transactionIDd.toString());
 		return query(filter);

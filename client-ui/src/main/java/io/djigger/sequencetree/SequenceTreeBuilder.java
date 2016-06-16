@@ -47,6 +47,7 @@ public class SequenceTreeBuilder {
 					targetChild.setEvent(child.getEvent());
 					if(addChildren(targetChild, stack, child, pathTransformer, nodeFilter)) {
 						currentTargetNode.addChild(targetChild);
+						targetChild.setParent(currentTargetNode);
 						retain = true;
 					}
 				} else {

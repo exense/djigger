@@ -43,6 +43,7 @@ import io.djigger.collector.server.conf.Configurator;
 import io.djigger.collector.server.conf.Connection;
 import io.djigger.collector.server.conf.ConnectionGroupNode;
 import io.djigger.collector.server.conf.ConnectionsConfig;
+import io.djigger.collector.server.conf.MongoDBParameters;
 import io.djigger.collector.server.services.ServiceServer;
 import io.djigger.model.TaggedInstrumentationEvent;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
@@ -120,7 +121,13 @@ public class Server {
 		mongodbConnection = new MongoConnection();
 		
 		try {
-			mongodbConnection.connect(config.getDb().getHost());
+			MongoDBParameters connectionParams = config.getDb();
+			if(connectionParams.getPort()!=null) {
+				Integer port = Integer.parseInt(connectionParams.getPort());
+				mongodbConnection.connect(connectionParams.getHost(), port);				
+			} else {
+				mongodbConnection.connect(connectionParams.getHost());			
+			}
 			
 			Long ttl = config.getDataTTL();
 			

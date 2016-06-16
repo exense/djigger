@@ -32,7 +32,7 @@ public class SequenceTreeNode implements Comparable<SequenceTreeNode> {
 
 	private final NodeID id;
 
-	private final SequenceTreeNode parent;
+	private SequenceTreeNode parent;
 
 	private final List<SequenceTreeNode> children = new ArrayList<SequenceTreeNode>();
 	
@@ -83,6 +83,14 @@ public class SequenceTreeNode implements Comparable<SequenceTreeNode> {
 
 	public boolean addChild(SequenceTreeNode e) {
 		return children.add(e);
+	}
+
+	public SequenceTreeNode getParent() {
+		return parent;
+	}
+
+	public void setParent(SequenceTreeNode parent) {
+		this.parent = parent;
 	}
 
 	@Override

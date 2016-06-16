@@ -19,8 +19,8 @@
  *******************************************************************************/
 package io.djigger.agent;
 
+import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.bson.types.ObjectId;
@@ -55,21 +55,18 @@ public class InstrumentationEventCollector {
 	
 	public static String getCurrentTracer() {
 		Transaction tr = getCurrentTransaction();
-		return tr!=null?tr.getId().toString()+tr.peekEvent().getId().toString():null;
+		return tr!=null?tr.peekEvent().getId().toString():null;
 	}
 
 	public static void applyTracer(String tracer) {
 		if(tracer!=null) {
-			UUID trid = UUID.fromString(tracer.substring(0, 36));
-			ObjectId parentId = new ObjectId(tracer.substring(36));
+			ObjectId parentId = new ObjectId(tracer);
 			Transaction tr = getCurrentTransaction();
-			if(tr==null) {
-				tr = new Transaction(trid);
-				setCurrentTransaction(tr);
+			if(tr!=null) {
+				tr.setParentId(parentId);				
 			} else {
-				tr.setId(trid);
+				// TODO warning
 			}
-			tr.setParentId(parentId);
 		}
 	}
 	
@@ -89,10 +86,10 @@ public class InstrumentationEventCollector {
 		}
 	}
 	
-	public static void addDataToCurrentTransaction(int dataid, InstrumentationEventData data) {
+	public static void addDataToCurrentTransaction(InstrumentationEventData data) {
 		Transaction tr = getCurrentTransaction();
 		if(tr!=null) {
-			tr.addData(dataid, data);
+			tr.addData(data);
 		}
 	}
 	
@@ -119,13 +116,8 @@ public class InstrumentationEventCollector {
 		if(transaction == null) {
 			transaction = createNewTransaction();
 		} else {
-			if(transaction.getParentId()!=null) {
-				event.setParentID(transaction.getParentId());
-				transaction.setParentId(null);
-			} else {
-				InstrumentationEvent currentEvent = transaction.peekEvent();
-				event.setParentID(currentEvent.getId());				
-			}
+			InstrumentationEvent currentEvent = transaction.peekEvent();
+			event.setParentID(currentEvent.getId());
 		}
 		
 		event.setThreadID(Thread.currentThread().getId());
@@ -181,6 +173,16 @@ public class InstrumentationEventCollector {
 
 		if(transaction.isStackEmpty()) {
 			leaveTransaction();
+			
+			if(transaction.getParentId()!=null) {
+				event.setParentID(transaction.getParentId());
+			}
+			
+			List<InstrumentationEventData> trData = transaction.collectData();
+			if(trData.size()>0) {
+				// TODO the event object should accept a list of data
+				event.setData(trData.get(0));
+			}
 		}
 	}
 	
