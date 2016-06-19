@@ -65,7 +65,7 @@ public class RegexSubscription extends InstrumentSubscription implements Transfo
 		return isRelatedToClass(classname.getName());
 	}
 
-	private boolean isRelatedToClass(String classname) {
+	private synchronized boolean isRelatedToClass(String classname) {
 		classNameMatcher.reset(classname);
 		return classNameMatcher.matches();
 	}
@@ -75,7 +75,7 @@ public class RegexSubscription extends InstrumentSubscription implements Transfo
 		return isMethodMatch(method.getName());
 	}
 
-	private boolean isMethodMatch(String method) {
+	private synchronized boolean isMethodMatch(String method) {
 		methodNameMatcher.reset(method);
 		return methodNameMatcher.matches();
 	}

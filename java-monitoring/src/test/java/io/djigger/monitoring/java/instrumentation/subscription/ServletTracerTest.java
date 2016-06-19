@@ -1,0 +1,91 @@
+/*******************************************************************************
+ * (C) Copyright 2016 Jérôme Comte and Dorian Cransac
+ *  
+ *  This file is part of djigger
+ *  
+ *  djigger is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *  
+ *  djigger is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
+ *  
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *******************************************************************************/
+package io.djigger.monitoring.java.instrumentation.subscription;
+
+import java.io.IOException;
+
+import javax.servlet.Servlet;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
+
+public class ServletTracerTest {
+	
+	public static void main(String[] args) throws Exception {
+		ServletTracerTest test = new ServletTracerTest();
+		test.test();
+	}
+	
+	public void test() throws Exception {
+		ServletHolder sh = new ServletHolder();
+		
+		sh.setServlet(new Servlet() {
+			
+			@Override
+			public void service(ServletRequest arg0, ServletResponse arg1) throws ServletException, IOException {
+				sleep();
+			}
+
+			
+			@Override
+			public void init(ServletConfig arg0) throws ServletException {}
+			
+			@Override
+			public String getServletInfo() {
+				return null;
+			}
+			
+			@Override
+			public ServletConfig getServletConfig() {
+				return null;
+			}
+			
+			@Override
+			public void destroy() {}
+		});
+		
+		Server server = new Server(12298);
+		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+		context.addServlet(sh, "/*");
+		server.setHandler(context);
+		try {
+			server.start();
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+		
+		synchronized (server) {
+			server.wait();
+		}
+	}
+
+	private void sleep() {
+		try {
+			Thread.sleep(100);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+}
