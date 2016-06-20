@@ -26,46 +26,51 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
 public class ServletTracerTest {
-	
+
 	public static void main(String[] args) throws Exception {
 		ServletTracerTest test = new ServletTracerTest();
 		test.test();
 	}
-	
+
 	public void test() throws Exception {
 		ServletHolder sh = new ServletHolder();
-		
+
 		sh.setServlet(new Servlet() {
-			
+
 			@Override
 			public void service(ServletRequest arg0, ServletResponse arg1) throws ServletException, IOException {
 				sleep();
+				HttpServletRequest httpRequest = (HttpServletRequest) arg0;        
+				arg1.getWriter().write("Hello World ! This is a " + httpRequest.getMethod());
 			}
 
-			
+
 			@Override
-			public void init(ServletConfig arg0) throws ServletException {}
-			
+			public void init(ServletConfig arg0) throws ServletException {
+				System.out.println("Initialized test servlet.");
+			}
+
 			@Override
 			public String getServletInfo() {
 				return null;
 			}
-			
+
 			@Override
 			public ServletConfig getServletConfig() {
 				return null;
 			}
-			
+
 			@Override
 			public void destroy() {}
 		});
-		
+
 		Server server = new Server(12298);
 		ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
 		context.addServlet(sh, "/*");
@@ -75,7 +80,7 @@ public class ServletTracerTest {
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
-		
+
 		synchronized (server) {
 			server.wait();
 		}

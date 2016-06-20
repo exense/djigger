@@ -21,11 +21,14 @@ package io.djigger.monitoring.java.instrumentation.subscription;
 
 import java.io.IOException;
 
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 
 public class HttpClientTracerTest {
 
@@ -33,44 +36,73 @@ public class HttpClientTracerTest {
 		HttpClientTracerTest test = new HttpClientTracerTest();
 		while(true) {
 			test.call();
-			Thread.sleep(1000);
+			Thread.sleep(3000);
 		}
 	}
 
 	private void call() throws Exception {
-		callGet();
-		callPost();
-		callDelete();
+
+		System.out.println("Http Test :");
+		System.out.println("callGet:" + parseResponse(callGet()));
+		System.out.println("callPost:" + parseResponse(callPost()));
+		System.out.println("callDelete:" + parseResponse(callDelete()));
+		System.out.println("callPut:" + parseResponse(callPut()));
+	}
+	
+	private String parseResponse(CloseableHttpResponse response) throws Exception {
+
+		String responseString = EntityUtils.toString(response.getEntity());
+		return responseString;
+		
 	}
 
-	private void callGet() throws Exception {
+
+	private CloseableHttpResponse callGet() throws Exception {
 		CloseableHttpClient client = HttpClients.createDefault();
+		CloseableHttpResponse response = null;
 		try {
 			HttpGet get = new HttpGet("http://localhost:12298");
-			client.execute(get);
+			response = client.execute(get);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		return response;
 	}
-	
-	private void callPost() throws Exception {
+
+	private CloseableHttpResponse callPost() throws Exception {
 		CloseableHttpClient client = HttpClients.createDefault();
+		CloseableHttpResponse response = null;
 		try {
-			HttpPost get = new HttpPost("http://localhost:12298");
-			client.execute(get);
+			HttpPost post = new HttpPost("http://localhost:12298");
+			response = client.execute(post);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		return response;
 	}
-	
-	private void callDelete() throws Exception {
+
+	private CloseableHttpResponse callDelete() throws Exception {
 		CloseableHttpClient client = HttpClients.createDefault();
+		CloseableHttpResponse response = null;
 		try {
-			HttpDelete get = new HttpDelete("http://localhost:12298");
-			client.execute(get);
+			HttpDelete del = new HttpDelete("http://localhost:12298");
+			response = client.execute(del);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		return response;
+	}
+
+	private CloseableHttpResponse callPut() throws Exception {
+		CloseableHttpClient client = HttpClients.createDefault();
+		CloseableHttpResponse response = null;
+		try {
+			HttpPut put = new HttpPut("http://localhost:12298");
+			response = client.execute(put);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return response;
 	}
 
 }
