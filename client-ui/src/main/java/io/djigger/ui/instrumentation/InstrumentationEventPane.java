@@ -167,12 +167,21 @@ public class InstrumentationEventPane extends Dashlet {
 					@Override
 					public Filter<InstrumentationEvent> createAttributeFilter(final String operator, final String attribute, final String value) {
 						
+						// TODO do this in a generic way
 						if(attribute.equals("trid")&&operator.equals("=")) { 
 							final UUID uuid = UUID.fromString(value);
 							return new Filter<InstrumentationEvent>() {
 								@Override
 								public boolean isValid(InstrumentationEvent input) {
 									return uuid.equals(input.getTransactionID());
+								}
+							};
+						} else if(attribute.equals("threadid")&&operator.equals("=")) { 
+							final long threadid = Long.parseLong(value);
+							return new Filter<InstrumentationEvent>() {
+								@Override
+								public boolean isValid(InstrumentationEvent input) {
+									return threadid==input.getThreadID();
 								}
 							};
 						} else {
