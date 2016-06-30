@@ -168,25 +168,21 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
     	Iterator<InstrumentationEvent> it = parent.getStoreClient().getInstrumentationAccessor().getByParentId(parentID);
     	if(it.hasNext()) {
     		InstrumentationEvent event = it.next();
-    		addTransactionPane(event.getTransactionID());
+    		addSequenceTreePane(event.getTransactionID());
     	} else {
 			JOptionPane.showMessageDialog(parent, "No child transaction found.", "Drilldown", JOptionPane.INFORMATION_MESSAGE);
     	}
     	
     }
     
-    public void addTransactionPane(UUID trID) {
+    public void addSequenceTreePane(UUID trID) {
     	SequenceTreeView view = new SequenceTreeView(this, TreeType.NORMAL, trID);
-    	//view.load(trID);
-		addTab(view, "Transaction Tree "+trID.toString(), true);
-    	
-//    	InstrumentationEventPane view = new InstrumentationEventPane(parent, "trid="+trID);
-//		addTab(view, trID.toString(), true);
+		addTab(view, "Sequence tree "+trID.toString(), true);
     }
     
     public void addInstrumentationEventPaneForTransaction(UUID trID) {
     	InstrumentationEventPane view = new InstrumentationEventPane(parent, "trid="+trID, this);
-		addTab(view, trID.toString(), true);
+		addTab(view, "Event list "+trID.toString(), true);
     }
     
     public void addSubscriptionPane() {

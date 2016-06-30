@@ -56,7 +56,7 @@ public class TransactionMenu {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				UUID transactionID = callback.getCurrentTransactionID();
-				session.getAnalyzerGroupPane().addTransactionPane(transactionID);
+				session.getAnalyzerGroupPane().addSequenceTreePane(transactionID);
 			}
 		}));
 		target.add(new JMenuItem(new AbstractAction("Sampling tree") {	
