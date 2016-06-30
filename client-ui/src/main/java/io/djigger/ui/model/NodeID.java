@@ -27,72 +27,34 @@ public class NodeID implements Serializable, Poolable {
 
 	private static final long serialVersionUID = -2486310135334134770L;
 
-	private final String className;
-
-	private final String methodName;
+	private String id;
 	
-	private String cachedFullname;
+	private Object attachment;
 
 	private final int hashcode;
 
 	private static final InstancePool<NodeID> pool = new InstancePool<NodeID>();
 
-	public static final NodeID ROOT = getInstance("","");
-
-	public static NodeID getInstance(String className, String methodName) {
-		return pool.getInstance(new NodeID(className, methodName));
+	public static NodeID getInstance(String id) {
+		return pool.getInstance(new NodeID(id));
 	}
 
-	public static NodeID getInstance(io.djigger.monitoring.java.model.StackTraceElement element, boolean includeLineNumbers) {
-		return pool.getInstance(new NodeID(element, includeLineNumbers));
-	}
-
-	private NodeID(io.djigger.monitoring.java.model.StackTraceElement element, boolean includeLineNumbers) {
-		this.className = element.getClassName();
-		if(includeLineNumbers) {
-			this.methodName = element.getMethodName()+"("+element.getLineNumber()+")";
-		} else {
-			this.methodName = element.getMethodName();
-		}
+	private NodeID(String id) {
+		this.id = id;
 		this.hashcode = calculateHashCode();
 	}
-
-	private NodeID(String className, String methodName) {
-		this.className = className;
-		this.methodName = methodName;
-		this.hashcode = calculateHashCode();
-	}
-
-	public String getClassName() {
-		return className;
-	}
-
-	public String getMethodName() {
-		return methodName;
+	
+	public Object getAttachment() {
+		return attachment;
 	}
 	
-	private final static String DELIMITER = ".";
-	
-	private String buildFullname() {
-		if(className!=null && methodName!=null) {
-			StringBuilder builder = new StringBuilder(className.length()+1+methodName.length());
-			builder.append(className).append(DELIMITER).append(methodName);
-			return builder.toString();			
-		} else {
-			return "";
-		}
-	}
-
-	public synchronized String getFullname() {
-		if(cachedFullname==null) {
-			cachedFullname = buildFullname();
-		}
-		return cachedFullname;
+	public void setAttachment(Object attachment) {
+		this.attachment = attachment;
 	}
 
 	@Override
 	public String toString() {
-		return getFullname();
+		return id;
 	}
 
 	@Override
@@ -104,9 +66,7 @@ public class NodeID implements Serializable, Poolable {
 		final int prime = 31;
 		int result = 1;
 		result = prime * result
-				+ ((className == null) ? 0 : className.hashCode());
-		result = prime * result
-				+ ((methodName == null) ? 0 : methodName.hashCode());
+				+ ((id == null) ? 0 : id.hashCode());
 		return result;
 	}
 
@@ -119,15 +79,10 @@ public class NodeID implements Serializable, Poolable {
 		if (getClass() != obj.getClass())
 			return false;
 		NodeID other = (NodeID) obj;
-		if (className == null) {
-			if (other.className != null)
+		if (id == null) {
+			if (other.id != null)
 				return false;
-		} else if (!className.equals(other.className))
-			return false;
-		if (methodName == null) {
-			if (other.methodName != null)
-				return false;
-		} else if (!methodName.equals(other.methodName))
+		} else if (!id.equals(other.id))
 			return false;
 		return true;
 	}

@@ -19,13 +19,6 @@
  *******************************************************************************/
 package io.djigger.ui.instrumentation;
 
-import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
-import io.djigger.monitoring.java.instrumentation.InstrumentationEventWithThreadInfo;
-import io.djigger.store.Store;
-import io.djigger.store.filter.StoreFilter;
-import io.djigger.ui.model.RealNodePath;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -38,13 +31,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.djigger.aggregation.Thread.RealNodePathWrapper;
+import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEventWithThreadInfo;
+import io.djigger.store.Store;
+import io.djigger.store.filter.StoreFilter;
+import io.djigger.ui.extensions.java.JavaBridge;
+import io.djigger.ui.model.RealNodePath;
+
 public class InstrumentationStatisticsCache {
 	
 	private Store store;
 	
 	private StoreFilter storeFilter;
-
-	private Map<RealNodePath, List<InstrumentationEvent>> instrumentationSamples;
 	
 	private Map<RealNodePath, InstrumentationStatistics> instrumentationStatisticsCache;
 		
@@ -62,22 +62,16 @@ public class InstrumentationStatisticsCache {
 
 	public void reload() {
 		samples = new ArrayList<InstrumentationEvent>();
-		instrumentationSamples = new HashMap<RealNodePath, List<InstrumentationEvent>>();
 		instrumentationStatisticsCache = new HashMap<RealNodePath, InstrumentationStatistics>();
 		
-		samples = store.queryInstrumentationSamples(storeFilter);
+		samples = store.getInstrumentationEvents().query(storeFilter!=null?storeFilter.getInstrumentationEventsFilter():null);
 
 		for (InstrumentationEvent sample : samples) {
 			if(sample instanceof InstrumentationEventWithThreadInfo) {
-				RealNodePath path = RealNodePath.fromStackTrace(((InstrumentationEventWithThreadInfo)sample).getThreadInfo().getStackTrace(), false);
-				if (path != null) {
-					// samples by RealNodePath
-					if (!instrumentationSamples.containsKey(path)) {
-						instrumentationSamples.put(path,
-								new ArrayList<InstrumentationEvent>());
-					}
-					instrumentationSamples.get(path).add(sample);
-	
+				RealNodePathWrapper pathWrapper = JavaBridge.toRealNodePath(((InstrumentationEventWithThreadInfo)sample).getThreadInfo(), false);
+				if (pathWrapper != null) {
+					RealNodePath path = pathWrapper.getPath();
+
 					// statistics cache
 					if (!instrumentationStatisticsCache.containsKey(path)) {
 						instrumentationStatisticsCache.put(path, new InstrumentationStatistics());
@@ -104,16 +98,6 @@ public class InstrumentationStatisticsCache {
 		return statistics;
 	}
 	
-	public synchronized List<InstrumentationEvent> getInstrumentationSamples(InstrumentSubscription subscription) {
-		List<InstrumentationEvent> result = new ArrayList<InstrumentationEvent>();
-		for(InstrumentationEvent sample:samples) {
-			if(subscription.getId()==sample.getSubscriptionID()) {
-				result.add(sample);
-			}
-		}
-		
-		return result;
-	}
 	
 	public synchronized void exportSamples(File file) throws IOException {
 		BufferedWriter writer = new BufferedWriter(new FileWriter(file)); 

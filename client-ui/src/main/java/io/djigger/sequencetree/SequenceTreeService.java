@@ -50,7 +50,7 @@ public class SequenceTreeService {
 	
 
 	private List<InstrumentationEvent> query(final UUID transactionID) {
-		return store.queryInstrumentationEvents(new Filter<InstrumentationEvent>() {
+		return store.getInstrumentationEvents().query(new Filter<InstrumentationEvent>() {
 			
 			@Override
 			public boolean isValid(InstrumentationEvent input) {

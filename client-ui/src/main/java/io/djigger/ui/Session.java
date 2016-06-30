@@ -19,6 +19,22 @@
  *******************************************************************************/
 package io.djigger.ui;
 
+import java.awt.BorderLayout;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+
+import javax.swing.JPanel;
+import javax.swing.JSplitPane;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.djigger.aggregation.Thread.RealNodePathWrapper;
 import io.djigger.client.AgentFacade;
 import io.djigger.client.Facade;
 import io.djigger.client.FacadeListener;
@@ -30,7 +46,13 @@ import io.djigger.model.Capture;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.ThreadInfo;
+import io.djigger.ql.Filter;
+import io.djigger.samplig.PseudoInstrumentationEventsGenerator;
+import io.djigger.samplig.PseudoInstrumentationEventsGenerator.Listener;
+import io.djigger.samplig.SequenceGenerator;
 import io.djigger.store.Store;
+import io.djigger.store.StoreCollection;
+import io.djigger.store.StoreCollection.StoreCollectionListener;
 import io.djigger.store.filter.StoreFilter;
 import io.djigger.ui.SessionConfiguration.SessionParameter;
 import io.djigger.ui.agentcontrol.SessionControlPane;
@@ -39,24 +61,12 @@ import io.djigger.ui.common.Closeable;
 import io.djigger.ui.common.MonitoredExecution;
 import io.djigger.ui.common.MonitoredExecutionRunnable;
 import io.djigger.ui.common.NodePresentationHelper;
+import io.djigger.ui.extensions.java.JavaBridge;
 import io.djigger.ui.instrumentation.InstrumentationStatisticsCache;
+import io.djigger.ui.model.PseudoInstrumentationEvent;
 import io.djigger.ui.model.SessionExport;
 import io.djigger.ui.storebrowser.StoreBrowserPane;
 import io.djigger.ui.threadselection.ThreadSelectionPane;
-
-import java.awt.BorderLayout;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-
-import javax.swing.JPanel;
-import javax.swing.JSplitPane;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 @SuppressWarnings("serial")
@@ -73,6 +83,8 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 	private final JSplitPane splitPane;
 
     private final AnalyzerGroupPane analyzerGroupPane;
+    
+    private final Store stagingStore = new Store();
 
     private final Store store;
 
@@ -89,6 +101,10 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 	private final MainFrame main;
 	
 	private boolean active;
+	
+	private boolean showLineNumbers;
+		
+	private StoreFilter currentStoreFilter;
 
     public Session(SessionConfiguration config, MainFrame main) {
 		super(new BorderLayout());
@@ -97,6 +113,21 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 		this.options = main.getOptions();
 		
 		store = new Store();
+		
+		realNodePathCache = new StoreCollection<>();
+		store.getThreadInfos().setListener(new StoreCollectionListener<ThreadInfo>() {
+
+			@Override
+			public void onAdd(ThreadInfo entry) {
+				realNodePathCache.add(JavaBridge.toRealNodePath(entry, false));
+			}
+
+			@Override
+			public void onClear() {
+				realNodePathCache.clear();
+			}
+		});
+		
 		statisticsCache = new InstrumentationStatisticsCache(store);
 		presentationHelper = new NodePresentationHelper(statisticsCache);
         
@@ -189,9 +220,7 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     				@Override
     				public void run(MonitoredExecution execution) {
     					SessionExport export = SessionExport.read(file);
-    					store.addThreadInfos(export.getStore().queryThreadDumps(null));
-    					store.addCaptures(export.getStore().queryCaptures(0, Long.MAX_VALUE));
-    					store.addInstrumentationSamples(export.getStore().queryInstrumentationSamples(null));
+    					export.getStore().drainTo(store);
     				}
     			});
     			execution.run();
@@ -250,14 +279,52 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     }
 
     public void refreshAll() {
-    	store.processBuffers();
+    	stagingStore.drainTo(store);
+
+    	generatePseudoInstrumentationEvents();
+
     	statisticsCache.reload();
     	threadSelectionPane.refresh();
-    	analyzerGroupPane.refresh();    	
+    	refreshAnalyzerGroupPane(); 	
+    }
+    
+    StoreCollection<RealNodePathWrapper> realNodePathCache;
+    
+    void refreshAnalyzerGroupPane() {    	
+		List<ThreadInfo> threads = store.getThreadInfos().query(currentStoreFilter!=null?currentStoreFilter.getThreadInfoFilter():null);
+		List<RealNodePathWrapper> realNodePaths = JavaBridge.toRealNodePathList(threads, showLineNumbers);
+		analyzerGroupPane.setSamples(realNodePaths);
+		analyzerGroupPane.refresh();
+    }
+    
+    private void generatePseudoInstrumentationEvents() {
+    	List<ThreadInfo> threadInfos = store.getThreadInfos().query(currentStoreFilter!=null?currentStoreFilter.getThreadInfoFilter():null);
+    	
+    	SequenceGenerator sequenceGenerator = new SequenceGenerator();
+    	List<io.djigger.aggregation.Thread> threads = sequenceGenerator.queryThreads(threadInfos);
+    			
+		store.getInstrumentationEvents().remove(new Filter<InstrumentationEvent>() {
+			@Override
+			public boolean isValid(InstrumentationEvent input) {
+				return input instanceof PseudoInstrumentationEvent;
+			}
+		});
+
+		if(presentationHelper.isShowMinCallCounts()) {			
+			PseudoInstrumentationEventsGenerator a = new PseudoInstrumentationEventsGenerator(new Listener() {
+				@Override
+				public void onPseudoInstrumentationEvent(PseudoInstrumentationEvent event) {
+					store.getInstrumentationEvents().add(event);
+				}
+			}, getSubscriptions());
+			a.generateApproximatedEvents(threads);
+		}
+    	
     }
     
     public void showLineNumbers(boolean show) {
-    	analyzerGroupPane.showLineNumbers(show);
+    	showLineNumbers = show;    	
+    	refreshAnalyzerGroupPane();
     }
     
     public void showMinCallCounts(boolean show) {
@@ -266,11 +333,11 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     }
 
     public void onThreadSelection(StoreFilter filter) {
+    	
     	statisticsCache.setStoreFilter(filter);
     	statisticsCache.reload();
-    	
-    	analyzerGroupPane.setStoreFilter(filter);
-    	analyzerGroupPane.refresh();
+
+    	refreshAnalyzerGroupPane();
     }
 
     public void clear() {
@@ -288,10 +355,10 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 			facade.setSampling(state);
 			if(state) {
 				currentCapture = new Capture(facade.getSamplingInterval());
-				store.addOrUpdateCapture(currentCapture);
+				addOrUpdateCapture(currentCapture);
 			} else {
 				currentCapture.setEnd(System.currentTimeMillis());
-				store.addOrUpdateCapture(currentCapture);
+				addOrUpdateCapture(currentCapture);
 			}
 		}
 	}
@@ -301,29 +368,47 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 			facade.setSamplingInterval(interval);
 			if(facade.isSampling()) {
 				currentCapture.setEnd(System.currentTimeMillis());
-				store.addOrUpdateCapture(currentCapture);
+				addOrUpdateCapture(currentCapture);
 				currentCapture = new Capture(facade.getSamplingInterval());
-				store.addOrUpdateCapture(currentCapture);
+				addOrUpdateCapture(currentCapture);
 			}
 		}
 	}
 	
+	private void addOrUpdateCapture(Capture capture) {
+		boolean update = false;
+		for(Capture c:store.getCaptures().queryAll()) {
+			if(c.getStart() == capture.getStart()) {
+				c.setEnd(capture.getEnd());
+				update = true;
+				break;
+			}
+		}
+		if(!update) {
+			store.getCaptures().add(capture);
+		}
+	}
+	
+	Set<InstrumentSubscription> subscriptions = new HashSet<>();
+	
 	public Set<InstrumentSubscription> getSubscriptions() {
-		return facade!=null?facade.getInstrumentationSubscriptions():null;
+		return subscriptions;
 	}
 
 	public void addSubscription(InstrumentSubscription subscription) {
+		subscriptions.add(subscription);
 		if(facade!=null) {
 			facade.addInstrumentation(subscription);
-			fireSubscriptionChangeEvent();
 		}	
+		fireSubscriptionChangeEvent();
 	}
 
 	public void removeSubscription(InstrumentSubscription subscription) {
+		subscriptions.remove(subscription);
 		if(facade!=null) {
 			facade.removeInstrumentation(subscription);
-			fireSubscriptionChangeEvent();
 		}
+		fireSubscriptionChangeEvent();
 	}
 	
 	public List<SessionListener> listeners = new ArrayList<>();
@@ -339,11 +424,11 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 	}
 
 	public void startCapture(Capture capture) {
-		store.addOrUpdateCapture(capture);
+		addOrUpdateCapture(capture);
 	}
 
 	public void stopCapture(Capture capture) {
-		store.addOrUpdateCapture(capture);
+		addOrUpdateCapture(capture);
 	}
 
 	public AnalyzerGroupPane getAnalyzerGroupPane() {
@@ -367,20 +452,12 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 	
 	@Override
 	public void threadInfosReceived(List<ThreadInfo> threads) {
-		if(!main.isOutOfMemoryPreventionActive()) {
-	        store.addThreadInfos(threads);
-		} else {
-			System.out.println("Ignoring incoming message to prevent JVM from OutOfMemory!");
-		}
+		store.getThreadInfos().addAll(threads);
 	}
 
 	@Override
 	public void instrumentationSamplesReceived(List<InstrumentationEvent> events) {
-		if(!main.isOutOfMemoryPreventionActive()) {
-	         store.addInstrumentationSamples(events);
-		} else {
-			System.out.println("Ignoring incoming message to prevent JVM from OutOfMemory!");
-		}
+         store.getInstrumentationEvents().addAll(events);
 	}
 
 	@Override
@@ -401,5 +478,9 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 
 	public StoreClient getStoreClient() {
 		return storeClient;
+	}
+
+	public StoreFilter getStoreFilter() {
+		return currentStoreFilter;
 	}
 }

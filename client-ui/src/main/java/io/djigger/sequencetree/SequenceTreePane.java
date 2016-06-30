@@ -99,9 +99,8 @@ public abstract class SequenceTreePane extends JPanel implements ActionListener 
 		if(session.getSessionType()==SessionType.STORE) {
 			Iterator<InstrumentationEvent> events = session.getStoreClient().getInstrumentationAccessor().getByTransactionId(transactionID);
 			while(events.hasNext()) {
-				session.getStore().addInstrumentationEvent(events.next());
+				session.getStore().getInstrumentationEvents().add(events.next());
 			};
-			session.getStore().processBuffers();
 		}
 		sequenceTreeService.load(transactionID, false);			
 		transform();

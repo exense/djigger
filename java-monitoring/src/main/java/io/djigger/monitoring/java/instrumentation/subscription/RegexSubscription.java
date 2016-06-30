@@ -24,12 +24,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
+import io.djigger.monitoring.java.instrumentation.NameBasedSubscription;
 import io.djigger.monitoring.java.instrumentation.TransformingSubscription;
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtMethod;
 
-public class RegexSubscription extends InstrumentSubscription implements TransformingSubscription {
+public class RegexSubscription extends InstrumentSubscription implements TransformingSubscription, NameBasedSubscription {
 
 	private static final long serialVersionUID = -1137052413341333149L;
 	
@@ -65,17 +66,17 @@ public class RegexSubscription extends InstrumentSubscription implements Transfo
 		return isRelatedToClass(classname.getName());
 	}
 
-	private synchronized boolean isRelatedToClass(String classname) {
+	public synchronized boolean isRelatedToClass(String classname) {
 		classNameMatcher.reset(classname);
 		return classNameMatcher.matches();
 	}
 
 	@Override
 	public boolean isRelatedToMethod(CtMethod method) {
-		return isMethodMatch(method.getName());
+		return isRelatedToMethod(method.getName());
 	}
 
-	private synchronized boolean isMethodMatch(String method) {
+	public synchronized boolean isRelatedToMethod(String method) {
 		methodNameMatcher.reset(method);
 		return methodNameMatcher.matches();
 	}

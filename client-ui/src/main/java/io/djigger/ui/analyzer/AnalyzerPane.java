@@ -24,6 +24,7 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -33,6 +34,7 @@ import io.djigger.aggregation.filter.BranchFilterFactory;
 import io.djigger.aggregation.filter.NodeFilterFactory;
 import io.djigger.monitoring.java.instrumentation.subscription.RealNodePathSubscription;
 import io.djigger.monitoring.java.instrumentation.subscription.SimpleSubscription;
+import io.djigger.monitoring.java.model.StackTraceElement;
 import io.djigger.ql.Filter;
 import io.djigger.ql.OQLFilterBuilder;
 import io.djigger.ui.Session;
@@ -181,19 +183,38 @@ public abstract class AnalyzerPane extends Dashlet implements ActionListener {
 
 	public void instrumentCurrentMethod() {
 		NodeID nodeID = getSelectedNode().getId();
-		
-		main.addSubscription(new SimpleSubscription(nodeID.getClassName(), nodeID.getMethodName(), true));
+		Object attachment = nodeID.getAttachment();
+		if(attachment!=null && attachment instanceof StackTraceElement) {
+			StackTraceElement el = (StackTraceElement) attachment;
+			main.addSubscription(new SimpleSubscription(el.getClassName(), el.getMethodName(), true));			
+		}
 	}	
 	
 	public void instrumentCurrentNode() {
 		if(nodeFilter==null) {
-			main.addSubscription(new RealNodePathSubscription(getSelectedNode().getRealNodePath().toStackTrace(), true));			
+			main.addSubscription(new RealNodePathSubscription(toStackTrace(getSelectedNode().getRealNodePath().getFullPath()), true));			
 		} else {
 			JOptionPane.showMessageDialog(this,
 				    "Instrumentation impossible when packages are skipped. Please remove the exclusion criteria and try again.",
 				    "Error",
 				    JOptionPane.ERROR_MESSAGE);
 		}
+	}
+	
+	private StackTraceElement[] toStackTrace(List<NodeID> path) {
+		int size = path.size();
+		StackTraceElement[] result = new StackTraceElement[size];
+		if(size>0) {
+			for(int i=0;i<size;i++) {
+				NodeID id = path.get(i);
+				Object attachment = id.getAttachment();
+				if(attachment!=null && attachment instanceof StackTraceElement) {
+					StackTraceElement el = (StackTraceElement) attachment;
+					result[size-i-1] = new StackTraceElement(el.getClassName(), el.getMethodName(), null, -1);					
+				}
+			}
+		}
+		return result;
 	}
 
 	public abstract void refreshDisplay();

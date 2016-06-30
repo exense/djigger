@@ -40,9 +40,9 @@ import javax.swing.event.ChangeListener;
 import org.bson.types.ObjectId;
 
 import io.djigger.aggregation.AnalyzerService;
+import io.djigger.aggregation.Thread.RealNodePathWrapper;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.sequencetree.SequenceTreeView;
-import io.djigger.store.filter.StoreFilter;
 import io.djigger.ui.Session;
 import io.djigger.ui.Session.SessionType;
 import io.djigger.ui.common.EnhancedTabbedPane;
@@ -56,17 +56,11 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 	private static final long serialVersionUID = -894031577206042607L;
 
 	private final Session parent;
-
+	
 	protected final AnalyzerService analyzerService;
-	
-	protected StoreFilter storeFilter;
-	
-	protected boolean includeLineNumbers;
-	
+			
 	private final NodePresentationHelper presentationHelper;
-
-	//private AnalyzerPane currentSelection;
-
+	
 	private final List<AnalyzerPaneListener> listeners;
 
 	public AnalyzerGroupPane(final Session parent, final NodePresentationHelper presentationHelper) {
@@ -74,7 +68,7 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 		this.parent = parent;
 		listeners = new ArrayList<AnalyzerPaneListener>();
         addChangeListener(this);
-        analyzerService = new AnalyzerService(parent.getStore());
+        analyzerService = new AnalyzerService();
         this.presentationHelper = presentationHelper;  
         
         final AnalyzerGroupPane me = this;
@@ -148,19 +142,7 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 			    	setVisible(false);
 				}
 
-			}));
-            
-//            add(new JMenuItem(new AbstractAction("Transaction Tree View") {
-//				@Override
-//				public void actionPerformed(ActionEvent e) {
-//					SequenceTreeView view = new SequenceTreeView(groupPane, TreeType.NORMAL);
-//					addTab(view, e.getActionCommand(), true);
-//			    	setVisible(false);
-//				}
-//
-//			}));
-            
-            
+			}));    
         }
     }
     
@@ -177,11 +159,7 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
     
     public void addTransactionPane(UUID trID) {
     	SequenceTreeView view = new SequenceTreeView(this, TreeType.NORMAL, trID);
-    	//view.load(trID);
 		addTab(view, "Transaction Tree "+trID.toString(), true);
-    	
-//    	InstrumentationEventPane view = new InstrumentationEventPane(parent, "trid="+trID);
-//		addTab(view, trID.toString(), true);
     }
     
     public void addInstrumentationEventPaneForTransaction(UUID trID) {
@@ -194,16 +172,12 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
     	addTab(pane, "Subscriptions", true);
     }
     
-    public void setStoreFilter(StoreFilter storeFilter) {
-    	this.storeFilter = storeFilter;
+    public void setSamples(List<RealNodePathWrapper> pathSamples) {
+    	analyzerService.load(pathSamples);
+    	refresh();
     }
-
-    public StoreFilter getStoreFilter() {
-		return storeFilter;
-	}
-
-	public void refresh() {
-    	analyzerService.load(storeFilter, includeLineNumbers);
+    
+	public void refresh() {	
     	for(Component component:getComponents()) {
             if(component instanceof Dashlet) {
                 ((Dashlet)component).refresh();
@@ -235,27 +209,6 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 	@Override
 	public void stateChanged(ChangeEvent e) {		
 		Component selection = getCurrentTab();
-		/*
-		// This feature seems to disturb more than it helps
-		if(selection!=null && currentSelection!=null) {
-			String oldExclude = currentSelection.getNodeFilter();
-			String oldFilter = currentSelection.getStacktraceFilter();
-			String newExclude = selection.getNodeFilter();
-			String newFilter = selection.getStacktraceFilter();
-
-			if((oldExclude!=null &&
-					!oldExclude.equals(newExclude)) ||
-				(oldFilter!=null &&
-						!oldFilter.equals(newFilter))) {
-				if(JOptionPane.showConfirmDialog(parent.getFrame(),
-						"Do you wish to reuse the filters of the previous view?") == JOptionPane.YES_OPTION) {
-					selection.setStacktraceFilter(oldFilter);
-					selection.setNodeFilter(oldExclude);
-					selection.refresh();
-				}
-			}
-		}
-		currentSelection = selection; */
 		if(selection!=null && selection instanceof AnalyzerPane) {
 			((AnalyzerPane)selection).resetFocus();
 		}
@@ -278,15 +231,8 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 	public NodePresentationHelper getPresentationHelper() {
 		return presentationHelper;
 	}
-	
-	public void showLineNumbers(boolean show) {
-		this.includeLineNumbers = show;
-		refresh();
-	}
 
 	public AnalyzerService getAnalyzerService() {
 		return analyzerService;
 	}
-
-
 }

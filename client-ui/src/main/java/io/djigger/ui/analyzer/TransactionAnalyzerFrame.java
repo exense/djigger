@@ -20,18 +20,23 @@
 package io.djigger.ui.analyzer;
 
 import java.awt.Dimension;
+import java.util.List;
 import java.util.UUID;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 
+import io.djigger.aggregation.Thread.RealNodePathWrapper;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.ThreadInfo;
+import io.djigger.ql.Filter;
 import io.djigger.store.filter.StoreFilter;
 import io.djigger.ui.Session;
 import io.djigger.ui.common.NodePresentationHelper;
+import io.djigger.ui.extensions.java.JavaBridge;
 import io.djigger.ui.instrumentation.InstrumentationStatisticsCache;
+import io.djigger.ui.model.PseudoInstrumentationEvent;
 
 public class TransactionAnalyzerFrame extends JPanel {
 	
@@ -45,7 +50,7 @@ public class TransactionAnalyzerFrame extends JPanel {
 	
 	private final NodePresentationHelper presentationHelper;
 
-	public TransactionAnalyzerFrame(Session main, final UUID transactionID) {
+	public TransactionAnalyzerFrame(Session main, final InstrumentationEvent event) {
 		super();
 		this.main = main;
 		
@@ -55,20 +60,41 @@ public class TransactionAnalyzerFrame extends JPanel {
             System.err.println("Couldn't use system look and feel.");
         }
 		
-		StoreFilter filter = new StoreFilter() {
-			
-			@Override
-			public boolean match(InstrumentationEvent sample) {
-				return sample.getTransactionID().equals(transactionID);
-			}
-			
-			@Override
-			public boolean match(ThreadInfo dump) {
-				return transactionID.equals(dump.getTransactionID());
-			}
-		};
+		StoreFilter filter;
+		if(event instanceof PseudoInstrumentationEvent) {
+			filter = new StoreFilter(new Filter<ThreadInfo>() {
+				
+				@Override
+				public boolean isValid(ThreadInfo dump) {
+					return (event.getThreadID()==dump.getId() && 
+							event.getStart()<=dump.getTimestamp() && event.getEnd()>=dump.getTimestamp());
+				}
+			}, new Filter<InstrumentationEvent>() {
+				
+				@Override
+				public boolean isValid(InstrumentationEvent sample) {
+					return event.getTransactionID()!=null&&event.getTransactionID().equals(sample.getTransactionID());
+				}
+			});
+		} else {
+			final UUID transactionID = event.getTransactionID();
+			filter = new StoreFilter(new Filter<ThreadInfo>() {
+				
+				@Override
+				public boolean isValid(ThreadInfo dump) {
+					return transactionID.equals(dump.getTransactionID());
+				}
+			}, new Filter<InstrumentationEvent>() {
+				
+				@Override
+				public boolean isValid(InstrumentationEvent sample) {
+					return transactionID.equals(sample.getTransactionID());
+				}
+			});
+		}
+		UUID transactionID = event.getTransactionID();
 
-        frame = new JFrame("djigger - Transaction "+transactionID.toString());
+        frame = new JFrame("djigger - Transaction "+(transactionID!=null?transactionID.toString():""));
         frame.setPreferredSize(new Dimension(1300,700));
 
 		statisticsCache = new InstrumentationStatisticsCache(main.getStore());
@@ -85,7 +111,10 @@ public class TransactionAnalyzerFrame extends JPanel {
         frame.setVisible(true);
 
         analyzerGroupPane.initialize();
-        analyzerGroupPane.setStoreFilter(filter);
+        
+		List<ThreadInfo> threads = main.getStore().getThreadInfos().query(filter.getThreadInfoFilter());
+		List<RealNodePathWrapper> realNodePaths = JavaBridge.toRealNodePathList(threads, false);
+		analyzerGroupPane.setSamples(realNodePaths);
         analyzerGroupPane.refresh();
 	}
 
