@@ -123,6 +123,7 @@ public class InstrumentationEventAccessor extends AbstractAccessor {
 				event.setStart(doc.getDate("start").getTime());
 				event.setDuration(doc.getLong("duration"));
 				event.setId(doc.getObjectId("_id"));
+				event.setThreadID(doc.getLong("threadid"));
 				event.setParentID(doc.getObjectId("parentid"));
 //				event.setTransactionID((UUID) doc.get("trid"));
 				event.setTransactionID(UUID.fromString(doc.getString("trid")));
