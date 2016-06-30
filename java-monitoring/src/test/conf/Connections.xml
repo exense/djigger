@@ -58,6 +58,7 @@
 					<tagEvent>true</tagEvent>
 				</io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
 				<io.djigger.monitoring.java.instrumentation.subscription.SQLConnectionTracer />
+				<io.djigger.monitoring.java.instrumentation.subscription.SQLStatementTracer />
 				<io.djigger.monitoring.java.instrumentation.subscription.SQLPreparedStatementTracer />
 			</subscriptions>
 			<attributes/>

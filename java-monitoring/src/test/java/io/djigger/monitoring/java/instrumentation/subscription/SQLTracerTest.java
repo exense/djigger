@@ -23,6 +23,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public class SQLTracerTest {
 	
@@ -55,8 +56,20 @@ public class SQLTracerTest {
 		PreparedStatement statement = null;
 		try {
 			statement = connection.prepareStatement("select * from test");
-			//statement.execute();
+			statement.execute();
 			statement.executeQuery();
+			
+
+			Statement statement1 = connection.createStatement();
+			statement1.executeQuery("select * /*testExecuteQuery*/ from test");
+			statement1.execute("select * /*testExecute*/ from test");
+			statement1.execute("select * /*testExecute2*/ from test",Statement.RETURN_GENERATED_KEYS);
+			
+			Statement statement2 = connection.createStatement();
+			statement2.execute("select * /*testExecute3*/ from test", new int[]{1});
+			
+			statement2.executeUpdate("update /*testUpdate1*/ test set att1='' where att1='test'");
+			
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
@@ -66,6 +79,7 @@ public class SQLTracerTest {
 				e.printStackTrace();
 			}
 		}
+		
 
 		return 1;
 	}

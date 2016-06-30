@@ -19,7 +19,7 @@
  *******************************************************************************/
 package io.djigger.monitoring.java.instrumentation.subscription;
 
-import java.sql.PreparedStatement;
+import java.sql.Statement;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.TransformingSubscription;
@@ -29,15 +29,15 @@ import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.NotFoundException;
 
-public class SQLPreparedStatementTracer extends InstrumentSubscription implements TransformingSubscription  {
+public class SQLStatementTracer extends InstrumentSubscription implements TransformingSubscription  {
 
 	private static final long serialVersionUID = 1170484117770802108L;
 
-	public SQLPreparedStatementTracer() {
+	public SQLStatementTracer() {
 		super(false);
 	}
 	
-	public SQLPreparedStatementTracer(boolean tagEvent) {
+	public SQLStatementTracer(boolean tagEvent) {
 		super(tagEvent);
 	}
 	
@@ -45,7 +45,7 @@ public class SQLPreparedStatementTracer extends InstrumentSubscription implement
 	public boolean isRelatedToClass(CtClass classname) {
 		
 		try {
-			CtClass preparedStatementClass = ClassPool.getDefault().getCtClass("java.sql.PreparedStatement");
+			CtClass preparedStatementClass = ClassPool.getDefault().getCtClass("java.sql.Statement");
 			return classname.subtypeOf(preparedStatementClass);
 		} catch (NotFoundException e) {
 			e.printStackTrace();
@@ -55,7 +55,7 @@ public class SQLPreparedStatementTracer extends InstrumentSubscription implement
 
 	@Override
 	public boolean retransformClass(Class<?> class_) {
-		return PreparedStatement.class.isAssignableFrom(class_); 
+		return Statement.class.isAssignableFrom(class_); 
 	}
 
 	@Override
@@ -67,7 +67,17 @@ public class SQLPreparedStatementTracer extends InstrumentSubscription implement
 	public void transform(CtClass clazz, CtMethod method) throws CannotCompileException {
 		if(!method.isEmpty()) {
 			if(method.getName().equals("execute")||method.getName().equals("executeQuery")||method.getName().equals("executeUpdate")) {
-				TimeMeasureTransformer.transform(clazz, method, this, false, "io.djigger.agent.InstrumentationEventCollector.getAttachedData(this)");
+				CtClass[] paramTypes;
+				try {
+					paramTypes = method.getParameterTypes();
+					if(paramTypes.length>0 && paramTypes[0].getName().equals("java.lang.String")) {
+						TimeMeasureTransformer.transform(clazz, method, this, false, "$1");					
+					} else {
+						// ignore methods without arguments => these are covered by the PreparedStatementTracer
+					}
+				} catch (NotFoundException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}
