@@ -29,9 +29,13 @@ public class OQLMongoDBQueryVisitor extends OQLBaseVisitor<Bson>{
 	@Override
 	public Bson visitEqualityExpr(EqualityExprContext ctx) {
 		String op = ctx.op.getText();
+		
 		String value = ctx.expr(1).getText();
-	       // strip quotes
-		value = value.replace("\"\"", "\"");
+		if(ctx.expr(1).getChildCount()==1&&ctx.expr(1).getChild(0) instanceof StringAtomContext) {
+			value = value.substring(1, value.length()-1);
+			// strip quotes
+			value = value.replace("\"\"", "\"");
+		}
 		
 		if(op.equals("=")) 
     		return new Document(ctx.expr(0).getText(), value);
@@ -65,6 +69,5 @@ public class OQLMongoDBQueryVisitor extends OQLBaseVisitor<Bson>{
 	public Bson visitStringAtom(StringAtomContext ctx) {
 		throw new RuntimeException("Missing assignment");
 	}
-
-
 }
+
