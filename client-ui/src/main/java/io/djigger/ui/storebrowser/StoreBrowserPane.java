@@ -30,7 +30,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
-import java.util.concurrent.TimeoutException;
 
 import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
@@ -39,20 +38,18 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
-import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
 import javax.swing.SpinnerDateModel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
-import org.antlr.runtime.RecognitionException;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.ThreadInfo;
-import io.djigger.ql.OSQL;
+import io.djigger.ql.OQLMongoDBBuilder;
 import io.djigger.ui.Session;
+import io.djigger.ui.common.EnhancedTextField;
 import io.djigger.ui.common.MonitoredExecution;
 import io.djigger.ui.common.MonitoredExecutionRunnable;
 
@@ -63,18 +60,16 @@ public class StoreBrowserPane extends JPanel implements ActionListener, KeyListe
 	
 	private final Session parent;
 	
-	private final JTextField queryTextField;
+	private final EnhancedTextField queryTextField;
 	
 	private final JSpinner fromDateSpinner;
 	
 	private final JSpinner toDateSpinner;
 	
 	private final JComboBox<DatePresets> datePresets;
-	
-	private boolean changeLock = false;
 
 	enum DatePresets {
-
+		MINS5("Last 5 mins", 300000, 0),
 		MINS15("Last 15 mins", 900000, 0),
 		MINS60("Last 60 mins", 3600000, 0),
 		HOURS4("Last 4 hours", 14400000, 0),
@@ -94,12 +89,14 @@ public class StoreBrowserPane extends JPanel implements ActionListener, KeyListe
 		}
 	}
 	
+	private static final String LABEL = "Store filter (and, or, not operators allowed)";
+	
 	public StoreBrowserPane(final Session parent) {
 		super();
 		
 		this.parent = parent;
 		
-		queryTextField = new JTextField("",5);
+		queryTextField = new EnhancedTextField(LABEL);
 		queryTextField.addActionListener(this);
 		add(queryTextField);
 		
@@ -120,55 +117,50 @@ public class StoreBrowserPane extends JPanel implements ActionListener, KeyListe
 			@Override
 			public void itemStateChanged(ItemEvent event) {
 				if (event.getStateChange() == ItemEvent.SELECTED) {					
-					DatePresets preset = (DatePresets) event.getItem();
-					applyPreset(preset);
+					onDatePresetSelection();
 				}				
 			}
 		}); 
 	    
+		
+		
 		add(datePresets);
 		setLayout(new BoxLayout(this,BoxLayout.LINE_AXIS));
 		
-		applyPreset((DatePresets) datePresets.getSelectedItem());
+		onDatePresetSelection();
 	}
 
 	private JSpinner initSpinner() {
 		JSpinner spinner = new JSpinner();
 		
 		spinner.setModel(new SpinnerDateModel());
-		spinner.getModel().addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent arg0) {
-				selectCustomPresetIfNeeded();
-			}
-		});
 		spinner.setEditor(new JSpinner.DateEditor(spinner, "dd.MM.yyyy HH:mm"));
 		((JSpinner.DefaultEditor)spinner.getEditor()).getTextField().addKeyListener(this);
 	    add(spinner);
 	    
 	    return spinner;
 	}
-
-	private void applyPreset(DatePresets preset) {
+	
+	private void onDatePresetSelection() {
+		DatePresets preset = (DatePresets) datePresets.getSelectedItem();
 		if(preset!=DatePresets.CUSTOM) {
-			changeLock = true;
-			try {	
-				Calendar cal = new GregorianCalendar();
-				cal.add(Calendar.MILLISECOND, -preset.fromOffset);
-				fromDateSpinner.getModel().setValue(cal.getTime());
-				cal.setTime(new Date());
-				cal.add(Calendar.MILLISECOND, -preset.toOffset);
-				toDateSpinner.getModel().setValue(cal.getTime());
-				
-			} finally {
-				changeLock = false;
-			}
+			fromDateSpinner.setVisible(false);
+			toDateSpinner.setVisible(false);
+		} else {
+			fromDateSpinner.setVisible(true);
+			toDateSpinner.setVisible(true);
 		}
 	}
 
-	private void selectCustomPresetIfNeeded() {
-		if(datePresets!=null && !changeLock) {	
-			datePresets.setSelectedIndex(datePresets.getItemCount()-1);
+	private void applyPreset() {
+		DatePresets preset = (DatePresets) datePresets.getSelectedItem();
+		if(preset!=DatePresets.CUSTOM) {
+			Calendar cal = new GregorianCalendar();
+			cal.add(Calendar.MILLISECOND, -preset.fromOffset);
+			fromDateSpinner.getModel().setValue(cal.getTime());
+			cal.setTime(new Date());
+			cal.add(Calendar.MILLISECOND, -preset.toOffset);
+			toDateSpinner.getModel().setValue(cal.getTime());
 		}
 	}
 
@@ -180,53 +172,85 @@ public class StoreBrowserPane extends JPanel implements ActionListener, KeyListe
 	private void search() {
 		parent.clear();
 		
+		applyPreset();
+		
 		final Bson query;
 		try {
-			query = OSQL.toMongoQuery(queryTextField.getText());
-			final Date from = ((SpinnerDateModel)fromDateSpinner.getModel()).getDate();
-			final Date to = ((SpinnerDateModel)toDateSpinner.getModel()).getDate();
+			query = parseQuery();
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(parent, "Unable to parse query: "+e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+			
+		final Date from = ((SpinnerDateModel)fromDateSpinner.getModel()).getDate();
+		final Date to = ((SpinnerDateModel)toDateSpinner.getModel()).getDate();
+		
+		if(to.after(from)) {
 			
 			final MonitoredExecution execution = new MonitoredExecution(parent.getMain().getFrame(), "Opening session... Please wait.", new MonitoredExecutionRunnable() {
 				protected void run(MonitoredExecution execution) {
-    				
-					execution.setText("Calculating execution time...");
-					try {
-	    				long maxValue = parent.getStoreClient().getThreadInfoAccessor().count(query, from, to);
-	    				execution.setMaxValue(maxValue);
-	    				execution.setText("Retrieving data...");
-	    				
-	    				try {
-	    					int count = 0;
-	    					Iterator<ThreadInfo> it = parent.getStoreClient().getThreadInfoAccessor().query(query, from, to).iterator();
-	    					
-	    					ThreadInfo thread;
-	    					while(it.hasNext() && !execution.isInterrupted()) {
-	    						count++;
-	    						
-	    						execution.setValue(count);
-	    						
-	    						thread=it.next();
-	
-								parent.getStore().addThreadInfo(thread);
-	    					}
-	    					parent.getStore().processBuffers();
-	    				
-	    					System.out.println("Fetched " + count + " stacktraces.");
-	    				} catch (Exception e) {
-	    					logger.error("Error while fetching ThreadInfos from store",e); 
-	    				}
-					} catch (TimeoutException e)  {
-						JOptionPane.showMessageDialog(parent, "Execution time limit exceeded. Try to reduce the time range, use more specific search criteria or create an index for the search criteria (see documentation)", "Error",
-						        JOptionPane.ERROR_MESSAGE);
-					}
+					retrieveThreadInfos(query, from, to, execution);
+    				retrieveInstumentationEvents(query, from, to, execution);
     			}
+
+				private void retrieveInstumentationEvents(final Bson query, final Date from, final Date to,	MonitoredExecution execution) {
+					execution.setText("Retrieving instrumentation events...");
+    				execution.setIndeterminate();
+					int count = 0;
+					Iterator<InstrumentationEvent> it = parent.getStoreClient().getInstrumentationAccessor().getTaggedEvents(query, from, to);
+					
+					InstrumentationEvent event;
+					while(it.hasNext() && !execution.isInterrupted()) {
+						count++;
+						execution.setValue(count);
+						event=it.next();
+						parent.getStore().addInstrumentationEvent(event);
+					}
+					parent.getStore().processBuffers();
+				
+					logger.debug("Fetched " + count + " instrumentation events.");
+				}
+
+				private void retrieveThreadInfos(final Bson query, final Date from, final Date to,
+						MonitoredExecution execution) {
+					execution.setText("Retrieving sampling events...");
+					execution.setIndeterminate();
+					int count = 0;
+					Iterator<ThreadInfo> it = parent.getStoreClient().getThreadInfoAccessor().query(query, from, to).iterator();
+					
+					ThreadInfo thread;
+					while(it.hasNext() && !execution.isInterrupted()) {
+						count++;
+						thread=it.next();
+						parent.getStore().addThreadInfo(thread);
+					}
+					parent.getStore().processBuffers();
+				
+					logger.debug("Fetched " + count + " stacktraces.");
+				}
     		}, true);
-    		execution.run();
+			
+			try {
+				execution.run();
+			} catch (Exception e) {
+				JOptionPane.showMessageDialog(parent, "Error while fetching data: "+e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
     		
 			parent.refreshAll();
-		} catch (RecognitionException e) {
-			
+		} else {
+			JOptionPane.showMessageDialog(parent, "Invalid timerange: MaxDate<MinDate", "Error",
+			        JOptionPane.ERROR_MESSAGE);
 		}
+	}
+	
+	private Bson parseQuery() {
+		Bson query=null;
+		String expression = queryTextField.getText();
+		if(expression!=null && expression.trim().length()>0) {
+			query = OQLMongoDBBuilder.build(queryTextField.getText());
+		}
+		return query;
 	}
 
 	@Override

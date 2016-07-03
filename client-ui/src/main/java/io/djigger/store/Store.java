@@ -19,47 +19,39 @@
  *******************************************************************************/
 package io.djigger.store;
 
-import io.djigger.model.Capture;
-import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
-import io.djigger.monitoring.java.model.ThreadInfo;
-import io.djigger.store.filter.StoreFilter;
-
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
+
+import io.djigger.model.Capture;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.model.ThreadInfo;
+import io.djigger.ql.Filter;
+import io.djigger.store.filter.StoreFilter;
 
 
 public class Store implements Serializable {
 
 	private static final long serialVersionUID = 8746530878726453216L;
 	
-	private final Set<InstrumentSubscription> subscriptions;
-
 	private List<Capture> captures;
 
 	private final List<ThreadInfo> threadInfos;
 	
 	private transient List<ThreadInfo> threadInfosBuffer;
-
-	private AtomicLong threadDumpIdSequence = new AtomicLong(0);
 	
-	private List<InstrumentationSample> instrumentationSamples;
+	private List<InstrumentationEvent> instrumentationSamples;
 
-	private transient List<InstrumentationSample> instrumentationSamplesBuffer;
+	private transient List<InstrumentationEvent> instrumentationSamplesBuffer;
 
 	public Store() {
 		super();
 		captures = new ArrayList<Capture>();
 		threadInfos = new ArrayList<>();
 		threadInfosBuffer = new ArrayList<>();
-		instrumentationSamples = new ArrayList<InstrumentationSample>();
-		instrumentationSamplesBuffer = new ArrayList<InstrumentationSample>();
-		subscriptions = new HashSet<InstrumentSubscription>();
+		instrumentationSamples = new ArrayList<InstrumentationEvent>();
+		instrumentationSamplesBuffer = new ArrayList<InstrumentationEvent>();
 	}
 	
 	public synchronized void addThreadInfo(ThreadInfo threadInfo) {
@@ -75,8 +67,18 @@ public class Store implements Serializable {
 		threadInfosBuffer.clear();
 	}
 
-	public synchronized void addInstrumentationSamples(List<InstrumentationSample> samples) {
-		instrumentationSamplesBuffer.addAll(samples);
+	public synchronized void addInstrumentationEvent(InstrumentationEvent event) {
+		event.setClassname(event.getClassname().intern());
+		event.setMethodname(event.getMethodname().intern());
+		instrumentationSamplesBuffer.add(event);
+	}
+	
+	public synchronized void addInstrumentationSamples(List<InstrumentationEvent> events) {
+		for(InstrumentationEvent event:events) {
+			event.setClassname(event.getClassname().intern());
+			event.setMethodname(event.getMethodname().intern());
+		}
+		instrumentationSamplesBuffer.addAll(events);
 	}
 
 	private synchronized void processInstrumentationSamplesBuffer() {
@@ -88,8 +90,7 @@ public class Store implements Serializable {
 		threadInfosBuffer.clear();
 		instrumentationSamplesBuffer.clear();
 		threadInfos.clear();
-		instrumentationSamples = new ArrayList<InstrumentationSample>();
-		subscriptions.clear();
+		instrumentationSamples = new ArrayList<InstrumentationEvent>();
 	}
 
 	public synchronized List<ThreadInfo> queryThreadDumps(StoreFilter filter) {
@@ -122,10 +123,24 @@ public class Store implements Serializable {
 		return result;
 	}
 	
-	public synchronized List<InstrumentationSample> queryInstrumentationSamples(StoreFilter filter) {
-		List<InstrumentationSample> result = new ArrayList<InstrumentationSample>();
-		for(InstrumentationSample sample:instrumentationSamples) {
+	public synchronized int getInstrumentationSamplesCount() {
+		return instrumentationSamples.size();
+	}
+	
+	public synchronized List<InstrumentationEvent> queryInstrumentationSamples(StoreFilter filter) {
+		List<InstrumentationEvent> result = new ArrayList<InstrumentationEvent>();
+		for(InstrumentationEvent sample:instrumentationSamples) {
 			if((filter==null || filter.match(sample))) {
+				result.add(sample);
+			}
+		}
+		return result;
+	}
+	
+	public synchronized List<InstrumentationEvent> queryInstrumentationEvents(Filter<InstrumentationEvent> filter) {
+		List<InstrumentationEvent> result = new ArrayList<InstrumentationEvent>();
+		for(InstrumentationEvent sample:instrumentationSamples) {
+			if((filter==null || filter.isValid(sample))) {
 				result.add(sample);
 			}
 		}
@@ -139,7 +154,7 @@ public class Store implements Serializable {
 
 	private Object readResolve() throws ObjectStreamException {
 		threadInfosBuffer = new ArrayList<>(10000);
-		instrumentationSamplesBuffer = new ArrayList<InstrumentationSample>();
+		instrumentationSamplesBuffer = new ArrayList<InstrumentationEvent>();
 		return this;
 	}
 
@@ -165,18 +180,4 @@ public class Store implements Serializable {
 		threadInfosBuffer.clear();
 		instrumentationSamplesBuffer.clear();
 	}
-
-	public void addSubscription(InstrumentSubscription subscription) {
-		subscriptions.add(subscription);
-	}
-	
-	public void removeSubscription(InstrumentSubscription subscription) {
-		subscriptions.remove(subscription);
-	}
-	
-	public Set<InstrumentSubscription> getSubscriptions() {
-		return subscriptions;
-	}
-	
-	
 }

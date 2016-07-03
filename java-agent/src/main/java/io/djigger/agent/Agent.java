@@ -19,8 +19,6 @@
  *******************************************************************************/
 package io.djigger.agent;
 
-import io.djigger.monitoring.java.agent.JavaAgentMessageType;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -38,8 +36,10 @@ import java.util.regex.Pattern;
 
 import org.smb.core.Message;
 
-public class Agent extends Thread {
+import io.djigger.monitoring.java.agent.JavaAgentMessageType;
 
+public class Agent extends Thread {
+	
 	private final static Integer DEFAULT_PORT = 12121;
 
 	private final boolean agentToClientConnection;
@@ -81,7 +81,8 @@ public class Agent extends Thread {
 				Integer port = Integer.decode(parameterMap.get("port"));
 				(new Agent(instrumentation, port)).start();
 			} else {
-				System.out.println("Agent: parameter missing. Please check the agent arguments.");
+				Integer port = DEFAULT_PORT;
+				(new Agent(instrumentation, port)).start();
 			}
 		} catch(Exception e) {
 			System.out.println("Agent: an error occurred while trying to parse the agent parameters.");

@@ -19,75 +19,90 @@
  *******************************************************************************/
 package io.djigger.agent;
 
-import io.djigger.monitoring.java.agent.JavaAgentMessageType;
-import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.sampling.Sampler;
-
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.net.Socket;
+import java.util.concurrent.TimeUnit;
 
 import org.smb.core.Message;
 import org.smb.core.MessageListener;
 import org.smb.core.MessageRouter;
 import org.smb.core.MessageRouterStateListener;
 
+import io.djigger.monitoring.eventqueue.EventQueue;
+import io.djigger.monitoring.eventqueue.EventQueue.EventQueueConsumer;
+import io.djigger.monitoring.eventqueue.ModuloEventSkipLogic;
+import io.djigger.monitoring.java.agent.JavaAgentMessageType;
+import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.model.ThreadInfo;
+import io.djigger.monitoring.java.sampling.Sampler;
 
 public class AgentSession implements MessageListener, MessageRouterStateListener {
 
 	private final MessageRouter messageRouter;
 
 	private volatile boolean isAlive;
-	
+
 	private final Sampler sampler;
-	
-	private final SamplerRunnable samplerRunnable;
-	
+
 	private final InstrumentationService instrumentationService;
-	
-	private final PostService postService;
+
+	private final EventQueue<InstrumentationEvent> instrumentationEventQueue;
+
+	private final EventQueue<ThreadInfo> threadInfoQueue;
 
 	public AgentSession(Socket socket, Instrumentation instrumentation) throws IOException {
 		super();
-		
-		this.messageRouter = new MessageRouter(this,socket);;
+
+		this.messageRouter = new MessageRouter(this, socket);
 		messageRouter.registerPermanentListenerForAllMessages(this);
 		this.isAlive = true;
 
-		samplerRunnable = new SamplerRunnable();
-		sampler = new Sampler(samplerRunnable);		
+		EventQueueConsumer<InstrumentationEvent> queueConsumer = new InstrumentationEventQueueConsumer(this);
+		instrumentationEventQueue = new EventQueue<InstrumentationEvent>(1, TimeUnit.SECONDS, queueConsumer, new ModuloEventSkipLogic<InstrumentationEvent>() {
+			@Override
+			protected long getSkipAttribute(InstrumentationEvent object) {
+				return object.getStart();
+			}
+		});
+		InstrumentationEventCollector.setEventCollector(instrumentationEventQueue);
+
+		EventQueueConsumer<ThreadInfo> threadInfoQueueConsumer = new ThreadInfoEventQueueConsumer(this);
+		threadInfoQueue = new EventQueue<ThreadInfo>(1, TimeUnit.SECONDS, threadInfoQueueConsumer, new ModuloEventSkipLogic<ThreadInfo>() {
+			@Override
+			protected long getSkipAttribute(ThreadInfo object) {
+				return object.getTimestamp();
+			}
+		});
+
+		sampler = new Sampler(new SamplerRunnable(threadInfoQueue));
 		instrumentationService = new InstrumentationService(instrumentation);
-		postService = new PostService(this);
 
 		messageRouter.start();
 		sampler.start();
-		postService.start();
-	}
-
-	public SamplerRunnable getSamplerRunnable() {
-		return samplerRunnable;
 	}
 
 	@Override
 	public void onMessage(Message msg) {
 		String command = msg.getType();
-		if(JavaAgentMessageType.RESUME.equals(command)) {
+		if (JavaAgentMessageType.RESUME.equals(command)) {
 			sampler.setRun(true);
-		} else if(JavaAgentMessageType.PAUSE.equals(command)) {
+		} else if (JavaAgentMessageType.PAUSE.equals(command)) {
 			sampler.setRun(false);
-		} else if(JavaAgentMessageType.SUBSCRIBE_THREAD_SAMPLING.equals(command)) {
+		} else if (JavaAgentMessageType.SUBSCRIBE_THREAD_SAMPLING.equals(command)) {
 			sampler.setInterval(msg.getIntegerContent());
 			sampler.setRun(true);
-		} else if(JavaAgentMessageType.UNSUBSCRIBE_THREAD_SAMPLING.equals(command)) {
+		} else if (JavaAgentMessageType.UNSUBSCRIBE_THREAD_SAMPLING.equals(command)) {
 			sampler.setRun(false);
-		} else if(JavaAgentMessageType.INSTRUMENT.equals(command)) {
+		} else if (JavaAgentMessageType.INSTRUMENT.equals(command)) {
 			InstrumentSubscription subscription = (InstrumentSubscription) msg.getContent();
 			instrumentationService.addSubscription(subscription);
-		} else if(JavaAgentMessageType.DEINSTRUMENT.equals(command)) {
+		} else if (JavaAgentMessageType.DEINSTRUMENT.equals(command)) {
 			InstrumentSubscription subscription = (InstrumentSubscription) msg.getContent();
 			instrumentationService.removeSubscription(subscription);
-		} else if(JavaAgentMessageType.INSTRUMENT_BATCH_INTERVAL.equals(command)) {
-			//agent.getInstrumentationService().setInterval(msg.getIntegerContent());
+		} else if (JavaAgentMessageType.INSTRUMENT_BATCH_INTERVAL.equals(command)) {
+			// agent.getInstrumentationService().setInterval(msg.getIntegerContent());
 		}
 	}
 
@@ -97,7 +112,7 @@ public class AgentSession implements MessageListener, MessageRouterStateListener
 
 	@Override
 	public void messageRouterDisconnected(MessageRouter router) {
-		if(isAlive) {
+		if (isAlive) {
 			isAlive = false;
 			close();
 			System.out.println("Agent: client disconnected.");
@@ -107,10 +122,12 @@ public class AgentSession implements MessageListener, MessageRouterStateListener
 	public boolean isAlive() {
 		return isAlive;
 	}
-	
+
 	public void close() {
 		messageRouter.disconnect();
 		instrumentationService.destroy();
 		sampler.destroy();
+		instrumentationEventQueue.shutdown();
+		threadInfoQueue.shutdown();
 	}
 }

@@ -25,7 +25,6 @@ import static com.mongodb.client.model.Filters.gt;
 import static com.mongodb.client.model.Filters.lt;
 
 import java.lang.Thread.State;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -33,6 +32,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -40,15 +40,10 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
-import com.mongodb.MongoClientOptions.Builder;
-import com.mongodb.MongoException;
 import com.mongodb.MongoExecutionTimeoutException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.CountOptions;
-import com.mongodb.client.model.IndexOptions;
 
 import io.djigger.collector.accessors.ThreadInfoAccessor;
 import io.djigger.collector.accessors.stackref.dbmodel.StackTraceElementEntry;
@@ -56,9 +51,9 @@ import io.djigger.collector.accessors.stackref.dbmodel.StackTraceEntry;
 import io.djigger.monitoring.java.model.ThreadInfo;
 
 
-public class ThreadInfoAccessorImpl implements ThreadInfoAccessor {
+public class ThreadInfoAccessorImpl extends AbstractAccessor implements ThreadInfoAccessor {
 	
-	MongoClient mongoClient;
+	MongoDatabase db;
 	
 	MongoCollection<Document> threadInfoCollection;
 	
@@ -66,86 +61,18 @@ public class ThreadInfoAccessorImpl implements ThreadInfoAccessor {
 			
 	LRUCache<ObjectId, StackTraceEntry> stackTracesCache = new LRUCache<>(1000);
 	
-	public ThreadInfoAccessorImpl() {
+	public ThreadInfoAccessorImpl(MongoDatabase db) {
 		super();
-	}
-
-	public void start(String host, String collection) throws UnknownHostException, MongoException {
-		Builder o = MongoClientOptions.builder().serverSelectionTimeout(3000);  
-		mongoClient = new MongoClient(host, o.build());
-		
-		// call this method to check if the connection succeeded as the mongo client lazy loads the connection 
-		mongoClient.getAddress();
-		
-		MongoDatabase db = mongoClient.getDatabase(collection);
-		
+		this.db = db;
 		threadInfoCollection = db.getCollection("threaddumps");
 		stackTracesCollection = db.getCollection("stacktraces");
 	}
-	
-	public void close() {
-		mongoClient.close();
-	}
 
 	public void createIndexesIfNeeded(Long ttl) {
-		Document hashCodeIndex = getIndex(stackTracesCollection, "hashcode");
-		if(hashCodeIndex==null) {
-			stackTracesCollection.createIndex(new Document("hashcode",1));
-		}
-		
-		Document ttlIndex = getIndex(threadInfoCollection, "timestamp");
-		if(ttlIndex==null) {
-			if(ttl!=null && ttl>0) {
-				createTimestampIndexWithTTL(ttl);
-			} else {
-				createTimestampIndex();
-			}
-		} else {
-			if(ttl!=null && ttl>0) {
-				if(!ttlIndex.containsKey("expireAfterSeconds") || !ttlIndex.getLong("expireAfterSeconds").equals(ttl)) {
-					dropIndex(ttlIndex);
-					createTimestampIndexWithTTL(ttl);
-				}
-			} else {
-				if(ttlIndex.containsKey("expireAfterSeconds")) {
-					dropIndex(ttlIndex);
-					createTimestampIndex();
-				}
-			}
-		}
+		createOrUpdateIndex(stackTracesCollection, "hashcode");
+		createOrUpdateTTLIndex(threadInfoCollection, "timestamp", ttl);
 	}
 
-	private void dropIndex(Document ttlIndex) {
-		threadInfoCollection.dropIndex(ttlIndex.getString("name"));
-	}
-
-	private void createTimestampIndexWithTTL(Long ttl) {
-		IndexOptions options = new IndexOptions();
-		options.expireAfter(ttl, TimeUnit.SECONDS);
-		createTimestampIndexWithOptions(options);
-	}
-	
-	private void createTimestampIndex() {
-		IndexOptions options = new IndexOptions();
-		createTimestampIndexWithOptions(options);
-	}
-	
-	private void createTimestampIndexWithOptions(IndexOptions options) {
-		threadInfoCollection.createIndex(new Document("timestamp", 1), options);
-	}
-	
-	private Document getIndex(MongoCollection<Document> collection,String indexName) {
-		for(Document index:collection.listIndexes()) {
-			Object o = index.get("key");
-			if(o instanceof Document) {
-				if(((Document)o).containsKey(indexName)) {
-					return (Document) index;
-				}
-			}
-		}
-		return null;
-	}
-	
 	private Bson buildQuery(Bson mongoQuery, Date from, Date to) {
 		Bson result = and(gt("timestamp", from), lt("timestamp", to));
 		if(mongoQuery!=null) {
@@ -153,14 +80,12 @@ public class ThreadInfoAccessorImpl implements ThreadInfoAccessor {
 		}
 		return result;
 	}
-
-	private static long COUNT_MAXTIME_SECONDS=30; 
 	
-	public long count(Bson mongoQuery, Date from, Date to) throws TimeoutException {
+	public long count(Bson mongoQuery, Date from, Date to, long timeout, TimeUnit timeUnit) throws TimeoutException {
 		mongoQuery = buildQuery(mongoQuery, from, to);
 		
 		CountOptions options = new CountOptions();
-		options.maxTime(COUNT_MAXTIME_SECONDS, TimeUnit.SECONDS);
+		options.maxTime(timeout, timeUnit);
 		
 		try {
 			return threadInfoCollection.count(mongoQuery, options);
@@ -201,10 +126,14 @@ public class ThreadInfoAccessorImpl implements ThreadInfoAccessor {
 						
 												
 						ThreadInfo info = new ThreadInfo(StackTraceElementEntry.fromEntries(s.getElements()));
-						info.setTimestamp(dbo.getDate("timestamp"));
+						info.setTimestamp(dbo.getDate("timestamp").getTime());
 						info.setName(dbo.getString("name"));
 						info.setId(dbo.getLong("id"));
 						info.setState(State.valueOf(dbo.getString("state")));
+						
+						if(dbo.containsKey("trid")) {
+							info.setTransactionID(UUID.fromString(dbo.getString("trid")));
+						}
 
 						Map<String, String> attributes = new HashMap<String, String>();
 						for(String key:dbo.keySet()) {
@@ -249,8 +178,13 @@ public class ThreadInfoAccessorImpl implements ThreadInfoAccessor {
 		o.put("id", threadInfo.getId());
 		o.put("name", threadInfo.getName());
 		o.put("state", threadInfo.getState());
-		o.put("timestamp", threadInfo.getTimestamp());
+		o.put("timestamp", new Date(threadInfo.getTimestamp()));
 		o.put("state", threadInfo.getState().toString());
+		
+		if(threadInfo.getTransactionID()!=null) {
+			o.put("trid", threadInfo.getTransactionID().toString());
+		}
+		
 		threadInfoCollection.insertOne(o);
 	}
 	

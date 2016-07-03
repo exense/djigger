@@ -19,17 +19,16 @@
  *******************************************************************************/
 package io.djigger.ui.connectiondialog;
 
-import io.djigger.ui.SessionConfiguration;
-import io.djigger.ui.SessionConfiguration.SessionParameter;
-
 import java.awt.GridLayout;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
+
+import io.djigger.ui.SessionConfiguration;
+import io.djigger.ui.SessionConfiguration.SessionParameter;
 
 public class HostConnectionParameter implements CaretListener, ConnectionParameterFrame {
 
@@ -138,5 +137,9 @@ public class HostConnectionParameter implements CaretListener, ConnectionParamet
 	public void setConnectionType(ConnectionType type) {
 		connectionType = type;
 	}
+
+
+	@Override
+	public void setReloadListener(ReloadListener listener) {}
 	
 }

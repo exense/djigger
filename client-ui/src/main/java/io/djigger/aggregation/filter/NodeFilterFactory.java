@@ -19,10 +19,12 @@
  *******************************************************************************/
 package io.djigger.aggregation.filter;
 
-import io.djigger.model.NodeID;
+import io.djigger.ql.Filter;
+import io.djigger.ql.FilterFactory;
 import io.djigger.ui.common.NodePresentationHelper;
+import io.djigger.ui.model.NodeID;
 
-public class NodeFilterFactory implements AtomicFilterFactory<NodeID> {
+public class NodeFilterFactory implements FilterFactory<NodeID> {
 
 	private final NodePresentationHelper presentationHelper;
 
@@ -32,8 +34,15 @@ public class NodeFilterFactory implements AtomicFilterFactory<NodeID> {
 	}
 
 	@Override
-	public Filter<NodeID> createFilter(String expression) {
+	public Filter<NodeID> createFullTextFilter(String expression) {
 		return new NodeFilter(expression, presentationHelper);
+	}
+
+	@Override
+	public Filter<NodeID> createAttributeFilter(String operator,
+			String attribute, String value) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

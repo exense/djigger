@@ -1,40 +1,28 @@
 <Group>
 	<attributes />
 	<groups>
-		<Group>
+		<Connection connectionClass="io.djigger.client.ProcessAttachFacade">
+			<samplingParameters samplingRate="1000" />
+			<connectionProperties>
+				<property name="processNamePattern" value="TestApp" />
+			</connectionProperties>
 			<attributes>
-				<entry>
-					<string>attributeKey1</string>
-					<string>attributeValue1</string>
-				</entry>
 			</attributes>
-			<groups>
-				<Group>
-					<attributes>
-						<entry>
-							<string>attributeKey2</string>
-							<string>attributeValue2</string>
-						</entry>
-					</attributes>
-					<groups>
-						<Connection connectionClass="io.djigger.client.JMXClientFacade">
-							<samplingParameters samplingRate="100" />
-							<connectionProperties>
-								<property name="host" value="localhost" />
-								<property name="port" value="1098" />
-								<property name="username" value="" />
-								<property name="password" value="" />
-							</connectionProperties>
-							<attributes>
-								<entry>
-									<string>attributeKey3</string>
-									<string>attributeValue3</string>
-								</entry>
-							</attributes>
-						</Connection>
-					</groups>
-				</Group>
-			</groups>
-		</Group>
+			<subscriptions>
+				<io.djigger.monitoring.java.instrumentation.subscription.SQLConnectionTracer />
+				<io.djigger.monitoring.java.instrumentation.subscription.SQLPreparedStatementTracer />
+				<io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
+					<classNamePattern>
+						<pattern>.*TestApp</pattern>
+						<flags>0</flags>
+					</classNamePattern>
+					<methodNamePattern>
+						<pattern>testMethod.*</pattern>
+						<flags>0</flags>
+					</methodNamePattern>
+					<tagEvent>false</tagEvent>
+				</io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
+			</subscriptions>
+		</Connection>
 	</groups>
 </Group>

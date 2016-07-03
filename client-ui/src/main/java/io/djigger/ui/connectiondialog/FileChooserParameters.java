@@ -26,6 +26,9 @@ import java.io.File;
 
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
+import javax.swing.LookAndFeel;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 
 public class FileChooserParameters implements ConnectionParameterFrame {
 
@@ -37,7 +40,24 @@ public class FileChooserParameters implements ConnectionParameterFrame {
 	
 	public FileChooserParameters() {
 		super();
+		
+		LookAndFeel saved = UIManager.getLookAndFeel();
+		if(System.getProperty("os.name").toLowerCase().trim().contains("mac"))
+			try {
+				UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+			} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+					| UnsupportedLookAndFeelException e) {
+				e.printStackTrace();
+			}
+		
 		chooser = new JFileChooser();
+		
+		try {
+			UIManager.setLookAndFeel(saved);
+		} catch (UnsupportedLookAndFeelException e) {
+			e.printStackTrace();
+		}
+		
 		chooser.setControlButtonsAreShown(false);
 		panel = new JPanel();
 		panel.add(chooser);
@@ -63,5 +83,8 @@ public class FileChooserParameters implements ConnectionParameterFrame {
 	public JPanel getPanel() {
 		return panel;
 	}
+
+	@Override
+	public void setReloadListener(ReloadListener listener) {}
 
 }

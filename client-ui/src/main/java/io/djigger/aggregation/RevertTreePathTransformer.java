@@ -19,10 +19,10 @@
  *******************************************************************************/
 package io.djigger.aggregation;
 
-import io.djigger.aggregation.filter.Filter;
-import io.djigger.model.NodeID;
-import io.djigger.model.RealNode;
-import io.djigger.model.RealNodePath;
+import io.djigger.ql.Filter;
+import io.djigger.ui.model.NodeID;
+import io.djigger.ui.model.RealNode;
+import io.djigger.ui.model.RealNodePath;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,14 +38,14 @@ public class RevertTreePathTransformer implements PathTransformer {
 	}
 
 	@Override
-	public List<PathTransformerResult> transformPath(RealNodePath path) {
-		List<PathTransformerResult> transformations = new ArrayList<PathTransformerResult>(path.getFullPath().size());
+	public List<RealNode> transformPath(RealNode realTree, RealNodePath path) {
+		List<RealNode> transformations = new ArrayList<>(path.getFullPath().size());
 
-		RealNode currentNode = RealNode.root;
+		RealNode currentNode = realTree;
 		for(NodeID nodeID:path.getFullPath()) {
 			currentNode = currentNode.getChild(nodeID);
 			if(nodeFilter == null || nodeFilter.isValid(nodeID)) {
-				transformations.add(0,new PathTransformerResult(nodeID, currentNode));
+				transformations.add(0,currentNode);
 			}
 		}
 

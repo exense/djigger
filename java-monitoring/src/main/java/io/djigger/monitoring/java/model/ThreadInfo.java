@@ -20,12 +20,12 @@
 package io.djigger.monitoring.java.model;
 
 import java.io.Serializable;
-import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 
 public class ThreadInfo implements Serializable {
 
-	private Date timestamp;
+	private long timestamp;
 	
 	private long id;
 	
@@ -36,22 +36,31 @@ public class ThreadInfo implements Serializable {
 	private Map<String, String> attributes;
 	
 	private StackTraceElement[] stackTrace;
+	
+	private UUID transactionID;
 
 	public ThreadInfo(StackTraceElement[] stackTrace) {
 		super();
 
 		this.stackTrace = stackTrace;
 	}
+	
+	public ThreadInfo(StackTraceElement[] stackTrace, long id, long timestamp) {
+		super();
+		this.id = id;
+		this.stackTrace = stackTrace;
+		this.timestamp = timestamp;
+	}
 
 	public StackTraceElement[] getStackTrace() {
 		return stackTrace;
 	}
 
-	public Date getTimestamp() {
+	public long getTimestamp() {
 		return timestamp;
 	}
 
-	public void setTimestamp(Date timestamp) {
+	public void setTimestamp(long timestamp) {
 		this.timestamp = timestamp;
 	}
 
@@ -89,5 +98,13 @@ public class ThreadInfo implements Serializable {
 
 	public void setStackTrace(StackTraceElement[] stackTrace) {
 		this.stackTrace = stackTrace;
+	}
+
+	public UUID getTransactionID() {
+		return transactionID;
+	}
+
+	public void setTransactionID(UUID transactionID) {
+		this.transactionID = transactionID;
 	}
 }

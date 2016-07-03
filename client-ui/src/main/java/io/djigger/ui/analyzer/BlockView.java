@@ -23,8 +23,8 @@ import io.djigger.ui.analyzer.BlockColorer.Framework;
 import io.djigger.ui.common.CloseButton;
 import io.djigger.ui.common.CustomButton;
 import io.djigger.ui.common.FileChooserHelper;
-import io.djigger.ui.model.Node;
-import io.djigger.ui.model.NodePath;
+import io.djigger.ui.model.AnalysisNode;
+import io.djigger.ui.model.AnalysisNodePath;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -80,7 +80,7 @@ public class BlockView extends AnalyzerPane implements MouseListener, MouseMotio
 
 	private Block rootBlock;
 
-	private final Stack<NodePath> selectionHistory;
+	private final Stack<AnalysisNodePath> selectionHistory;
 
 	private Block mouseOverBlock;
 
@@ -112,8 +112,8 @@ public class BlockView extends AnalyzerPane implements MouseListener, MouseMotio
 
 		rootBlock = new Block(workNode, this);
 
-		selectionHistory = new Stack<NodePath>();
-		selectionHistory.push(rootBlock.getNode().getTreeNodePath());
+		selectionHistory = new Stack<AnalysisNodePath>();
+		selectionHistory.push(rootBlock.getNode().getPath());
 	}
 
 	@Override
@@ -259,7 +259,7 @@ public class BlockView extends AnalyzerPane implements MouseListener, MouseMotio
 		Block newRoot;
 
 		if(selectionHistory.size()>0) {
-			Node newRootNode = workNode.find(selectionHistory.peek());
+			AnalysisNode newRootNode = workNode.find(selectionHistory.peek());
 			if(newRootNode != null) {
 				newRoot = new Block(newRootNode, this);
 			} else {
@@ -270,7 +270,7 @@ public class BlockView extends AnalyzerPane implements MouseListener, MouseMotio
 		}
 
 		for(Block block:oldRoot.getModifiedBlocks()) {
-			Block newBlock = newRoot.find(block.getNode().getTreeNodePath());
+			Block newBlock = newRoot.find(block.getNode().getPath());
 			if(newBlock != null) {
 				newBlock.loadPropertiesFrom(block);
 			}
@@ -288,7 +288,7 @@ public class BlockView extends AnalyzerPane implements MouseListener, MouseMotio
 	}
 
 	@Override
-	protected Node getSelectedNode() {
+	protected AnalysisNode getSelectedNode() {
 		return mouseOverBlock.getNode();
 	}
 
@@ -303,7 +303,7 @@ public class BlockView extends AnalyzerPane implements MouseListener, MouseMotio
 			} else {
 				Block block = rootBlock.getBlock(e.getX(), e.getY());
 				if(block!=null) {
-					selectionHistory.push(block.getNode().getTreeNodePath());
+					selectionHistory.push(block.getNode().getPath());
 					refreshDisplay();
 				}
 			}
@@ -381,6 +381,11 @@ public class BlockView extends AnalyzerPane implements MouseListener, MouseMotio
 			exportButton.addActionListener(this);
 			exportButton.setActionCommand("export");
 			add(exportButton);
+			
+			CustomButton importButton = new CustomButton(new JLabel("Import legend"));
+			importButton.addActionListener(this);
+			importButton.setActionCommand("import");
+			add(importButton);
 	    }
 
 		@SuppressWarnings("serial")
@@ -438,6 +443,15 @@ public class BlockView extends AnalyzerPane implements MouseListener, MouseMotio
 				File file = FileChooserHelper.selectFile("Export Legend", "Save");
 				if(file!=null) {
 	            	blockColorer.export(file);
+	            }
+			} else if(e.getActionCommand().equals("import")) {
+				File file = FileChooserHelper.selectFile("Import Legend", "Open");
+				if(file!=null) {
+					blockColorer.clearFrameworks();
+					blockColorer.loadFrameworks(file);
+	            	
+					refreshDisplay();
+					reloadLegend();
 	            }
 			} else {
 				new EditFramework(null);

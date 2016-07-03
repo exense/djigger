@@ -20,105 +20,56 @@
 package io.djigger.monitoring.java.instrumentation.subscription;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.InstrumentationAttributes;
-import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
+import io.djigger.monitoring.java.instrumentation.TransformingSubscription;
 import io.djigger.monitoring.java.model.StackTraceElement;
-import io.djigger.monitoring.java.model.ThreadInfo;
+import javassist.CannotCompileException;
+import javassist.CtClass;
+import javassist.CtMethod;
 
-import java.util.Arrays;
-
-public class RealNodePathSubscription extends InstrumentSubscription {
+public class RealNodePathSubscription extends InstrumentSubscription implements TransformingSubscription {
 
 	static final long serialVersionUID = 173774663260136913L;
 
 	private final StackTraceElement[] path;
-	
-	private final InstrumentationAttributes attributes;
 
-	public RealNodePathSubscription(StackTraceElement[]  path, boolean isTransactionEntryPoint) {
-		super(isTransactionEntryPoint);
+	public RealNodePathSubscription(StackTraceElement[]  path, boolean tagEvent) {
+		super(tagEvent);
 		this.path = path;
-		this.attributes = new InstrumentationAttributes();
-		attributes.addStacktrace();
-		attributes.addThreadId();
-	}
-
-	@Override
-	public boolean match(InstrumentationSample sample) {
-		ThreadInfo threadInfo = sample.getAtributesHolder().getStacktrace();
-		
-		//TODO re implement this  
-		if(threadInfo!=null) {
-			StackTraceElement[] samplePath = threadInfo.getStackTrace();
-			if(path.length!=samplePath.length) {
-				return false;
-			} else {
-				int length = path.length;
-				for (int i=0; i<length; i++) {
-					StackTraceElement o1 = path[i];
-					StackTraceElement o2 = samplePath[i];
-					if(!o1.getMethodName().equals(o2.getMethodName())||!o1.getMethodName().equals(o2.getMethodName())) {
-						return false;
-					}
-				}
-			}
-		} else {
-			return false;
-		}
-		
-		// Arrays.equals(path, threadInfo.getStackTrace())
-		return true;
 	}
 
 	public StackTraceElement[]  getPath() {
 		return path;
 	}
-
+	
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((path == null) ? 0 : path.hashCode());
-		return result;
+	public boolean isRelatedToClass(CtClass class_) {
+		return isRelatedToClassname(class_.getName());
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		RealNodePathSubscription other = (RealNodePathSubscription) obj;
-		if (path == null) {
-			if (other.path != null)
-				return false;
-		} else if (!path.equals(other.path))
-			return false;
-		return true;
-	}
-
-	@Override
-	public InstrumentationAttributes getInstrumentationAttributes() {
-		return attributes;
-	}
-
-	@Override
-	public boolean isRelatedToClass(String classname) {
+	private boolean isRelatedToClassname(String classname) {
 		StackTraceElement lastNode = path[0] ;
 		return lastNode.getClassName().equals(classname);
 	}
 
 	@Override
-	public boolean isRelatedToMethod(String methodname) {
+	public boolean isRelatedToMethod(CtMethod method) {
 		StackTraceElement lastNode = path[0] ;
-		return lastNode.getMethodName().equals(methodname);
+		return lastNode.getMethodName().equals(method.getName());
 	}
 
 	@Override
-	public String getName() {
+	public String toString() {
 		StackTraceElement lastNode = path[0] ;
 		return ".../" + lastNode.getClassName() + '.' + lastNode.getMethodName();
+	}
+
+	@Override
+	public boolean retransformClass(Class<?> class_) {
+		return isRelatedToClassname(class_.getName());
+	}
+
+	@Override
+	public void transform(CtClass clazz, CtMethod method) throws CannotCompileException {
+		TimeMeasureTransformer.transform(clazz, method, this, true);
 	}
 }

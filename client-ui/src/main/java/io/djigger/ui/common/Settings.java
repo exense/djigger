@@ -59,6 +59,15 @@ public class Settings {
 		return settings.getProperty(key);
 	}
 	
+	public synchronized boolean getAsBoolean(String key, boolean default_) {
+		String prop = settings.getProperty(key);
+		if(prop!=null) {
+			return Boolean.parseBoolean(prop);
+		} else {
+			return default_;
+		}
+	}
+	
 	public synchronized void put(String key, Object value) {
 		settings.put(key, value);
 		try {

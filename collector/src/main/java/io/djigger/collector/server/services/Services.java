@@ -19,11 +19,9 @@
  *******************************************************************************/
 package io.djigger.collector.server.services;
 
-import io.djigger.client.Facade;
-import io.djigger.collector.server.Server;
-
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.inject.Inject;
@@ -33,6 +31,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+
+import io.djigger.client.Facade;
+import io.djigger.collector.server.ClientConnection;
+import io.djigger.collector.server.Server;
 
 @Path("/services")
 public class Services {
@@ -44,14 +46,30 @@ public class Services {
 	ServletContext context;
 	
 	public class FacadeStatus {
+		
+		String facadeClass;
+
+		Map<String, String> attributes;
+		
 		Properties properties;
 		
 		boolean connected;
 
-		public FacadeStatus(Properties properties, boolean connected) {
+		public FacadeStatus(String facadeClass, Map<String, String> attributes, Properties properties,
+				boolean connected) {
 			super();
+			this.facadeClass = facadeClass;
+			this.attributes = attributes;
 			this.properties = properties;
 			this.connected = connected;
+		}
+
+		public String getFacadeClass() {
+			return facadeClass;
+		}
+
+		public Map<String, String> getAttributes() {
+			return attributes;
 		}
 
 		public Properties getProperties() {
@@ -68,14 +86,17 @@ public class Services {
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<FacadeStatus> getStatus() {
 		List<FacadeStatus> result = new ArrayList<>();
-		for(Facade facade:server.getClients()) {
-			//TODO do this in a more generic way
+		for(ClientConnection connection:server.getClients()) {
+			
+			Facade facade = connection.getFacade();
+			
 			Properties newProperties = new Properties();
 			newProperties.putAll(facade.getProperties());
+			//TODO do this in a more generic way
 			if(newProperties.get("password")!=null) {
 				newProperties.put("password", "*****");	
 			}
-			result.add(new FacadeStatus(newProperties, facade.isConnected()));
+			result.add(new FacadeStatus(facade.getClass().getName(), connection.getAttributes(), newProperties, facade.isConnected()));
 		}
 		return result;
 	}

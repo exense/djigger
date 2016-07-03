@@ -19,9 +19,10 @@
  *******************************************************************************/
 package io.djigger.aggregation.filter;
 
-import io.djigger.model.NodeID;
-import io.djigger.model.RealNodePath;
+import io.djigger.ql.Filter;
 import io.djigger.ui.common.NodePresentationHelper;
+import io.djigger.ui.model.NodeID;
+import io.djigger.ui.model.RealNodePath;
 
 public class BranchFilter implements Filter<RealNodePath> {
 

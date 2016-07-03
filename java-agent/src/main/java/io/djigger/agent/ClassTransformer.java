@@ -19,94 +19,75 @@
  *******************************************************************************/
 package io.djigger.agent;
 
-import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.InstrumentationAttributes;
-
-import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 import java.util.Set;
 
-import javassist.CannotCompileException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.LoaderClassPath;
-import javassist.Modifier;
 
 public class ClassTransformer implements ClassFileTransformer {
-
+	
+	private static final Logger logger = LoggerFactory.getLogger(ClassTransformer.class);
+	
 	private final InstrumentationService service;
 
 	ClassTransformer(InstrumentationService service) {
 		super();
 		this.service = service;
 	}
-
+		
 	@Override
-	public byte[] transform(ClassLoader loader, String className,
-			Class<?> classBeingRedefined, ProtectionDomain protectionDomain,
-			byte[] classfileBuffer) throws IllegalClassFormatException {
-		if(classBeingRedefined!=null) {
+	public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain,
+		byte[] classfileBuffer) throws IllegalClassFormatException {
+
+		ClassPool pool = ClassPool.getDefault();
+		if(loader!=null) {
+			pool.insertClassPath(new LoaderClassPath(loader));
+		}
+		CtClass currentClass = null;
+		try {
+			currentClass = pool.makeClass(new java.io.ByteArrayInputStream(classfileBuffer));
+		
 			Set<InstrumentSubscription> subscriptions = service.getSubscriptions();
 			if(subscriptions!=null && subscriptions.size()>0) {
-				System.out.println("Redefining " + classBeingRedefined.getName());
-				ClassPool pool = ClassPool.getDefault();
-				if(loader!=null) {
-					System.out.println("Appending classpath: " + loader);
-					pool.appendClassPath(new LoaderClassPath(loader));
-				}
-				try {
-					CtClass ctClass = pool
-							.makeClass(new java.io.ByteArrayInputStream(
-									classfileBuffer));
-					CtClass currentClass = ctClass;
-					do {
+				boolean transformed = false;
+				for(InstrumentSubscription subscription:subscriptions) {
+					if (subscription.isRelatedToClass(currentClass)) {
 						for (CtMethod method : currentClass.getDeclaredMethods()) {
-							InstrumentationAttributes attributes = null;
-							for(InstrumentSubscription subscription:subscriptions) {
-								if (subscription.isRelatedToClass(currentClass.getName()) && subscription.isRelatedToMethod(method.getName())) {
-									if(attributes == null) {
-										attributes = new InstrumentationAttributes();
-									}
-									attributes.merge(subscription.getInstrumentationAttributes());
+							if (subscription.isRelatedToMethod(method)) {
+								if(logger.isDebugEnabled()) {
+									logger.debug("Transforming method " + className + "." + method.getLongName());
 								}
-							}
-							if(attributes!=null && !Modifier.isNative(method.getModifiers())) {
-								//method.instrument(new CodeConverter());
-								StringBuilder attributesBuilder = new StringBuilder();
-								attributesBuilder.append("new boolean[]{");
-								for(boolean attribute:attributes.getAttributes()) {
-									attributesBuilder.append(attribute).append(",");
-								}
-								attributesBuilder.append("true");
-								attributesBuilder.append("}");
-								
-								method.addLocalVariable("t1", CtClass.longType);
-								method.insertBefore("t1 = System.currentTimeMillis();io.djigger.agent.Collector.start(this, \"" + currentClass.getName() + "\",\"" + method.getName() + "\");");
-								System.out.println("io.djigger.agent.Collector.report(\"" + currentClass.getName() + "\",\"" + method.getName() + "\", t1," + attributesBuilder.toString() + ");");
-								method.insertAfter("io.djigger.agent.Collector.report(\"" + currentClass.getName() + "\",\"" + method.getName() + "\", t1," + attributesBuilder.toString() + ");");
+								subscription.transform(currentClass, method);
+								transformed = true;	
 							}
 						}
+					}
+				}
 
-					} while ((currentClass = currentClass.getSuperclass()) != null);
-
-					byte[] result = ctClass.toBytecode();
-					ctClass.defrost();
-					return result;
-
-
-				} catch (CannotCompileException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
-				} catch (Exception e) {
-					e.printStackTrace();
+				if(transformed) {
+					if(logger.isDebugEnabled()) {
+						logger.debug("Transformed " + className);
+					}
+					classfileBuffer = currentClass.toBytecode();	
 				}
 			}
+		} catch (Throwable e) {
+			logger.error("An error occurred while transforming class "+className, e);
+		} finally {
+			if(currentClass!=null) {
+				currentClass.detach();
+			}	
 		}
 
-		return null;
+		return classfileBuffer;
 	}
 }

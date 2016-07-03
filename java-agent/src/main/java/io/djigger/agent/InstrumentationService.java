@@ -19,16 +19,20 @@
  *******************************************************************************/
 package io.djigger.agent;
 
-import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 
 
 public class InstrumentationService {
+	
+	private final Logger logger = Logger.getLogger(InstrumentationService.class.getName());
 
 	private final Instrumentation instrumentation;
 	
@@ -42,44 +46,51 @@ public class InstrumentationService {
 		instrumentation.addTransformer(transformer, true);
 	}
 	
-	public synchronized void destroy() {
+	public void destroy() {
 		Set<InstrumentSubscription> previousSubscriptions = new HashSet<InstrumentSubscription>();
-		previousSubscriptions.addAll(subscriptions);
-		subscriptions.clear();
+		synchronized (subscriptions) {
+			previousSubscriptions.addAll(subscriptions);
+			subscriptions.clear();
+		}
 		for(InstrumentSubscription subscription:previousSubscriptions) {
 			applySubscriptionChange(subscription);
 		}
 	}
 	
-	public synchronized void addSubscription(InstrumentSubscription subscription) {
-		subscriptions.add(subscription);
+	public void addSubscription(InstrumentSubscription subscription) {
+		synchronized (subscriptions) {
+			subscriptions.add(subscription);			
+		}
 		applySubscriptionChange(subscription);
 	}
 	
-	public synchronized void removeSubscription(InstrumentSubscription subscription) {
-		subscriptions.remove(subscription);
+	public void removeSubscription(InstrumentSubscription subscription) {
+		synchronized (subscriptions) {
+			subscriptions.remove(subscription);
+		}
 		applySubscriptionChange(subscription);
 	}
 	
 	
-	public synchronized Set<InstrumentSubscription> getSubscriptions() {
+	public Set<InstrumentSubscription> getSubscriptions() {
 		HashSet<InstrumentSubscription> result = new HashSet<InstrumentSubscription>();
-		result.addAll(subscriptions);
+		synchronized (subscriptions) {
+			result.addAll(subscriptions);
+		}
 		return result;
 	}
 
 	private void applySubscriptionChange(InstrumentSubscription subscription) {
-		try {
-			for(Class<?> clazz:instrumentation.getAllLoadedClasses()) {
-				if(subscription.isRelatedToClass(clazz.getName())) {
+		for(Class<?> clazz:instrumentation.getAllLoadedClasses()) {
+			try {
+				if(subscription.retransformClass(clazz)) {
 					instrumentation.retransformClasses(clazz);
 				}
+			} catch (UnmodifiableClassException e) {
+				logger.log(Level.WARNING, "Agent: unable to apply subscription "+subscription.toString()+ ". Class '"+clazz.getName()+"' unmodifiable.");
+			} catch(Throwable e) {
+				logger.log(Level.WARNING, "Agent: unable to apply subscription "+subscription.toString(), e);
 			}
-		} catch (UnmodifiableClassException e) {
-			System.err.println("Agent: unable to apply subscription "+subscription.getName()+ ". Class unmodifiable.");
-		} catch(Throwable e) {
-			System.err.println("Agent: unable to apply subscription "+subscription.getName());
-			e.printStackTrace();
 		}
 	}
 }

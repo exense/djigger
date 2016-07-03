@@ -19,7 +19,7 @@
  *******************************************************************************/
 package io.djigger.ui.analyzer;
 
-import io.djigger.ui.model.Node;
+import io.djigger.ui.model.AnalysisNode;
 
 import java.util.List;
 
@@ -31,7 +31,7 @@ public class CustomTreeUI extends MetalTreeUI {
 	@Override
 	protected void toggleExpandState(TreePath path) {
 		if(!tree.isExpanded(path)) {
-			Node node = (Node) path.getLastPathComponent();
+			AnalysisNode node = (AnalysisNode) path.getLastPathComponent();
 			path = getExpandPath(node);
 
 		    int row = getRowForPath(tree, path);
@@ -51,18 +51,19 @@ public class CustomTreeUI extends MetalTreeUI {
 		}
 	}
 	
-	private TreePath getExpandPath(Node node) {
-		List<Node> children = node.getChildren();
+	// This method should NEVER return a leaf as the tree.expandPath() only works with folder (nodes) 
+	private TreePath getExpandPath(AnalysisNode node) {
+		List<AnalysisNode> children = node.getChildren();
 		if(children.size()==1 && !children.get(0).isLeaf()) {
 			return getExpandPath(node.getChildren().get(0));
 		} else if (children.size() > 1){
-			Node mostImportantNode = null;
-			for(Node child:children) {
+			AnalysisNode mostImportantNode = null;
+			for(AnalysisNode child:children) {
 				if(mostImportantNode == null || mostImportantNode.getWeight()<child.getWeight()) {
 					mostImportantNode = child;
 				}
 			}
-			if(mostImportantNode.getWeight()>node.getWeight()*0.8) {
+			if(mostImportantNode.getWeight()>node.getWeight()*0.8 && !mostImportantNode.isLeaf()) {
 				return getExpandPath(mostImportantNode);
 			} else {
 				return new TreePath(node.getTreePath().toArray());

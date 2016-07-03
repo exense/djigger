@@ -1,40 +1,68 @@
 <Group>
-	<attributes />
 	<groups>
-		<Group>
+<!-- 		<Connection connectionClass="io.djigger.client.JMXClientFacade">
+			<samplingParameters samplingRate="10000" />
+			<connectionProperties>
+				<property name="host" value="localhost" />
+				<property name="port" value="1098" />
+				<property name="username" value="" />
+				<property name="password" value="" />
+			</connectionProperties>
 			<attributes>
-				<entry>
-					<string>attributeKey1</string>
-					<string>attributeValue1</string>
-				</entry>
+				<entry><string>foo</string><string>bar</string></entry>
 			</attributes>
-			<groups>
-				<Group>
-					<attributes>
-						<entry>
-							<string>attributeKey2</string>
-							<string>attributeValue2</string>
-						</entry>
-					</attributes>
-					<groups>
-						<Connection connectionClass="io.djigger.client.JMXClientFacade">
-							<samplingParameters samplingRate="1000" />
-							<connectionProperties>
-								<property name="host" value="localhost" />
-								<property name="port" value="1098" />
-								<property name="username" value="" />
-								<property name="password" value="" />
-							</connectionProperties>
-							<attributes>
-								<entry>
-									<string>attributeKey3</string>
-									<string>attributeValue3</string>
-								</entry>
-							</attributes>
-						</Connection>
-					</groups>
-				</Group>
-			</groups>
-		</Group>
+		</Connection> -->
+		<Connection connectionClass="io.djigger.client.AgentFacade">
+			<samplingParameters samplingRate="10000" />
+			<connectionProperties>
+				<property name="host" value="localhost" />
+				<property name="port" value="12121" />
+				<property name="username" value="" />
+				<property name="password" value="" />
+			</connectionProperties>
+			<subscriptions>
+				<io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
+					<classNamePattern><pattern>ClassName.*</pattern><flags>0</flags></classNamePattern>
+					<methodNamePattern><pattern>methodName.*</pattern><flags>0</flags></methodNamePattern>
+					<tagEvent>true</tagEvent>
+				</io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
+				<io.djigger.monitoring.java.instrumentation.subscription.ServletTracer/>
+				<io.djigger.monitoring.java.instrumentation.subscription.HttpClientTracer />
+				<io.djigger.monitoring.java.instrumentation.subscription.SQLConnectionTracer />
+				<io.djigger.monitoring.java.instrumentation.subscription.SQLPreparedStatementTracer />
+			</subscriptions>
+			<attributes>
+				<entry><string>foo</string><string>bar</string></entry>
+			</attributes>
+		</Connection>
+<!-- 		<Connection connectionClass="io.djigger.client.ProcessAttachFacade">
+			<samplingParameters samplingRate="1000" />
+			<connectionProperties>
+				<property name="processNamePattern" value="processName.*" />
+			</connectionProperties>
+			<attributes>
+				<entry><string>foo</string><string>bar</string></entry>
+			</attributes>
+			<subscriptions>
+				<io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
+					<classNamePattern><pattern>ClassName.*</pattern><flags>0</flags></classNamePattern>
+					<methodNamePattern><pattern>methodName.*</pattern><flags>0</flags></methodNamePattern>
+					<tagEvent>true</tagEvent>
+				</io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
+				<io.djigger.monitoring.java.instrumentation.subscription.ServletTracer/>
+				<io.djigger.monitoring.java.instrumentation.subscription.HttpClientTracer />
+				<io.djigger.monitoring.java.instrumentation.subscription.SQLConnectionTracer />
+				<io.djigger.monitoring.java.instrumentation.subscription.SQLPreparedStatementTracer />				
+			</subscriptions>
+		</Connection> -->
+<!-- 		<Connection connectionClass="io.djigger.client.JstackLogTailFacade">
+			<samplingParameters samplingRate="1000" />
+			<connectionProperties>
+				<property name="file" value="D:\Temp\jstack.log" />
+			</connectionProperties>
+			<attributes>
+				<entry><string>foo</string><string>bar</string></entry>
+			</attributes>
+		</Connection> -->
 	</groups>
 </Group>

@@ -33,6 +33,6 @@ public abstract class MonitoringChart extends JPanel {
 	
 	protected abstract void init();
 	
-	protected abstract void addSerie(InstrumentSubscription index, InstrumentationStatistics stats);
+	protected abstract void addSerie(InstrumentSubscription index);
 
 }

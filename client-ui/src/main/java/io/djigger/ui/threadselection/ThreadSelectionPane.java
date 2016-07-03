@@ -19,30 +19,15 @@
  *******************************************************************************/
 package io.djigger.ui.threadselection;
 
-import io.djigger.model.Capture;
-import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.model.ThreadInfo;
-import io.djigger.store.Store;
-import io.djigger.store.filter.IdStoreFilter;
-import io.djigger.store.filter.StoreFilter;
-import io.djigger.store.filter.TimeStoreFilter;
-import io.djigger.ui.Session;
-import io.djigger.ui.analyzer.AnalyzerPaneListener;
-import io.djigger.ui.analyzer.TreeView;
-import io.djigger.ui.instrumentation.InstrumentationPaneListener;
-import io.djigger.ui.instrumentation.InstrumentationStatistics;
-import io.djigger.ui.model.Node;
-import io.djigger.ui.model.NodeAggregation;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
@@ -60,6 +45,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
+import javax.swing.AbstractAction;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -70,8 +56,21 @@ import javax.swing.border.EmptyBorder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.djigger.model.Capture;
+import io.djigger.monitoring.java.model.ThreadInfo;
+import io.djigger.ql.Filter;
+import io.djigger.ql.FilterFactory;
+import io.djigger.ql.OQLFilterBuilder;
+import io.djigger.store.Store;
+import io.djigger.store.filter.IdStoreFilter;
+import io.djigger.store.filter.StoreFilter;
+import io.djigger.store.filter.TimeStoreFilter;
+import io.djigger.ui.Session;
+import io.djigger.ui.analyzer.AnalyzerPaneListener;
+import io.djigger.ui.common.EnhancedTextField;
 
-public class ThreadSelectionPane extends JPanel implements MouseMotionListener, MouseListener, KeyListener, ComponentListener, InstrumentationPaneListener, AnalyzerPaneListener {
+
+public class ThreadSelectionPane extends JPanel implements MouseMotionListener, MouseListener, KeyListener, ComponentListener, AnalyzerPaneListener {
 
 	private static final Logger logger = LoggerFactory.getLogger(ThreadSelectionPane.class);
 	
@@ -108,8 +107,13 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 	private boolean timeBasedAxis;
 	
 	private final JScrollPane scrollPane;
+	
+	private final String THREADNAME_FILTER = "Thread name filter (and, or, not operators allowed)";
+	
+	private EnhancedTextField threadnameFilterTextField;
 
-    public ThreadSelectionPane(Session main) {
+    @SuppressWarnings("serial")
+	public ThreadSelectionPane(Session main) {
 		super(new BorderLayout());
 		this.main = main;
 		this.store = main.getStore();
@@ -135,18 +139,32 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 		blocksPane.addComponentListener(this);
 		blocksPane.setComponentPopupMenu(popup);
 		
-		add(axis, BorderLayout.PAGE_START);
+		threadnameFilterTextField = new EnhancedTextField(THREADNAME_FILTER);
+		threadnameFilterTextField.setToolTipText(THREADNAME_FILTER);
+		threadnameFilterTextField.setMaximumSize(new Dimension(Integer.MAX_VALUE,20));
+		threadnameFilterTextField.addActionListener(new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				refresh();
+				selectionChanged();
+			}
+		});
+		add(threadnameFilterTextField, BorderLayout.PAGE_START);
+		
+		JPanel threadTimelinePane = new JPanel(new BorderLayout());
+		threadTimelinePane.add(axis, BorderLayout.PAGE_START);
 		scrollPane = new JScrollPane(blocksPane, ScrollPaneLayout.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneLayout.HORIZONTAL_SCROLLBAR_NEVER);
 		scrollPane.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
-		add(scrollPane, BorderLayout.CENTER);
-		add(label, BorderLayout.PAGE_END);
-
+		threadTimelinePane.add(scrollPane, BorderLayout.CENTER);
+		threadTimelinePane.add(label, BorderLayout.PAGE_END);
+		add(threadTimelinePane, BorderLayout.CENTER);
+		
 		refresh();
 	}
     
     public void initialize() {
 		main.getAnalyzerGroupPane().addListener(this);
-		main.getInstrumentationPane().addListener(this);
+//		main.getInstrumentationPane().addListener(this);
     }
 
     public void refresh() {
@@ -180,10 +198,10 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 	    		ThreadInfo threadDump2 = null;
 	        	for(ThreadInfo dump:dumps) {
 	        		if(timeBasedAxis) {
-		    			if(threadDump1 == null || dump.getTimestamp().before(threadDump1.getTimestamp())) {
+		    			if(threadDump1 == null || dump.getTimestamp()<threadDump1.getTimestamp()) {
 		    				threadDump1 = dump;
 		    			}
-		    			if(threadDump2 == null || dump.getTimestamp().after(threadDump2.getTimestamp())) {
+		    			if(threadDump2 == null || dump.getTimestamp()>threadDump2.getTimestamp()) {
 		    				threadDump2 = dump;
 		    			}
 	        		} else {
@@ -196,7 +214,7 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 	        		}
 	        	}
 	        	if(timeBasedAxis) {
-	        		currentRange = new Range(threadDump1.getTimestamp().getTime(),threadDump2.getTimestamp().getTime());
+	        		currentRange = new Range(threadDump1.getTimestamp(),threadDump2.getTimestamp());
 	        	} else {
 	        		currentRange = new Range(threadDump1.getId(),threadDump2.getId());
 	        	}
@@ -235,7 +253,7 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
     				blockMap.put(threadId, block);
     			}
     			if(timeBasedAxis) {
-    				block.add(thread.getTimestamp().getTime(), thread);
+    				block.add(thread.getTimestamp(), thread);
     			} else {
     				// TODO
     			}
@@ -303,8 +321,7 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 		        	g2.fillRect(Math.min(dragInitialX,dragX), 0,
 		        			Math.abs(dragX-dragInitialX), getSize().height);
 		        	if(timeBasedAxis) {
-			        	SimpleDateFormat format = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss.S");
-		        		String label = (format.format(new Date(xToRange(dragX)))).toString();
+		        		String label = formatDate(xToRange(dragX));
 		        		g2.setColor(new Color(0,100,200));
 		        		g2.drawChars(label.toCharArray(), 0, label.length(), dragX, dragY);
 		        	}
@@ -427,27 +444,38 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 		} else {
 			setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 		}
+
+		StringBuilder labelStr = new StringBuilder();
 		if(mouseOverBlock != null) {
 			String captureInfos = "";
+			long time = xToRange(e.getX());
 			if(currentCaptures!=null) {
-				long time = xToRange(e.getX());
 				Capture capture = getCapture(time);
 				if(capture!=null) {
 					captureInfos = ", Sampling interval (ms): " + capture.getSamplingInterval();
 				}
 			}
-			String labelStr = mouseOverBlock.label + " [" + currentNumberOfThreadDumps + " thread dumps" + captureInfos + "]";
+			labelStr.append(mouseOverBlock.label + " [" + currentNumberOfThreadDumps + " thread dumps" + captureInfos + "]");
 			if(!label.getText().equals(labelStr)) {
 				repaint = true;
 			}
-			label.setText(labelStr);
+			labelStr.append(" - ").append(formatDate(time));
 		} else {
-			label.setText(" ");
+			labelStr.append(" ");
 		}
+
+		
+		label.setText(labelStr.toString());
 
 		if(repaint) {
 			repaint();
 		}
+	}
+
+	private static final String DATE_FORMAT = "yyyy.MM.dd HH:mm:ss.S";
+	private String formatDate(long time) {
+		SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT);
+		return format.format(new Date(time));
 	}
 
 	private ThreadBlock getBlock(int x, int y) {
@@ -553,10 +581,11 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 		}
 
 		if(timeBasedAxis) {
+			Filter<ThreadInfo> threadnameFilter = parseThreadnameFilter();
 			if(currentSelection.selectWholeRange) {
-				filter = new TimeStoreFilter(threadIdsFilter, null, null);
+				filter = new TimeStoreFilter(threadnameFilter, threadIdsFilter, null, null);
 			} else {
-				filter = new TimeStoreFilter(threadIdsFilter, currentSelection.start, currentSelection.end);
+				filter = new TimeStoreFilter(threadnameFilter, threadIdsFilter, currentSelection.start, currentSelection.end);
 			}
 		} else {
 			if(currentSelection.selectWholeRange) {
@@ -566,6 +595,39 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 			}
 		}
     	return filter;
+	}
+	
+	private Filter<ThreadInfo> parseThreadnameFilter() {
+		Filter<ThreadInfo> complexFilter = null;
+		final String filter = threadnameFilterTextField.getText();
+		if(filter!=null) {
+			FilterFactory<ThreadInfo> factory = new FilterFactory<ThreadInfo>() {
+
+				@Override
+				public Filter<ThreadInfo> createFullTextFilter(final String expression) {
+					return new Filter<ThreadInfo>() {
+						@Override
+						public boolean isValid(ThreadInfo input) {
+							return input.getName().contains(expression);
+						}
+						
+					};
+				}
+
+				@Override
+				public Filter<ThreadInfo> createAttributeFilter(
+						String operator, String attribute, String value) {
+					// TODO Auto-generated method stub
+					return null;
+				}
+			};
+			try {
+				complexFilter = OQLFilterBuilder.getFilter(filter, factory);
+			} catch (Exception e) {
+				JOptionPane.showMessageDialog(this,	e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			}
+		}
+		return complexFilter;
 	}
 
 	private void selectionChanged() {
@@ -670,72 +732,15 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 
 		INDIVIDUAL;
 	}
-
+	
 	@Override
-	public void onSelection(Set<InstrumentSubscription> selectedSubscriptions) {
-    	for(ThreadBlock block:blocks) {
-			block.selectedInInstrumentationPane = false;
-    	}
-
-    	Set<Long> selectedInAnalyzerPane = getThreadsByInstrumentSubscription(selectedSubscriptions);
-    	for(ThreadBlock block:blocks) {
-    		if(selectedInAnalyzerPane.contains(block.id)) {
-    			block.selectedInInstrumentationPane = true;
-    		}
-    	}
-
-    	repaint();
-	}
-
-	private Set<Long> getAnalyzerPaneThreads() {
-		HashSet<Long> result = new HashSet<Long>();
-		Component _pane = main.getAnalyzerGroupPane().getCurrentTab();
-		if(_pane!=null && _pane instanceof TreeView) {
-			TreeView pane = (TreeView) _pane;
-			Node selectedNode = pane.getSelectedNode();
-			if(selectedNode!=null) {
-				for(NodeAggregation aggregation:selectedNode.getAggregations()) {
-					for(ThreadInfo threadSnapshot:aggregation.getAggregation().getSamples()) {
-						result.add(threadSnapshot.getId());
-					}
-				}
-				/*
-				RealNodePath path = selectedNode.getPath();
-				List<ThreadDump> dumps = store.getThreadDumps();
-				for(ThreadDump dump:dumps) {
-					for(ThreadSnapshot stacktrace:dump.getStackTraces()) {
-						if(stacktrace.getPath().containsPath(path)!=-1) {
-						}
-					}
-				}
-				*/
-			}
-		}
-		return result;
-	}
-
-	private Set<Long> getThreadsByInstrumentSubscription(Set<InstrumentSubscription> subscriptions) {
-		HashSet<Long> result = new HashSet<Long>();
-		if(subscriptions!=null) {
-			for(InstrumentSubscription subscription:subscriptions) {
-				InstrumentationStatistics stats = main.getStatisticsCache().getInstrumentationStatistics(subscription);
-				result.addAll(stats.getThreadIds());
-			}
-		}
-		return result;
-	}
-
-
-	@Override
-	public void onSelection(Node selectedNode) {
-		Set<Long> selectedInAnalyzerPane = getAnalyzerPaneThreads();
-
+	public void onSelection(Set<Long> selectedThreadIds) {
     	for(ThreadBlock block:blocks) {
 			block.selectedInAnalyzerPane = false;
     	}
 
     	for(ThreadBlock block:blocks) {
-    		if(selectedInAnalyzerPane.contains(block.id)) {
+    		if(selectedThreadIds.contains(block.id)) {
     			block.selectedInAnalyzerPane = true;
     		}
     	}

@@ -19,13 +19,14 @@
  *******************************************************************************/
 package io.djigger.aggregation;
 
-import io.djigger.model.RealNodePath;
-
 import java.util.List;
+
+import io.djigger.ui.model.RealNode;
+import io.djigger.ui.model.RealNodePath;
 
 
 public interface PathTransformer {
 
-	public List<PathTransformerResult> transformPath(RealNodePath path);
+	public List<RealNode> transformPath(RealNode realTree, RealNodePath path);
 
 }

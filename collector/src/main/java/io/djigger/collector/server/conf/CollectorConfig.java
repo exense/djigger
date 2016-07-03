@@ -19,6 +19,8 @@
  *******************************************************************************/
 package io.djigger.collector.server.conf;
 
+import java.util.List;
+
 
 public class CollectorConfig {
 	
@@ -28,6 +30,16 @@ public class CollectorConfig {
 	
 	Long dataTTL;
 	
+	List<String> connectionFiles;
+	
+	public List<String> getConnectionFiles() {
+		return connectionFiles;
+	}
+
+	public void setConnectionFiles(List<String> connectionFiles) {
+		this.connectionFiles = connectionFiles;
+	}
+
 	public MongoDBParameters getDb() {
 		return db;
 	}

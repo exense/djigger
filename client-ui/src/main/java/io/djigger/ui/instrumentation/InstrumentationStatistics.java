@@ -19,9 +19,6 @@
  *******************************************************************************/
 package io.djigger.ui.instrumentation;
 
-import io.djigger.monitoring.java.instrumentation.InstrumentationAttributesHolder;
-import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -37,6 +34,8 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 
 
 public class InstrumentationStatistics implements Serializable {
@@ -59,9 +58,9 @@ public class InstrumentationStatistics implements Serializable {
 
 	private int realCount;
 
-	private Integer averageResponseTime;
+	private Double averageResponseTime;
 	
-	private Integer throughput;
+	private Double throughput;
 
 	public InstrumentationStatistics() {
 		super();
@@ -81,21 +80,21 @@ public class InstrumentationStatistics implements Serializable {
 		}
 
 		if(realCount>0) {
-			averageResponseTime = (int)(totalTimeSpent/realCount);
+			averageResponseTime = totalTimeSpent/(1000000.0*realCount);
 		}
 	}
 
-	public void update(InstrumentationSample sample) {
+	public void update(InstrumentationEvent sample) {
 		start = Math.min(start, sample.getStart());
 		end = Math.max(end, sample.getEnd());
 		realCount++;
-		int duration = (int)(sample.getEnd()-sample.getStart());
+		long duration = sample.getDuration();
 		totalTimeSpent += duration;
 		synchronized(samples) {
-			samples.add(new Sample(sample.getAtributesHolder().getThreadID(), sample.getStart(), duration, sample.getAtributesHolder()));
+			samples.add(new Sample(sample.getThreadID(), sample.getStart(), duration));
 		}
 
-		threadIds.add(sample.getAtributesHolder().getThreadID());
+		threadIds.add(sample.getThreadID());
 
 		averageResponseTime = null;
 		throughput = null;
@@ -105,23 +104,23 @@ public class InstrumentationStatistics implements Serializable {
 		return realCount;
 	}
 
-	public Integer getAverageResponseTime() {
+	public Double getAverageResponseTime() {
 		if(averageResponseTime==null) {
 			if(realCount>0) {
-				averageResponseTime = (int)(totalTimeSpent/realCount);
+				averageResponseTime = totalTimeSpent/(1000000.0*realCount);
 			} else {
-				return 0;
+				return 0.0;
 			}
 		}
 		return averageResponseTime;
 	}
 
-	public Integer getThroughput() {
+	public Double getThroughput() {
 		if(throughput==null) {
 			if(realCount>1 && end-start>0) {
-				throughput = (int)(60000L*realCount/(end-start));
+				throughput = 1000.0*realCount/(end-start);
 			} else {
-				return 0;
+				return 0.0;
 			}
 		}
 		return throughput;
@@ -140,32 +139,25 @@ public class InstrumentationStatistics implements Serializable {
 
 		private final long time;
 
-		private final int elapsed;
-		
-		private final InstrumentationAttributesHolder attributes;
+		private final long elapsed;
 
-		public Sample(long threadId, long time, int elapsed, InstrumentationAttributesHolder attributes) {
+		public Sample(long threadId, long start, long duration) {
 			super();
 			this.threadId = threadId;
-			this.time = time;
-			this.elapsed = elapsed;
-			this.attributes = attributes;
+			this.time = start;
+			this.elapsed = duration;
 		}
 
 		public long getTime() {
 			return time;
 		}
 
-		public int getElapsed() {
+		public long getElapsed() {
 			return elapsed;
 		}
 
 		public long getThreadId() {
 			return threadId;
-		}
-
-		public InstrumentationAttributesHolder getAttributes() {
-			return attributes;
 		}
 
 		@Override

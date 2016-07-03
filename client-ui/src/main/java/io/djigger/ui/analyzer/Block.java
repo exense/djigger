@@ -19,11 +19,11 @@
  *******************************************************************************/
 package io.djigger.ui.analyzer;
 
-import io.djigger.model.NodeID;
 import io.djigger.ui.analyzer.BlockColorer.Framework;
 import io.djigger.ui.common.NodePresentationHelper;
-import io.djigger.ui.model.Node;
-import io.djigger.ui.model.NodePath;
+import io.djigger.ui.model.AnalysisNode;
+import io.djigger.ui.model.NodeID;
+import io.djigger.ui.model.AnalysisNodePath;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -50,7 +50,7 @@ public class Block implements MouseListener {
 
 	private int height;
 
-	private final Node node;
+	private final AnalysisNode node;
 
 	private final BlockView parentContainer;
 
@@ -66,11 +66,11 @@ public class Block implements MouseListener {
 
 	private String label;
 
-	public Block(Node root, BlockView parentContainer) {
+	public Block(AnalysisNode root, BlockView parentContainer) {
 		this(root, 1.0, null, parentContainer);
 	}
 
-	private Block(Node root, double parentWeight, Block parent, BlockView parentContainer) {
+	private Block(AnalysisNode root, double parentWeight, Block parent, BlockView parentContainer) {
 		this.node = root;
 		this.parent = parent;
 		
@@ -93,7 +93,7 @@ public class Block implements MouseListener {
 		if(!node.isLeaf()) {
 			children = new ArrayList<Block>(root.getChildren().size());
 			if(parentWeight>0.01) {
-				for(Node child:root.getChildren()) {
+				for(AnalysisNode child:root.getChildren()) {
 					Block newBlock = new Block(child, parentWeight*relativeWeight, this, parentContainer);
 	
 					children.add(newBlock);
@@ -187,15 +187,15 @@ public class Block implements MouseListener {
 			graph.drawLine(x+width, y, x+width, y+height);
 		}
 
-		if(parentContainer.getMain().getInstrumentationPane().isSelected(node.getPath())) {
-			Color borderColor = parentContainer.getMain().getInstrumentationPane().getColor(node.getPath());
-			if(borderColor != null) {
-				graph.setColor(borderColor);
-			} else {
-				graph.setColor(Color.RED);
-			}
-			graph.drawRect(x+1, y+1, width-2, height-2);
-		}
+//		if(parentContainer.getMain().getInstrumentationPane().isSelected(node.getRealNodePath())) {
+//			Color borderColor = parentContainer.getMain().getInstrumentationPane().getColor(node.getRealNodePath());
+//			if(borderColor != null) {
+//				graph.setColor(borderColor);
+//			} else {
+//				graph.setColor(Color.RED);
+//			}
+//			graph.drawRect(x+1, y+1, width-2, height-2);
+//		}
 	}
 
 	public Block getBlock(int x, int y) {
@@ -274,7 +274,7 @@ public class Block implements MouseListener {
 		mouseOver = false;
 	}
 
-	public Node getNode() {
+	public AnalysisNode getNode() {
 		return node;
 	}
 
@@ -344,8 +344,8 @@ public class Block implements MouseListener {
 		}
 	}
 
-	public Block find(NodePath path) {
-		if(node.getTreeNodePath().equals(path)) {
+	public Block find(AnalysisNodePath path) {
+		if(node.getPath().equals(path)) {
 			return this;
 		} else {
 			if(children.size()>0) {

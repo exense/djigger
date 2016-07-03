@@ -27,8 +27,14 @@ public interface ConnectionParameterFrame {
 	
 	public void setConnectionType(ConnectionType type);
 	
+	public void setReloadListener(ReloadListener listener);
+	
 	public SessionConfiguration getSessionConfiguration();
 	
 	public JPanel getPanel();
+	
+	public static interface ReloadListener {
+		public void reload();
+	}
 
 }

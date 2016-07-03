@@ -19,6 +19,11 @@
  *******************************************************************************/
 package io.djigger.client;
 
+import io.djigger.monitoring.java.agent.JavaAgentMessageType;
+import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.model.ThreadInfo;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
@@ -29,34 +34,31 @@ import org.smb.core.Message;
 import org.smb.core.MessageListener;
 import org.smb.core.MessageRouter;
 
-import io.djigger.monitoring.java.agent.JavaAgentMessageType;
-import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
-import io.djigger.monitoring.java.model.ThreadInfo;
-
 
 public class AgentFacade extends Facade implements MessageListener {
 	
 	private static final Logger logger = LoggerFactory.getLogger(AgentFacade.class);
 
     protected MessageRouter client;
+    
+    public AgentFacade(Properties properties, boolean autoReconnect) {
+    	super(properties, autoReconnect);
+    	this.client = null;
+    }
         
     public AgentFacade(Properties properties) {
 		this(properties, true);
 	}
     
-    public AgentFacade(Properties properties, boolean autoReconnect) {
-		super(properties, autoReconnect);
-		this.client = null;
-	}
-    
     @Override
     protected void startSampling() {
-    	try {
-    		client.sendMessage(JavaAgentMessageType.SUBSCRIBE_THREAD_SAMPLING, getSamplingInterval());
-    	} catch (IOException e) {
-    		logger.error("Error while sending message to agent:",e);
-    	}
+    	if(client!=null) {
+	    	try {
+	    		client.sendMessage(JavaAgentMessageType.SUBSCRIBE_THREAD_SAMPLING, getSamplingInterval());
+	    	} catch (IOException e) {
+	    		logger.error("Error while sending message to agent:",e);
+	    	}
+    	}	
     }
 
     protected void stopSampling() {
@@ -76,7 +78,7 @@ public class AgentFacade extends Facade implements MessageListener {
 			}
 		} else if (JavaAgentMessageType.INSTRUMENT_SAMPLE.equals(msg.getType())) {
 			for(FacadeListener listener:listeners) {
-				listener.instrumentationSamplesReceived((List<InstrumentationSample>) msg.getContent());
+				listener.instrumentationSamplesReceived((List<InstrumentationEvent>) msg.getContent());
 			}
 		}
 	}
@@ -90,11 +92,13 @@ public class AgentFacade extends Facade implements MessageListener {
 
 	@Override
 	protected void addInstrumentation_(InstrumentSubscription subscription) {
-		try {
-            client.sendMessage(JavaAgentMessageType.INSTRUMENT, subscription);
-        } catch (IOException e) {
-    		logger.error("Error while sending message to agent:",e);
-        }
+		if(client!=null) {
+			try {
+	            client.sendMessage(JavaAgentMessageType.INSTRUMENT, subscription);
+	        } catch (IOException e) {
+	    		logger.error("Error while sending message to agent:",e);
+	        }
+		}
 	}
 
 	@Override

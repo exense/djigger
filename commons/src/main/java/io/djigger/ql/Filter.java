@@ -23,5 +23,4 @@ public interface Filter<T> {
 
 	boolean isValid(T input);
 	
-	void write(StringBuilder builder, T input);
 }

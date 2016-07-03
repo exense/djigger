@@ -19,7 +19,7 @@
  *******************************************************************************/
 package io.djigger.store.filter;
 
-import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.ThreadInfo;
 
 import java.util.Set;
@@ -54,7 +54,7 @@ public class IdStoreFilter implements StoreFilter {
 	}
 
 	@Override
-	public boolean match(InstrumentationSample sample) {
+	public boolean match(InstrumentationEvent sample) {
 		throw new RuntimeException("Not implemented");
 	}
 

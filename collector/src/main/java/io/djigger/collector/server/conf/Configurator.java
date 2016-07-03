@@ -25,12 +25,15 @@
 
 package io.djigger.collector.server.conf;
 
+import io.djigger.client.JMXClientFacade;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -41,53 +44,87 @@ import org.slf4j.LoggerFactory;
 
 import com.thoughtworks.xstream.XStream;
 
-import io.djigger.client.JMXClientFacade;
-
 public class Configurator {
 
 	private static final Logger logger = LoggerFactory.getLogger(Configurator.class);
 
 	public static CollectorConfig parseCollectorConfiguration(String collConfigFilename) throws Exception {
-		
+
 		if(collConfigFilename == null || collConfigFilename.trim().isEmpty())
 			throw new Exception("Invalid collector config file : " + collConfigFilename + ". Check your -DcollectorConfig option.");
-		
+
 		try {
 			XStream xstream = new XStream();
 			xstream.alias("Collector", CollectorConfig.class);
-			// [dcransac] Since connections and collector settings are now decoupled
-			//xstream.alias("Group", ConnectionGroup.class);
-			//xstream.alias("Connection", Connection.class);
-			//xstream.processAnnotations(Connection.class);
-			//xstream.processAnnotations(SamplingParameters.class);
 			xstream.processAnnotations(MongoDBParameters.class);
 			return (CollectorConfig) xstream.fromXML(new File(collConfigFilename));
 		} catch (Exception e) {
-			logger.error("Unable to load " + collConfigFilename + " from ClassLoader.", e);
-			throw new RuntimeException("Unable to load " + collConfigFilename + " from ClassLoader.", e);
+			String errorMessage = "XStream could not load the collector's config file located at " + collConfigFilename + ". Exception message was : " + e.getMessage();
+			logger.error(errorMessage, e);
+			throw new RuntimeException(errorMessage, e);
 		}
 	}
 
-	public static ConnectionsConfig parseConnectionsConfiguration(String connectionsConfigFilename) throws Exception {
+	public static ConnectionsConfig parseConnectionsConfiguration(List<String> connectionsConfigFiles) throws Exception {
 
-		if(connectionsConfigFilename == null || connectionsConfigFilename.trim().isEmpty())
-			throw new Exception("Invalid connections config file : " + connectionsConfigFilename  + ". Check your -DconnectionsConfig option.");
+		if(connectionsConfigFiles == null || connectionsConfigFiles.size() < 1)
+			throw new Exception("The connections config file is either empty or null. Please define a proper file location in in the <collectionFiles> block of your Collector.xml (see template in conf/ folder).");
+		
+		List<ConnectionsConfig> ccList = new ArrayList<ConnectionsConfig>();
 
-		if(connectionsConfigFilename.trim().toLowerCase().endsWith(".xml"))
-			return parseConnectionsXML(connectionsConfigFilename);
-		if(connectionsConfigFilename.trim().toLowerCase().endsWith(".csv"))
-			return parseConnectionsCSV(connectionsConfigFilename);
+		for(String connectionsFile : connectionsConfigFiles)
+		{
+			if(connectionsFile == null || connectionsFile.trim().isEmpty())
+				throw new Exception("Invalid connections config file : " + connectionsConfigFiles  + ". Check your -DconnectionsConfig option.");
 
-		throw new Exception("Unknown connections config file type for file : " + connectionsConfigFilename + ". Please use a .xml or .csv file.");
+
+			if(connectionsFile.trim().toLowerCase().endsWith(".xml"))
+				ccList.add(parseConnectionsXML(connectionsFile));
+			else{
+				if(connectionsFile.trim().toLowerCase().endsWith(".csv"))
+					ccList.add(parseConnectionsCSV(connectionsFile));
+				else{
+					File folderCase = new File(connectionsFile);
+					if(folderCase.isDirectory())
+					{
+						List<String> subFiles = qualify(folderCase.list(), folderCase.getAbsolutePath());
+						ccList.add(parseConnectionsConfiguration(subFiles));
+					}
+				}
+			}
+		}
+		ConnectionsConfig result = mergeConnectionsConfigs(ccList);
+
+		logger.info("Parsed the following files:" + connectionsConfigFiles );
+		logger.info("Which loaded the following connection definitions:" + result );
+
+		return result;
 	}
 
-	/*
-	 * @author dcransac
-	 * @since 16.03.2016
-	 *
-	 * Provide a simpler mechanism based on CSV Files to specify and load JMX Connection information
-	 *
-	 */
+	private static List<String> qualify(String[] list, String path) {
+
+		List<String> qualified = new ArrayList<String>();
+		
+		for(int i=0; i < list.length; i++)
+			qualified.add(path + File.separator + list[i]);
+		
+		return qualified;
+	}
+
+	private static ConnectionsConfig mergeConnectionsConfigs(
+			List<ConnectionsConfig> ccList) {
+
+		ConnectionGroup topContainer = new ConnectionGroup(); 
+
+		for (ConnectionsConfig cc : ccList)
+			topContainer.addGroup(cc.getConnectionGroup());
+
+		ConnectionsConfig result = new ConnectionsConfig();
+		result.setConnectionGroup(topContainer);
+
+		return result;
+	}
+
 	private static ConnectionsConfig parseConnectionsCSV(String connectionsConfigFilename) {
 
 		ConnectionsConfig cc = new ConnectionsConfig();
@@ -109,7 +146,7 @@ public class Configurator {
 		List<ConnectionGroupNode> cgnList = new ArrayList<ConnectionGroupNode>();
 
 		// @bugfix (cosmetic, since exception gets caught anyway)
-	    // empty line bug : test if line contains something
+		// empty line bug : test if line contains something
 		while (line != null && !line.trim().isEmpty())
 		{
 			try {
@@ -132,9 +169,9 @@ public class Configurator {
 	}
 
 	private static ConnectionsConfig parseConnectionsXML(String connectionsConfigFilename) {
-		
+
 		ConnectionsConfig cc = new ConnectionsConfig();
-		
+
 		try {
 			XStream xstream = new XStream();
 			// [dcransac] Only Connections / Groups
@@ -142,12 +179,12 @@ public class Configurator {
 			xstream.alias("Connection", Connection.class);
 			xstream.processAnnotations(Connection.class);
 			xstream.processAnnotations(SamplingParameters.class);
-			
+
 			ConnectionGroup cg = (ConnectionGroup) xstream.fromXML(new File(connectionsConfigFilename));
 			cc.setConnectionGroup(cg);
-			
+
 			return cc;
-			
+
 		} catch (Exception e) {
 			logger.error("Unable to load " + connectionsConfigFilename, e);
 			throw new RuntimeException("Unable to load " + connectionsConfigFilename, e);
@@ -196,7 +233,7 @@ public class Configurator {
 		// Default password = empty
 		if(pathToPassword == null || pathToPassword.trim().isEmpty())
 			return "";
-		
+
 		String password = null;
 		String line = null;
 		BufferedReader br = null;

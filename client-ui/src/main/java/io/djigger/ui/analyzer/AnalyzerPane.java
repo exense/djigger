@@ -24,35 +24,26 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.List;
-import java.util.Set;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import io.djigger.aggregation.Aggregation;
-import io.djigger.aggregation.Aggregator;
-import io.djigger.aggregation.DefaultPathTransformer;
-import io.djigger.aggregation.PathTransformer;
-import io.djigger.aggregation.RevertTreePathTransformer;
+import io.djigger.aggregation.AnalyzerService;
 import io.djigger.aggregation.filter.BranchFilterFactory;
-import io.djigger.aggregation.filter.Filter;
-import io.djigger.aggregation.filter.FilterFactory;
 import io.djigger.aggregation.filter.NodeFilterFactory;
-import io.djigger.aggregation.filter.ParsingException;
-import io.djigger.model.NodeID;
-import io.djigger.model.RealNodePath;
-import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.subscription.RealNodePathSubscription;
-import io.djigger.monitoring.java.instrumentation.subscription.SimpleInstrumentationSubscription;
+import io.djigger.monitoring.java.instrumentation.subscription.SimpleSubscription;
+import io.djigger.ql.Filter;
+import io.djigger.ql.OQLFilterBuilder;
 import io.djigger.ui.Session;
 import io.djigger.ui.common.EnhancedTextField;
 import io.djigger.ui.common.NodePresentationHelper;
-import io.djigger.ui.instrumentation.InstrumentationPaneListener;
-import io.djigger.ui.model.Node;
+import io.djigger.ui.model.AnalysisNode;
+import io.djigger.ui.model.NodeID;
+import io.djigger.ui.model.RealNodePath;
 
 
-public abstract class AnalyzerPane extends JPanel implements ActionListener, InstrumentationPaneListener {
+public abstract class AnalyzerPane extends Dashlet implements ActionListener {
 
 	private static final long serialVersionUID = -8452799701138552693L;
 
@@ -62,7 +53,7 @@ public abstract class AnalyzerPane extends JPanel implements ActionListener, Ins
 
 	private Filter<NodeID> nodeFilter;
 
-	protected Node workNode;
+	protected AnalysisNode workNode;
 
 	private EnhancedTextField filterTextField;
 
@@ -103,36 +94,30 @@ public abstract class AnalyzerPane extends JPanel implements ActionListener, Ins
 
 		transform();
 
-		main.getInstrumentationPane().addListener(this);
+//		main.getInstrumentationPane().addListener(this);
 	}
 
-	public void refresh() {
-		transform();
-		refreshDisplay();
-	}
-
-	public void mergedCalls() {
-		//Node currentNode = getSelectedNode();
-		//Node root = new Node();
-		//TODO: root.setOverallTotalCount(rootNode.updateTotalCount());
-		//filteredRootNode.extractMerge(currentNode.getMethodName(), root);
-		//TreeView mergedCallAnalyzer = new TreeView(parent, TreeType.MERGE, root);
-		//parent.addTab(mergedCallAnalyzer);
-	}
-
-	public void setFilterOnCurrentSelection() {
-		filterTextField.setText(getPresentationHelper().getFullname(getSelectedNode()));
+	public void appendCurrentSelectionToBranchFilter(boolean negate) {
+		appendFilter(negate, filterTextField);		
 		refresh();
 	}
 
-	public void skipCurrentSelection() {
-		String newSkipText = excludeTextField.getText();
-		if(newSkipText!=null && newSkipText.length()>0 && !newSkipText.endsWith(",")) {
-			newSkipText += ",";
+	public void appendCurrentSelectionToNodeFilter(boolean negate) {
+		appendFilter(negate, excludeTextField);
+		refresh();
+	}
+
+	private void appendFilter(boolean negate, EnhancedTextField textField) {
+		StringBuilder filter = new StringBuilder();
+		String currentFilter = textField.getText();
+		if(currentFilter!=null && currentFilter.trim().length()>0) {
+			filter.append(currentFilter).append(" and ");			
 		}
-		newSkipText += getPresentationHelper().getFullname(getSelectedNode());
-		excludeTextField.setText(newSkipText);
-		refresh();
+		if(negate) {
+			filter.append("not ");
+		}
+		filter.append(getPresentationHelper().getFullname(getSelectedNode()));
+		textField.setText(filter.toString().trim());
 	}
 
 	@Override
@@ -161,11 +146,10 @@ public abstract class AnalyzerPane extends JPanel implements ActionListener, Ins
 		String filter = getStacktraceFilter();
 		if(filter!=null) {
 			BranchFilterFactory atomicFactory = new BranchFilterFactory(getPresentationHelper());
-			FilterFactory<RealNodePath> factory = new FilterFactory<RealNodePath>(atomicFactory);
 			try {
-				complexFilter = factory.getCompositeFilter(filter);
-			} catch (ParsingException e) {
-				JOptionPane.showMessageDialog(this,	e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+				complexFilter = OQLFilterBuilder.getFilter(filter, atomicFactory);
+			} catch (Exception e) {
+				JOptionPane.showMessageDialog(this,	"Error parsing stacktrace filter '" + filter + "'. " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			}
 		}
 		return complexFilter;
@@ -175,11 +159,10 @@ public abstract class AnalyzerPane extends JPanel implements ActionListener, Ins
 		String excludeFilter = getNodeFilter();
 		if(excludeFilter!=null) {
 			NodeFilterFactory atomicFactory = new NodeFilterFactory(getPresentationHelper());
-			FilterFactory<NodeID> factory = new FilterFactory<NodeID>(atomicFactory);
 			try {
-				nodeFilter = factory.getCompositeFilter(excludeFilter);
-			} catch (ParsingException e) {
-				JOptionPane.showMessageDialog(this,	e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+				nodeFilter =  OQLFilterBuilder.getFilter(excludeFilter, atomicFactory);
+			} catch (Exception e) {
+				JOptionPane.showMessageDialog(this,	"Error parsing node filter '" + excludeFilter + "'. " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 				nodeFilter = null;
 			}
 		} else {
@@ -188,34 +171,23 @@ public abstract class AnalyzerPane extends JPanel implements ActionListener, Ins
 		return nodeFilter;
 	}
 
-	private void transform() {
-		Aggregator aggregator = parent.getAggregator();
-
+	void transform() {
 		Filter<RealNodePath> branchFilter = parseBranchFilter();
-		List<Aggregation> aggregations = aggregator.query(branchFilter);
-
 		Filter<NodeID> nodeFilter = parseNodeFilter();
-		PathTransformer pathTransformer;
-		if(treeType == TreeType.REVERSE) {
-			pathTransformer = new RevertTreePathTransformer(nodeFilter);
-		} else {
-			pathTransformer = new DefaultPathTransformer(nodeFilter);
-		}
 
-		Node aggregationTreeNode = Node.buildNode(aggregations, pathTransformer, nodeFilter);
-
-		workNode = aggregationTreeNode;
+		AnalyzerService analyzerService = parent.getAnalyzerService();
+		workNode = analyzerService.buildTree(branchFilter, nodeFilter, treeType);
 	}
 
 	public void instrumentCurrentMethod() {
 		NodeID nodeID = getSelectedNode().getId();
 		
-		main.addSubscription(new SimpleInstrumentationSubscription(false, nodeID.getClassName(), nodeID.getMethodName()));
+		main.addSubscription(new SimpleSubscription(nodeID.getClassName(), nodeID.getMethodName(), true));
 	}	
 	
 	public void instrumentCurrentNode() {
 		if(nodeFilter==null) {
-			main.addSubscription(new RealNodePathSubscription(getSelectedNode().getPath().toStackTrace(), false));
+			main.addSubscription(new RealNodePathSubscription(getSelectedNode().getRealNodePath().toStackTrace(), true));			
 		} else {
 			JOptionPane.showMessageDialog(this,
 				    "Instrumentation impossible when packages are skipped. Please remove the exclusion criteria and try again.",
@@ -226,15 +198,15 @@ public abstract class AnalyzerPane extends JPanel implements ActionListener, Ins
 
 	public abstract void refreshDisplay();
 
-	protected abstract Node getSelectedNode();
+	protected abstract AnalysisNode getSelectedNode();
 
 	public Session getMain() {
 		return main;
 	}
 
-	public void onSelection(Set<InstrumentSubscription> subscriptions) {
-		repaint();
-	}
+//	public void onSelection(Set<InstrumentSubscription> subscriptions) {
+//		repaint();
+//	}
 
 	public NodePresentationHelper getPresentationHelper() {
 		return parent.getPresentationHelper();
@@ -242,5 +214,10 @@ public abstract class AnalyzerPane extends JPanel implements ActionListener, Ins
 
 	public void resetFocus() {
 		requestFocusInWindow();
+	}
+	
+	public void refresh() {
+		transform();
+		refreshDisplay();
 	}
 }

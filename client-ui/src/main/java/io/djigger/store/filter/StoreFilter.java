@@ -19,13 +19,13 @@
  *******************************************************************************/
 package io.djigger.store.filter;
 
-import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.ThreadInfo;
 
 public interface StoreFilter {
 
 	public boolean match(ThreadInfo dump);
 
-	public boolean match(InstrumentationSample sample);
+	public boolean match(InstrumentationEvent sample);
 
 }

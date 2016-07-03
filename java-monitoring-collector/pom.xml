@@ -4,12 +4,20 @@
 	<parent>
 		<groupId>io.djigger</groupId>
 		<artifactId>parent</artifactId>
-		<version>1.4.2</version>
+		<version>1.5.1</version>
 		<relativePath>../parent</relativePath>
 	</parent>
 	<artifactId>java-monitoring-collector</artifactId>
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>

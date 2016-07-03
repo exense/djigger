@@ -19,32 +19,17 @@
  *******************************************************************************/
 package io.djigger.ui;
 
-import java.awt.BorderLayout;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.List;
-import java.util.Properties;
-
-import javax.swing.JPanel;
-import javax.swing.JSplitPane;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.djigger.client.AgentFacade;
 import io.djigger.client.Facade;
 import io.djigger.client.FacadeListener;
 import io.djigger.client.JMXClientFacade;
+import io.djigger.client.JstackLogTailFacade;
 import io.djigger.client.ProcessAttachFacade;
 import io.djigger.db.client.StoreClient;
 import io.djigger.model.Capture;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.ThreadInfo;
-import io.djigger.parser.Parser;
-import io.djigger.parser.Parser.Format;
 import io.djigger.store.Store;
 import io.djigger.store.filter.StoreFilter;
 import io.djigger.ui.SessionConfiguration.SessionParameter;
@@ -54,11 +39,24 @@ import io.djigger.ui.common.Closeable;
 import io.djigger.ui.common.MonitoredExecution;
 import io.djigger.ui.common.MonitoredExecutionRunnable;
 import io.djigger.ui.common.NodePresentationHelper;
-import io.djigger.ui.instrumentation.InstrumentationPane;
 import io.djigger.ui.instrumentation.InstrumentationStatisticsCache;
 import io.djigger.ui.model.SessionExport;
 import io.djigger.ui.storebrowser.StoreBrowserPane;
 import io.djigger.ui.threadselection.ThreadSelectionPane;
+
+import java.awt.BorderLayout;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+
+import javax.swing.JPanel;
+import javax.swing.JSplitPane;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 @SuppressWarnings("serial")
@@ -72,8 +70,6 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     
     private StoreClient storeClient;
 
-    private final JSplitPane splitPane1;
-
 	private final JSplitPane splitPane;
 
     private final AnalyzerGroupPane analyzerGroupPane;
@@ -83,8 +79,6 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     private final InstrumentationStatisticsCache statisticsCache;
 
     private final ArgumentParser options;
-
-    private final InstrumentationPane instrumentationPane;
     
     private final StoreBrowserPane storeBrowserPane;
 
@@ -112,29 +106,15 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     		facade.addListener(this);
         }
 
-        splitPane1 = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);        
 
         threadSelectionPane = new ThreadSelectionPane(this);
-        splitPane1.add(threadSelectionPane);
-
-        splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);        
+        splitPane.add(threadSelectionPane);
         
         analyzerGroupPane = new AnalyzerGroupPane(this, presentationHelper);
         splitPane.add(analyzerGroupPane);
-
-        instrumentationPane = new InstrumentationPane(this, presentationHelper);
-        splitPane.add(instrumentationPane);
-
-        if(config.getType() == SessionType.AGENT || config.getType() == SessionType.AGENT_CAPTURE ) {
-        	instrumentationPane.setVisible(true);
-        } else {
-        	instrumentationPane.setVisible(false);
-        }
-
-        splitPane1.add(splitPane);
-        splitPane1.setDividerLocation(300);
-
-        add(splitPane1);
+        splitPane.setDividerLocation(300);
+        add(splitPane);
 
         if(config.getType() == SessionType.STORE) {
         	storeBrowserPane = new StoreBrowserPane(this);
@@ -147,8 +127,6 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 
         threadSelectionPane.initialize();
         analyzerGroupPane.initialize();
-
-    	splitPane.setDividerLocation(0.7);
     }
 
 	private Facade createFacade(SessionConfiguration config) {
@@ -163,6 +141,12 @@ public class Session extends JPanel implements FacadeListener, Closeable {
         		prop.put("port", config.getParameters().get(SessionParameter.PORT));
         		facade = new AgentFacade(prop, false);
         	}
+        } else if (config.getType() == SessionType.FILE) {
+        	Properties prop = new Properties();
+        	prop.put(JstackLogTailFacade.FILE_PARAM, config.getParameters().get(SessionParameter.FILE));
+        	prop.put(JstackLogTailFacade.START_AT_FILE_BEGIN_PARAM, "true");
+
+        	facade = new JstackLogTailFacade(prop, false);
         } else if (config.getType() == SessionType.JMX) {
         	Properties prop = new Properties();
         	prop.put("host", config.getParameters().get(SessionParameter.HOSTNAME));
@@ -178,59 +162,50 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     
     public void start() throws Exception {
     	if(facade!=null) {
-    		facade.connect();
-    	}
-    	
-    	if(getSessionType()==SessionType.STORE) {
-    		storeClient = new StoreClient();
-    		storeClient.connect(config.getParameters().get(SessionParameter.HOSTNAME));
-    	} else if (getSessionType()==SessionType.FILE) {
-    		final File file = new File(config.getParameters().get(SessionParameter.FILE));
-    		MonitoredExecution execution = new MonitoredExecution(main.getFrame(), "Parsing threaddumps... Please wait.", new MonitoredExecutionRunnable() {
+    		MonitoredExecution execution = new MonitoredExecution(main.getFrame(), "Connecting... Please wait.", new MonitoredExecutionRunnable() {
     			@Override
-    			public void run(MonitoredExecution execution) {
-    				try {
-    	    			List<ThreadInfo> dumps = parseThreadDumpFile(file);
-    	    			threadInfosReceived(dumps);
-    				} catch (IOException e) {
-    					logger.error("Error while parsing thread dumps from file "+file, e);
-    				}
+    			public void run(MonitoredExecution execution) throws Exception {
+    				facade.connect();
     			}
     		});
     		execution.run();
     		refreshAll();
-    	} else if (getSessionType()==SessionType.AGENT_CAPTURE) {
-    		final File file = new File(config.getParameters().get(SessionParameter.FILE));
-    		MonitoredExecution execution = new MonitoredExecution(main.getFrame(), "Opening session... Please wait.", new MonitoredExecutionRunnable() {
-    			@Override
-    			public void run(MonitoredExecution execution) {
-    				try {
+    	} else {
+    		if(getSessionType()==SessionType.STORE) {
+    			storeClient = new StoreClient();
+    			
+    			Map<SessionParameter,String> params = config.getParameters();
+    			String hostname = params.get(SessionParameter.HOSTNAME);
+    			int port;
+    			try{
+    			port = Integer.parseInt(params.get(SessionParameter.PORT));
+    			}catch(NumberFormatException e){
+    				port = 27017;
+    			}
+    			storeClient.connect(hostname, port);
+    		} else if (getSessionType()==SessionType.AGENT_CAPTURE) {
+    			final File file = new File(config.getParameters().get(SessionParameter.FILE));
+    			MonitoredExecution execution = new MonitoredExecution(main.getFrame(), "Opening session... Please wait.", new MonitoredExecutionRunnable() {
+    				@Override
+    				public void run(MonitoredExecution execution) {
     					SessionExport export = SessionExport.read(file);
     					store.addThreadInfos(export.getStore().queryThreadDumps(null));
     					store.addCaptures(export.getStore().queryCaptures(0, Long.MAX_VALUE));
     					store.addInstrumentationSamples(export.getStore().queryInstrumentationSamples(null));
-    					store.getSubscriptions().addAll(export.getStore().getSubscriptions());
-    				} catch (Exception e) {
-    					logger.error("Error while opening session from file "+file, e);
     				}
-    			}
-    		});
-    		execution.run();
-    		refreshAll();
+    			});
+    			execution.run();
+    			refreshAll();
+    		}    		
     	}
+    	
     }
     
-    private List<ThreadInfo> parseThreadDumpFile(File file) throws IOException {
-        Format format = Parser.detectFormat(file);
-        Parser parser = new Parser(format);
-
-        BufferedReader reader = new BufferedReader(new FileReader(file));
-
-        List<ThreadInfo> threadDumps = parser.parse(reader);
-        reader.close();
-        
-        return threadDumps;
-    }
+    public void configure() {}
+    
+    public Facade getFacade() {
+		return facade;
+	}
 
     public MainFrame getMain() {
 		return main;
@@ -278,12 +253,16 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     	store.processBuffers();
     	statisticsCache.reload();
     	threadSelectionPane.refresh();
-    	analyzerGroupPane.refresh();
-    	instrumentationPane.refresh();
+    	analyzerGroupPane.refresh();    	
     }
     
     public void showLineNumbers(boolean show) {
     	analyzerGroupPane.showLineNumbers(show);
+    }
+    
+    public void showMinCallCounts(boolean show) {
+    	presentationHelper.setShowMinCallCounts(show);
+    	refreshAll();
     }
 
     public void onThreadSelection(StoreFilter filter) {
@@ -292,9 +271,6 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     	
     	analyzerGroupPane.setStoreFilter(filter);
     	analyzerGroupPane.refresh();
-    	
-    	instrumentationPane.setStoreFilter(filter);
-    	instrumentationPane.refresh();
     }
 
     public void clear() {
@@ -304,10 +280,6 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 
 	public ArgumentParser getOptions() {
 		return options;
-	}
-
-	public InstrumentationPane getInstrumentationPane() {
-		return instrumentationPane;
 	}
 	
 	Capture currentCapture;
@@ -335,24 +307,34 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 			}
 		}
 	}
+	
+	public Set<InstrumentSubscription> getSubscriptions() {
+		return facade!=null?facade.getInstrumentationSubscriptions():null;
+	}
 
 	public void addSubscription(InstrumentSubscription subscription) {
-		store.addSubscription(subscription);
 		if(facade!=null) {
 			facade.addInstrumentation(subscription);
-		}
-		instrumentationPane.setVisible(true);
-		if(splitPane.getHeight()-splitPane.getDividerLocation()<100) {
-			splitPane.setDividerLocation(0.7);
-		}
-		instrumentationPane.refresh();
-		
+			fireSubscriptionChangeEvent();
+		}	
 	}
 
 	public void removeSubscription(InstrumentSubscription subscription) {
-		store.removeSubscription(subscription);
 		if(facade!=null) {
 			facade.removeInstrumentation(subscription);
+			fireSubscriptionChangeEvent();
+		}
+	}
+	
+	public List<SessionListener> listeners = new ArrayList<>();
+	
+	public void addListener(SessionListener listener) {
+		listeners.add(listener);
+	}
+	
+	public void fireSubscriptionChangeEvent() {
+		for (SessionListener sessionListener : listeners) {
+			sessionListener.subscriptionChange();
 		}
 	}
 
@@ -393,10 +375,9 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 	}
 
 	@Override
-	public void instrumentationSamplesReceived(
-			List<InstrumentationSample> samples) {
+	public void instrumentationSamplesReceived(List<InstrumentationEvent> events) {
 		if(!main.isOutOfMemoryPreventionActive()) {
-	         store.addInstrumentationSamples(samples);
+	         store.addInstrumentationSamples(events);
 		} else {
 			System.out.println("Ignoring incoming message to prevent JVM from OutOfMemory!");
 		}

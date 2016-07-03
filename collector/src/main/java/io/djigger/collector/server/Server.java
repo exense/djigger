@@ -20,11 +20,12 @@
 package io.djigger.collector.server;
 
 import java.lang.reflect.Constructor;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,8 @@ import com.mongodb.MongoException;
 
 import io.djigger.client.Facade;
 import io.djigger.client.FacadeListener;
+import io.djigger.collector.accessors.InstrumentationEventAccessor;
+import io.djigger.collector.accessors.MongoConnection;
 import io.djigger.collector.accessors.ThreadInfoAccessor;
 import io.djigger.collector.accessors.stackref.ThreadInfoAccessorImpl;
 import io.djigger.collector.server.conf.CollectorConfig;
@@ -40,8 +43,11 @@ import io.djigger.collector.server.conf.Configurator;
 import io.djigger.collector.server.conf.Connection;
 import io.djigger.collector.server.conf.ConnectionGroupNode;
 import io.djigger.collector.server.conf.ConnectionsConfig;
+import io.djigger.collector.server.conf.MongoDBParameters;
 import io.djigger.collector.server.services.ServiceServer;
-import io.djigger.monitoring.java.instrumentation.InstrumentationSample;
+import io.djigger.model.TaggedInstrumentationEvent;
+import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.ThreadInfo;
 
 public class Server {
@@ -52,10 +58,14 @@ public class Server {
 		Server server = new Server();
 		server.start();
 	}
+	
+	private MongoConnection mongodbConnection;
 
 	private ThreadInfoAccessor threadInfoAccessor;
+	
+	private InstrumentationEventAccessor instrumentationEventsAccessor;
 
-	private List<Facade> clients = new ArrayList<>();
+	private List<ClientConnection> clients = new ArrayList<>();
 
 	private ServiceServer serviceServer;
 
@@ -63,10 +73,9 @@ public class Server {
 		try {
 
 			String collConfigFilename = System.getProperty("collectorConfig");
-			String connectionsConfigFilename = System.getProperty("connectionsConfig");
 
 			CollectorConfig config = Configurator.parseCollectorConfiguration(collConfigFilename);
-			ConnectionsConfig cc = Configurator.parseConnectionsConfiguration(connectionsConfigFilename);
+			ConnectionsConfig cc = Configurator.parseConnectionsConfiguration(config.getConnectionFiles());
 
 			initAccessors(config);
 
@@ -86,14 +95,6 @@ public class Server {
 			attributes.putAll(attributeStack);
 		}
 		
-		/* 
-		 *  @author dcransac
-		 *  @bug
-		 *  @since 22.03.2016
-		 *  
-		 *  Since introduction of CSV version (null attributes are possible here)
-		 */
-		
 		if(groupNode.getAttributes() != null && groupNode.getAttributes().size() > 0)
 			attributes.putAll(groupNode.getAttributes());
 
@@ -108,7 +109,7 @@ public class Server {
 			try {
 				Facade client = createClient(attributes, connectionParam);
 				synchronized (clients) {
-					clients.add(client);
+					clients.add(new ClientConnection(client, attributes));
 				}
 			} catch (Exception e) {
 				logger.error("An error occurred while creating client " + connectionParam.toString(), e);
@@ -117,20 +118,33 @@ public class Server {
 	}
 
 	private void initAccessors(CollectorConfig config) throws Exception {
-		threadInfoAccessor = new ThreadInfoAccessorImpl();
+		mongodbConnection = new MongoConnection();
+		
 		try {
-			threadInfoAccessor.start(config.getDb().getHost(), config.getDb().getCollection());
-
-			threadInfoAccessor.createIndexesIfNeeded(config.getDataTTL());
-		} catch (UnknownHostException | MongoException e) {
+			MongoDBParameters connectionParams = config.getDb();
+			if(connectionParams.getPort()!=null) {
+				Integer port = Integer.parseInt(connectionParams.getPort());
+				mongodbConnection.connect(connectionParams.getHost(), port);				
+			} else {
+				mongodbConnection.connect(connectionParams.getHost());			
+			}
+			
+			Long ttl = config.getDataTTL();
+			
+			threadInfoAccessor = new ThreadInfoAccessorImpl(mongodbConnection.getDb());
+			threadInfoAccessor.createIndexesIfNeeded(ttl);
+			
+			instrumentationEventsAccessor = new InstrumentationEventAccessor(mongodbConnection.getDb());
+			instrumentationEventsAccessor.createIndexesIfNeeded(ttl);
+		} catch (MongoException e) {
 			logger.error("An error occurred while connection to DB", e);
 			throw e;
 		}
 	}
 
 	private Facade createClient(final Map<String, String> attributes, Connection connectionConfig) throws Exception {
-		Constructor<?> c = Class.forName(connectionConfig.getConnectionClass()).getConstructors()[0];
-		Facade client = (Facade) c.newInstance(connectionConfig.getConnectionProperties(), true);
+		Constructor<?> c = Class.forName(connectionConfig.getConnectionClass()).getDeclaredConstructor(Properties.class, boolean.class);
+		final Facade client = (Facade) c.newInstance(connectionConfig.getConnectionProperties(), true);
 
 		client.addListener(new FacadeListener() {
 
@@ -147,7 +161,29 @@ public class Server {
 			}
 
 			@Override
-			public void instrumentationSamplesReceived(List<InstrumentationSample> samples) {}
+			public void instrumentationSamplesReceived(List<InstrumentationEvent> samples) {
+				List<TaggedInstrumentationEvent> taggedEvents = new LinkedList<>();
+				
+				for(InstrumentationEvent event:samples) {
+					boolean tagEvent = false;
+					for(InstrumentSubscription subscription:client.getInstrumentationSubscriptions()) {
+						if(subscription.getId()==event.getSubscriptionID()) {
+							if(subscription.isTagEvent()) {
+								tagEvent = true;
+								break;
+							}
+						}
+					}
+					TaggedInstrumentationEvent  taggedEvent;
+					if(tagEvent) {
+						taggedEvent = new TaggedInstrumentationEvent(attributes, event);
+					} else {
+						taggedEvent = new TaggedInstrumentationEvent(null, event);
+					}
+					taggedEvents.add(taggedEvent);
+				}
+				instrumentationEventsAccessor.save(taggedEvents);
+			}
 
 			@Override
 			public void connectionEstablished() {}
@@ -159,12 +195,18 @@ public class Server {
 		client.setSamplingInterval(connectionConfig.getSamplingParameters().getSamplingRate());
 		client.setSampling(true);
 
+		if(connectionConfig.getSubscriptions()!=null) {
+			for(InstrumentSubscription subscription:connectionConfig.getSubscriptions()) {
+				client.addInstrumentation(subscription);
+			}
+		}
+		
 		return client;
 	}
 
-	public List<Facade> getClients() {
+	public List<ClientConnection> getClients() {
 		synchronized (clients) {
-			return new ArrayList<Facade>(clients);
+			return new ArrayList<ClientConnection>(clients);
 		}
 	}
 }

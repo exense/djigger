@@ -34,9 +34,10 @@ import javax.swing.JRadioButton;
 
 import io.djigger.ui.MainFrame;
 import io.djigger.ui.SessionConfiguration;
+import io.djigger.ui.connectiondialog.ConnectionParameterFrame.ReloadListener;
 
 
-public class AgentConnectionDialog implements ActionListener {
+public class AgentConnectionDialog implements ActionListener, ReloadListener {
 
 	private final JDialog dialog;
 	
@@ -61,7 +62,7 @@ public class AgentConnectionDialog implements ActionListener {
 		
 		this.type = ConnectionType.JMX;
 		
-		dialog = new JDialog(main.getFrame(), "Agent connection", true);
+		dialog = new JDialog(main.getFrame(), "New session", true);
 		dialog.setFocusable(true);
 		dialog.setLayout(new BorderLayout());		
 		
@@ -154,11 +155,17 @@ public class AgentConnectionDialog implements ActionListener {
 		try {
 			currentFrame = type.getParameterDialogClass().newInstance();
 			currentFrame.setConnectionType(type);
+			currentFrame.setReloadListener(this);
 		} catch (InstantiationException | IllegalAccessException e) {
 			throw new RuntimeException(e);
 		}
 
 		agentPane.add(currentFrame.getPanel());
+		reload();
+	}
+
+	@Override
+	public void reload() {
 		agentPane.revalidate();
 		agentPane.repaint();
 		dialog.pack();

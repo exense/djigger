@@ -10,12 +10,15 @@ import java.net.Socket;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smb.core.MessageRouter;
 
 import com.sun.tools.attach.VirtualMachine;
+import com.sun.tools.attach.VirtualMachineDescriptor;
 
 public class ProcessAttachFacade extends AgentFacade {
 	
@@ -23,7 +26,9 @@ public class ProcessAttachFacade extends AgentFacade {
 
 	public static final String CONNECTION_TIMEOUT = "ConnectionTimeoutMs";
 	
-	public static final String PROCESSID = "ProcessID";
+	public static final String PROCESSID = "processID";
+	
+	public static final String PROCESS_NAME_REGEX = "processNamePattern";
 	
 	private static final String DEFAULT_CONNECTION_TIMEOUT = "10000";
 
@@ -59,7 +64,23 @@ public class ProcessAttachFacade extends AgentFacade {
 			}
 		}).start();
 		
-		vm = VirtualMachine.attach(properties.get(PROCESSID).toString());
+		String processID=null;
+		Object processNamePattern = properties.get(PROCESS_NAME_REGEX);
+		if(processNamePattern!=null) {
+			Pattern pattern = Pattern.compile(processNamePattern.toString());
+			for(VirtualMachineDescriptor vm_:VirtualMachine.list()) {
+				Matcher matcher = pattern.matcher(vm_.displayName());
+				if(matcher.find()) {
+					processID = vm_.id();
+				}
+			}
+			if(processID==null) {
+				throw new RuntimeException("No VM found matching pattern " + processNamePattern);
+			}
+		} else {
+			processID = properties.get(PROCESSID).toString();
+		}
+		vm = VirtualMachine.attach(processID);
 		
 		InputStream is = getClass().getClassLoader().getResourceAsStream("agent.jar");
 		File agentJar = File.createTempFile("agent-"+UUID.randomUUID(),".jar");

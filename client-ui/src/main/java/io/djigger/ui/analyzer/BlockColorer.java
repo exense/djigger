@@ -198,6 +198,10 @@ public class BlockColorer implements Serializable {
 			} catch (Exception e) {}
 		}
 	}
+	
+	public void clearFrameworks() {
+		frameworks.clear();
+	}
 
 	public void addFramework(String line) {
 		String[] split = line.split(";");

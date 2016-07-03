@@ -19,9 +19,6 @@
  *******************************************************************************/
 package io.djigger.client;
 
-import io.djigger.model.Capture;
-import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -29,13 +26,19 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.djigger.model.Capture;
+import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
+
 public abstract class Facade {
 	
 	private static final Logger logger = LoggerFactory.getLogger(Facade.class);
+	
+	private long runtimeID;
 	
 	private boolean connected;
 	
@@ -59,6 +62,9 @@ public abstract class Facade {
 		super();
 		this.properties = properties;
 		
+		// TODO get this from a sequence to avoid collisions
+		this.runtimeID = System.currentTimeMillis();
+		
 		this.connected = false;
 		this.samplingRate = DEFAULT_RATE;
 		
@@ -81,7 +87,15 @@ public abstract class Facade {
 		}
 	}
     
-    public Properties getProperties() {
+    public long getRuntimeID() {
+		return runtimeID;
+	}
+
+	public void setRuntimeID(long runtimeID) {
+		this.runtimeID = runtimeID;
+	}
+
+	public Properties getProperties() {
 		return properties;
 	}
 
@@ -116,7 +130,12 @@ public abstract class Facade {
 		listeners.add(listener);
 	}
 
+	private static AtomicInteger idSequence = new AtomicInteger();
+	
     public synchronized void addInstrumentation(InstrumentSubscription subscription) {
+    	if(subscription.getId()==0) {
+    		subscription.setId(idSequence.incrementAndGet());
+    	}
         subscriptions.add(subscription);
         addInstrumentation_(subscription);
     }
@@ -199,5 +218,9 @@ public abstract class Facade {
 		for(InstrumentSubscription s:subscriptions) {
 			addInstrumentation_(s);
 		}
+	}
+	
+	public boolean hasStartStopSupport() {
+		return true;
 	}
 }

@@ -21,26 +21,32 @@ package io.djigger.monitoring.java.sampling;
 
 import java.lang.management.ThreadInfo;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 
 public class ThreadDumpHelper {
+	
+	{
+		System.out.println("init");
+	}
 
 	public static List<io.djigger.monitoring.java.model.ThreadInfo> toThreadDump(ThreadInfo[] threadInfos) {
 		long timestamp = System.currentTimeMillis();
-		List<io.djigger.monitoring.java.model.ThreadInfo> snapshots = new ArrayList<>();
+		List<io.djigger.monitoring.java.model.ThreadInfo> snapshots = new ArrayList<io.djigger.monitoring.java.model.ThreadInfo>();
 		for (ThreadInfo info : threadInfos) {
-			io.djigger.monitoring.java.model.ThreadInfo i = new io.djigger.monitoring.java.model.ThreadInfo(toStackTraceElement(info.getStackTrace(),0));
-			i.setTimestamp(new Date(timestamp));
-			i.setState(info.getThreadState());
-			i.setName(info.getThreadName());
-			i.setId(info.getThreadId());
+			io.djigger.monitoring.java.model.ThreadInfo i = toThreadInfo(timestamp, info);
 			snapshots.add(i);
-			
 		}
-		
 		return snapshots;	
+	}
+
+	public static io.djigger.monitoring.java.model.ThreadInfo toThreadInfo(long timestamp, ThreadInfo info) {
+		io.djigger.monitoring.java.model.ThreadInfo i = new io.djigger.monitoring.java.model.ThreadInfo(toStackTraceElement(info.getStackTrace(),0));
+		i.setTimestamp(timestamp);
+		i.setState(info.getThreadState());
+		i.setName(info.getThreadName());
+		i.setId(info.getThreadId());
+		return i;
 	}
 	
 	public static io.djigger.monitoring.java.model.StackTraceElement[] toStackTraceElement(StackTraceElement[] stacktrace, int offset) {

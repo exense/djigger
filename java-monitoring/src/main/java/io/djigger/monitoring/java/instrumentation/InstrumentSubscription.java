@@ -21,44 +21,64 @@ package io.djigger.monitoring.java.instrumentation;
 
 import java.io.Serializable;
 
+import javassist.CtClass;
+import javassist.CtMethod;
 
-public abstract class InstrumentSubscription implements Serializable {
+
+public abstract class InstrumentSubscription implements Serializable, TransformingSubscription {
 
 	private static final long serialVersionUID = -299257813496574472L;
+	
+	private int id;
+	
+	private boolean tagEvent;
 
-	private boolean transactionEntryPoint;
+	public abstract boolean isRelatedToClass(CtClass clazz);
 	
-	public abstract boolean isRelatedToClass(String classname);
+	public abstract boolean isRelatedToMethod(CtMethod method);
 	
-	public abstract boolean isRelatedToMethod(String methodname);
+	public abstract boolean retransformClass(Class<?> clazz);
 
-	public abstract boolean match(InstrumentationSample sample);
-	
-	public abstract InstrumentationAttributes getInstrumentationAttributes();
-	
-	public abstract String getName();
-
-	public InstrumentSubscription(boolean transactionEntryPoint) {
+	public InstrumentSubscription(boolean tagEvent) {
 		super();
-		this.transactionEntryPoint = transactionEntryPoint;
+		this.tagEvent = tagEvent;
 	}
 
-	public boolean isTransactionEntryPoint() {
-		return transactionEntryPoint;
+	public int getId() {
+		return id;
 	}
 
-	public void setTransactionEntryPoint(boolean transactionEntryPoint) {
-		this.transactionEntryPoint = transactionEntryPoint;
+	public void setId(int id) {
+		this.id = id;
 	}
-	
+
+	public boolean isTagEvent() {
+		return tagEvent;
+	}
+
+	public void setTagEvent(boolean tagEvent) {
+		this.tagEvent = tagEvent;
+	}
+
 	@Override
-	public String toString() {
-		return getName();
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + id;
+		return result;
 	}
 
 	@Override
-	public abstract int hashCode();
-
-	@Override
-	public abstract boolean equals(Object obj);
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		InstrumentSubscription other = (InstrumentSubscription) obj;
+		if (id != other.id)
+			return false;
+		return true;
+	}
 }
