@@ -72,7 +72,9 @@ public class InstrumentationEventAccessor extends AbstractAccessor {
 
 	public void save(TaggedInstrumentationEvent event) {
 		Document doc = toDocument(event);
+		
 		log(doc);
+		
 		instrumentationEventsCollection.insertOne(doc);
 	}
 
@@ -173,7 +175,9 @@ public class InstrumentationEventAccessor extends AbstractAccessor {
 		List<Document> documents = new ArrayList<>();
 		for (TaggedInstrumentationEvent instrumentationEvent : events) {
 			Document document = toDocument(instrumentationEvent);
+			
 			documents.add(document);
+			
 			log(document);
 		}
 		instrumentationEventsCollection.insertMany(documents);
