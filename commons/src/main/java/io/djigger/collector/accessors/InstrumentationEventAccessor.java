@@ -32,6 +32,8 @@ import java.util.UUID;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
@@ -48,6 +50,10 @@ import io.djigger.monitoring.java.model.ThreadInfo;
 
 public class InstrumentationEventAccessor extends AbstractAccessor {
 
+	private static final Logger logger = LoggerFactory.getLogger(InstrumentationEventAccessor.class);
+	
+	private static final Logger eventWriter = LoggerFactory.getLogger("InstrumentationEventWriter");
+	
 	MongoDatabase db;
 
 	MongoCollection<Document> instrumentationEventsCollection;
@@ -66,6 +72,7 @@ public class InstrumentationEventAccessor extends AbstractAccessor {
 
 	public void save(TaggedInstrumentationEvent event) {
 		Document doc = toDocument(event);
+		log(doc);
 		instrumentationEventsCollection.insertOne(doc);
 	}
 
@@ -165,9 +172,17 @@ public class InstrumentationEventAccessor extends AbstractAccessor {
 	public void save(List<TaggedInstrumentationEvent> events) {
 		List<Document> documents = new ArrayList<>();
 		for (TaggedInstrumentationEvent instrumentationEvent : events) {
-			documents.add(toDocument(instrumentationEvent));
+			Document document = toDocument(instrumentationEvent);
+			documents.add(document);
+			log(document);
 		}
 		instrumentationEventsCollection.insertMany(documents);
+	}
+
+	private void log(Document document) {
+		if(eventWriter.isTraceEnabled()) {
+			eventWriter.trace(document.toJson());
+		}
 	}
 
 	private Document toDocument(TaggedInstrumentationEvent taggedEvent) {
