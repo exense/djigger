@@ -26,6 +26,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -54,7 +55,7 @@ import io.djigger.ui.common.MonitoredExecution;
 import io.djigger.ui.common.MonitoredExecutionRunnable;
 
 @SuppressWarnings("serial")
-public class StoreBrowserPane extends JPanel implements ActionListener, KeyListener {
+public class StoreBrowserPane extends JPanel implements ActionListener {
 	
 	private static final Logger logger = LoggerFactory.getLogger(StoreBrowserPane.class);
 	
@@ -131,11 +132,35 @@ public class StoreBrowserPane extends JPanel implements ActionListener, KeyListe
 	}
 
 	private JSpinner initSpinner() {
-		JSpinner spinner = new JSpinner();
+		final JSpinner spinner = new JSpinner();
 		
 		spinner.setModel(new SpinnerDateModel());
-		spinner.setEditor(new JSpinner.DateEditor(spinner, "dd.MM.yyyy HH:mm"));
-		((JSpinner.DefaultEditor)spinner.getEditor()).getTextField().addKeyListener(this);
+		
+		final JSpinner.DateEditor editor = new JSpinner.DateEditor(spinner, "dd.MM.yyyy HH:mm");
+		spinner.setEditor(editor);
+		
+		editor.getTextField().addKeyListener(
+				new KeyListener() {
+					
+					@Override
+					public void keyTyped(KeyEvent e) {}
+					
+					@Override
+					public void keyReleased(KeyEvent e) {}
+					
+					@Override
+					public void keyPressed(KeyEvent e) {
+						if(e.getKeyCode()==KeyEvent.VK_ENTER) {
+							try {
+								editor.commitEdit();
+							} catch (ParseException e1) {
+								logger.error("Error while parsing expression: "+editor.getTextField().getText(), e);
+							}
+							search();							
+						}
+					}
+				}
+		);
 	    add(spinner);
 	    
 	    return spinner;
@@ -252,17 +277,4 @@ public class StoreBrowserPane extends JPanel implements ActionListener, KeyListe
 		}
 		return query;
 	}
-
-	@Override
-	public void keyPressed(KeyEvent arg0) {
-		if(arg0.getKeyCode() == KeyEvent.VK_ENTER) {
-			search();
-		}
-	}
-
-	@Override
-	public void keyReleased(KeyEvent arg0) {}
-
-	@Override
-	public void keyTyped(KeyEvent arg0) {}
 }
