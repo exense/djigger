@@ -17,6 +17,9 @@
 	<logger name="org.lightcouch" level="error" />
 	<!-- <logger name="io.djigger...." level="debug" /> -->
 	
+	<!-- This logger prints the collected InstrumentationEvent as JSON out -->
+	<!-- <logger name="InstrumentationEventWriter" level="trace" /> -->
+	
 	<root level="info">
 		<appender-ref ref="STDOUT" />
 		<appender-ref ref="FILE" />
