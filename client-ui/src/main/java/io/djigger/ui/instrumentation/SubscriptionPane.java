@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 import com.thoughtworks.xstream.XStream;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
+import io.djigger.monitoring.java.instrumentation.subscription.CapturingSubscription;
 import io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription;
 import io.djigger.ui.Session;
 import io.djigger.ui.SessionListener;
@@ -195,6 +196,8 @@ public class SubscriptionPane extends JPanel {
 		private final JTextField classname;
 
 		private final JTextField methodname;
+		
+		private final JTextField capture;
 
 		private final JButton button;
 
@@ -203,6 +206,9 @@ public class SubscriptionPane extends JPanel {
 
 			classname = new JTextField("",50);
 			methodname = new JTextField("",50);
+			
+			capture = new JTextField("",50);
+			
 			button = new JButton("Add");
 
 			setLayout(new GridLayout(0,1,0,2));
@@ -213,6 +219,10 @@ public class SubscriptionPane extends JPanel {
 			add(classname);
 			add(new JLabel("Method name pattern (regex)"));
 			add(methodname);
+			
+			add(new JLabel("Capture expression (javassist) [optional]"));
+			add(capture);
+			
 			add(new JSeparator());
 			add(button);
 
@@ -228,7 +238,13 @@ public class SubscriptionPane extends JPanel {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			if(e.getActionCommand().equals("Add")) {
-				InstrumentSubscription subscription = new RegexSubscription(classname.getText(), methodname.getText(), false);
+				InstrumentSubscription subscription;
+				if(capture.getText().isEmpty()) {
+					subscription = new RegexSubscription(classname.getText(), methodname.getText(), false);
+				} else {
+					subscription = new CapturingSubscription(classname.getText(), methodname.getText(), false);
+					((CapturingSubscription)subscription).setCapture(capture.getText());
+				}					
 				parent.addSubscription(subscription);
 				frame.setVisible(false);
 			}
