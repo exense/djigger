@@ -31,9 +31,17 @@ public class TimeMeasureTransformer {
 	}
 	
 	public static void transform(CtClass clazz, CtMethod method, InstrumentSubscription subscription, boolean captureThreadInfos, String capture) throws CannotCompileException {
+		transform(clazz, method, subscription, captureThreadInfos, capture, null);
+	}
+	
+	public static void transform(CtClass clazz, CtMethod method, InstrumentSubscription subscription, boolean captureThreadInfos, String capture, Integer maxCaptureSize) throws CannotCompileException {
 		method.insertBefore("io.djigger.agent.InstrumentationEventCollector.enterMethod(\"" + clazz.getName() + "\",\"" + method.getName() + "\","+Boolean.toString(captureThreadInfos)+","+subscription.getId()+");");
 		if(capture!=null) {
-			method.insertAfter("io.djigger.agent.InstrumentationEventCollector.leaveMethodAndCaptureToString("+capture+");", true);			
+			if(maxCaptureSize!=null) {
+				method.insertAfter("io.djigger.agent.InstrumentationEventCollector.leaveMethodAndCaptureToString("+capture+","+maxCaptureSize+");", true);							
+			} else {
+				method.insertAfter("io.djigger.agent.InstrumentationEventCollector.leaveMethodAndCaptureToString("+capture+");", true);							
+			}
 		} else {
 			method.insertAfter("io.djigger.agent.InstrumentationEventCollector.leaveMethod();", true);						
 		}

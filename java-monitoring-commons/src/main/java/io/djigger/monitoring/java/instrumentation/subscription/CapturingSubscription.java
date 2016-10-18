@@ -31,6 +31,8 @@ public class CapturingSubscription extends RegexSubscription {
 	
 	protected String capture;
 	
+	protected Integer maxCaptureSize;
+	
 	public String getCapture() {
 		return capture;
 	}
@@ -47,13 +49,21 @@ public class CapturingSubscription extends RegexSubscription {
 		this.captureThreadInfos = captureThreadInfos;
 	}
 
+	public Integer getMaxCaptureSize() {
+		return maxCaptureSize;
+	}
+
+	public void setMaxCaptureSize(Integer maxCaptureSize) {
+		this.maxCaptureSize = maxCaptureSize;
+	}
+
 	public CapturingSubscription(String classNameRegex, String methodNameRegex, boolean tagEvent) {
 		super(classNameRegex, methodNameRegex, tagEvent);
 	}
 
 	@Override
 	public void transform(CtClass clazz, CtMethod method) throws CannotCompileException {
-		TimeMeasureTransformer.transform(clazz, method, this, captureThreadInfos, capture);
+		TimeMeasureTransformer.transform(clazz, method, this, captureThreadInfos, capture, maxCaptureSize);
 	}
 	
 	@Override

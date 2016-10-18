@@ -156,6 +156,14 @@ public class InstrumentationEventCollector {
 		}
 	}
 	
+	public static void leaveMethodAndCaptureToString(Object data, Integer maxCaptureSize) {
+		if(data!=null) {
+			leaveMethod(new StringInstrumentationEventData(data.toString(), maxCaptureSize));
+		} else {
+			leaveMethod();
+		}
+	}
+	
 	public static void leaveMethod(InstrumentationEventData data) {
 		long endNano = System.nanoTime();
 

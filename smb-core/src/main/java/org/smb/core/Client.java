@@ -20,6 +20,7 @@
 package org.smb.core;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -27,22 +28,93 @@ import java.net.UnknownHostException;
 
 public class Client implements MessageRouterStateListener {
 
-	private final String agentHost;
+	private String agentHost;
 
-	private final int agentPort;
+	private int agentPort;
 
-	private final MessageRouter router;
+	private MessageRouter router;
 
 	private boolean isAlive;
+
+	public Client() {
+		
+	}
 
 	public Client(String agentHost, int agentPort) throws UnknownHostException, IOException {
 		super();
 		this.agentHost = agentHost;
 		this.agentPort = agentPort;
-		this.isAlive = true;
-		router = new MessageRouter(this, new Socket(agentHost, agentPort));
+		connect(agentHost, agentPort);
+		start();
+	}
+
+	public void connect(String agentHost, int agentPort) throws IOException, UnknownHostException {
+		setMessageRouter(new Socket(agentHost, agentPort));
+	}
+	
+	public void start() {
 		router.start();
 	}
+	
+	public ConnectionFuture prepareForIncommingConnection() throws IOException {
+		return new ConnectionFuture();
+	}
+	
+	private void setMessageRouter(Socket socket) throws IOException {
+		router = new MessageRouter(this, socket);
+		this.isAlive = true;
+	}
+	
+	public class ConnectionFuture {
+		
+		ServerSocket serverSocket; 
+		
+		public ConnectionFuture() throws IOException {
+			super();
+			serverSocket = new ServerSocket(0);
+			
+			final ConnectionFuture me = this;
+			new Thread(new Runnable() {
+				public void run() {
+					Socket socket;
+					try {
+						socket = serverSocket.accept();
+						synchronized (me) {
+							setMessageRouter(socket);
+							me.notifyAll();
+						}
+					} catch (IOException e) {
+						
+					} finally {
+						try {
+							serverSocket.close();
+						} catch (IOException e) {}
+					}
+				}
+			}).start();
+			
+		}
+
+		public int getLocalPort() {
+			return serverSocket.getLocalPort();
+		}
+
+		public void waitForConnection(long timeout) {		
+			if(!isAlive) {
+				synchronized (this) {
+					try {
+						wait(timeout);
+					} catch (InterruptedException e) {
+						
+					}				
+				}
+			}
+			
+			router.start();
+		}
+	}
+	
+	
 
 	public void sendMessage(String command) throws IOException {
 		sendMessage(command, null);
@@ -79,5 +151,21 @@ public class Client implements MessageRouterStateListener {
 	public void close() {
 		router.disconnect();
 		isAlive = false;
+	}
+
+	public void registerPermanentListener(String type, MessageListener listener) {
+		router.registerPermanentListener(type, listener);
+	}
+
+	public void registerPermanentListenerForAllMessages(MessageListener listener) {
+		router.registerPermanentListenerForAllMessages(listener);
+	}
+
+	public void registerSynchronListener(String type, SynchronMessageListener listener) {
+		router.registerSynchronListener(type, listener);
+	}
+
+	public void unregisterPermanentListener(String type, MessageListener listener) {
+		router.unregisterPermanentListener(type, listener);
 	}
 }

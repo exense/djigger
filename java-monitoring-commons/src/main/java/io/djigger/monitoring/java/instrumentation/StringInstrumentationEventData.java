@@ -1,14 +1,17 @@
 package io.djigger.monitoring.java.instrumentation;
 
 public class StringInstrumentationEventData extends InstrumentationEventData {
-	
-	private static int MAX_SIZE = 1024;
-	
+		
 	String payload;
 
 	public StringInstrumentationEventData (String payload) {
 		super();
-		this.payload = truncate(payload);
+		this.payload = payload;
+	}
+	
+	public StringInstrumentationEventData (String payload, Integer maxSize) {
+		super();
+		this.payload = truncate(payload, maxSize);
 	}
 
 	public String getPayload() {
@@ -16,11 +19,11 @@ public class StringInstrumentationEventData extends InstrumentationEventData {
 	}
 
 	public void setPayload(String payload) {
-		this.payload = truncate(payload);
+		this.payload = payload;
 	}
 
-	private String truncate(String payload) {
-		return payload.substring(0, Math.min(MAX_SIZE, payload.length()));
+	private String truncate(String payload, Integer maxSize) {
+		return payload.substring(0, Math.min(maxSize, payload.length()));
 	}
 
 	@Override

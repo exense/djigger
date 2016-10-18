@@ -110,6 +110,10 @@ public class AgentSession implements MessageListener, MessageRouterStateListener
 		return messageRouter;
 	}
 
+	public InstrumentationService getInstrumentationService() {
+		return instrumentationService;
+	}
+
 	@Override
 	public void messageRouterDisconnected(MessageRouter router) {
 		if (isAlive) {

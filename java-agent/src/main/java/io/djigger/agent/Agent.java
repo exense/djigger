@@ -61,8 +61,8 @@ public class Agent extends Thread {
 		System.out.println("Starting agent. Arguments: " + agentArguments);
 		
 		Map<String,String> parameterMap = new HashMap<String,String>();
-
 		try {
+			
 			if(agentArguments!=null) {
 				String[] split = agentArguments.split(",");
 				for(String argument:split) {
@@ -73,42 +73,22 @@ public class Agent extends Thread {
 				}
 			}
 
-			if (parameterMap.containsKey("host")) {
-				String clientHost = parameterMap.get("host");
-				Integer port = Integer.decode(parameterMap.get("port"));
-				(new Agent(instrumentation, clientHost, port)).start();
-			} else if(parameterMap.containsKey("port")) {
-				Integer port = Integer.decode(parameterMap.get("port"));
-				(new Agent(instrumentation, port)).start();
-			} else {
-				Integer port = DEFAULT_PORT;
-				(new Agent(instrumentation, port)).start();
-			}
+			String clientHost = parameterMap.get("host");
+			Integer port = parameterMap.containsKey("port")?Integer.decode(parameterMap.get("port")):null;
+			Agent agent = new Agent(instrumentation, clientHost, port);
+			agent.start();
 		} catch(Exception e) {
 			System.out.println("Agent: an error occurred while trying to parse the agent parameters.");
 			e.printStackTrace();
 		}
 	}
-
-	private Agent(Instrumentation instrumentation, Integer port) {
-		super();
-		this.agentToClientConnection = false;
-		if(port==null) {
-			port = DEFAULT_PORT;
-		}
-		this.port = port;
-		this.clientHost = null;
-		this.instrumentation = instrumentation;
-
-		addCollectorToBootstrap(instrumentation);
-	}
 	
-	private Agent(Instrumentation instrumentation, String host, Integer port) {
+	protected Agent(Instrumentation instrumentation, String host, Integer port) {
 		super();
-		this.agentToClientConnection = true;
-		this.port = port;
+		this.port = port!=null?port:DEFAULT_PORT;
 		this.clientHost = host;
 		this.instrumentation = instrumentation;
+		this.agentToClientConnection = clientHost!=null;
 
 		addCollectorToBootstrap(instrumentation);
 	}
@@ -166,7 +146,7 @@ public class Agent extends Thread {
 			ServerSocket serverSocket = new ServerSocket(port);
 			while(true) {
 				Socket socket = serverSocket.accept();
-				AgentSession session = new AgentSession(socket, instrumentation);
+				AgentSession session = createSession(socket);
 				if(this.session == null || (this.session!=null && !this.session.isAlive())) {
 					this.session = session;
 				} else {
@@ -177,5 +157,11 @@ public class Agent extends Thread {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+
+	protected AgentSession createSession(Socket socket) throws IOException {
+		AgentSession session = new AgentSession(socket, instrumentation);
+		return session;
 	}
 }
