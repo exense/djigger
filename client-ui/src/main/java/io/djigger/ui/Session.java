@@ -29,6 +29,7 @@ import io.djigger.db.client.StoreClient;
 import io.djigger.model.Capture;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.store.Store;
 import io.djigger.store.filter.StoreFilter;
@@ -381,6 +382,11 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 		} else {
 			System.out.println("Ignoring incoming message to prevent JVM from OutOfMemory!");
 		}
+	}
+	
+	@Override
+	public void metricsReceived(List<Metric<?>> metrics) {
+
 	}
 
 	@Override
