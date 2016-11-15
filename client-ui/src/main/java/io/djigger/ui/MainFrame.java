@@ -152,10 +152,6 @@ public class MainFrame extends JPanel {
 			}
 		});
 		msgThread.start();
-		
-		for(Session session:sessions) {
-			session.getStore().clearBuffers();
-		}
 	}
 	
 	public synchronized void disableOutOfMemory(boolean neverMonitorAgain) {

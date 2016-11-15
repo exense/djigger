@@ -53,6 +53,10 @@ public class NodePresentationHelper {
 		this.showMinCallCounts = showMinCallCounts;
 	}
 
+	public boolean isShowMinCallCounts() {
+		return showMinCallCounts;
+	}
+
 	public String shortLabel(AnalysisNode node, AnalysisNode rootForCalculation) {
 		String[] split = getFullname(node).split("\\.");
 		if(split.length>=2) {
@@ -63,11 +67,11 @@ public class NodePresentationHelper {
 	}
 
 	public String shortLabel(RealNodePath path) {
-		String[] split = path.getLastNode().getFullname().split("\\.");
+		String[] split = path.getLastNode().toString().split("\\.");
 		if(split.length>=2) {
 			return split[split.length-2] + "." + split[split.length-1] ;
 		} else {
-			return path.getLastNode().getFullname();
+			return path.getLastNode().toString();
 		}
 	}
 
@@ -89,7 +93,7 @@ public class NodePresentationHelper {
 
 	public String getFullname(NodeID nodeID) {
 		if(nodeID!=null) {
-			return nodeID.getFullname();
+			return nodeID.toString();
 		} else {
 			return "Root";
 		}

@@ -19,9 +19,10 @@
  *******************************************************************************/
 package io.djigger.aggregation;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
+import io.djigger.aggregation.Thread.RealNodePathWrapper;
 import io.djigger.ui.model.RealNodePath;
 
 
@@ -29,27 +30,23 @@ public class Aggregation {
 
 	private final RealNodePath path;
 
-	private final ArrayList<Thread> samples;
+	private final LinkedList<RealNodePathWrapper> samples;
 
 	public Aggregation(RealNodePath path) {
 		super();
-		samples = new ArrayList<>();
+		samples = new LinkedList<>();
 		this.path = path;
 	}
 
-	public void addSample(Thread sample) {
+	public void addSample(RealNodePathWrapper sample) {
 		samples.add(sample);
-	}
-
-	public void trim() {
-		samples.trimToSize();
 	}
 
 	public RealNodePath getPath() {
 		return path;
 	}
 
-	public List<Thread> getSamples() {
+	public List<RealNodePathWrapper> getSamples() {
 		return samples;
 	}
 }

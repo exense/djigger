@@ -26,6 +26,7 @@ import javax.swing.AbstractAction;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.ui.Session;
 import io.djigger.ui.analyzer.TransactionAnalyzerFrame;
 
@@ -47,7 +48,7 @@ public class TransactionMenu {
 	
 	public interface TransactionMenuCallback {
 		
-		public UUID getCurrentTransactionID();
+		public InstrumentationEvent getCurrentEvent();
 	}
 
 	private void populate() {
@@ -55,21 +56,21 @@ public class TransactionMenu {
 		target.add(new JMenuItem(new AbstractAction("Sequence tree") {	
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				UUID transactionID = callback.getCurrentTransactionID();
+				UUID transactionID = callback.getCurrentEvent().getTransactionID();
 				session.getAnalyzerGroupPane().addSequenceTreePane(transactionID);
 			}
 		}));
 		target.add(new JMenuItem(new AbstractAction("Sampling tree") {	
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				UUID transactionID = callback.getCurrentTransactionID();
-				new TransactionAnalyzerFrame(session, transactionID);
+				InstrumentationEvent event = callback.getCurrentEvent();
+				new TransactionAnalyzerFrame(session, event);
 			}
 		}));
 		target.add(new JMenuItem(new AbstractAction("Event list") {	
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				final UUID transactionID = callback.getCurrentTransactionID();
+				final UUID transactionID = callback.getCurrentEvent().getTransactionID();
 				session.getAnalyzerGroupPane().addInstrumentationEventPaneForTransaction(transactionID);
 			}
 		}));

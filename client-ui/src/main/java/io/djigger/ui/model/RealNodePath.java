@@ -19,8 +19,6 @@
  *******************************************************************************/
 package io.djigger.ui.model;
 
-import io.djigger.monitoring.java.model.StackTraceElement;
-
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -34,27 +32,6 @@ public class RealNodePath implements Serializable, Poolable {
 	private Integer cachedHashCode;
 
 	private static final InstancePool<RealNodePath> pool = new InstancePool<RealNodePath>();
-	
-	public static RealNodePath fromStackTrace(StackTraceElement[] stacktrace, boolean includeLineNumbers) {
-		ArrayList<NodeID> nodeIDs = new ArrayList<NodeID>(stacktrace.length);
-		for(int i=stacktrace.length-1;i>=0;i--) {
-			nodeIDs.add(NodeID.getInstance(stacktrace[i], includeLineNumbers));
-		}
-		return getInstance(nodeIDs);
-		
-	}
-	
-	public StackTraceElement[] toStackTrace() {
-		int size = fullPath.size();
-		StackTraceElement[] result = new StackTraceElement[size];
-		if(size>0) {
-			for(int i=0;i<size;i++) {
-				NodeID id = fullPath.get(i);
-				result[size-i-1] = new StackTraceElement(id.getClassName(), id.getMethodName(), null, -1);
-			}
-		}
-		return result;
-	}
 	
 	public static RealNodePath getInstance(ArrayList<NodeID> fullPath) {
 		return pool.getInstance(new RealNodePath(fullPath));

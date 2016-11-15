@@ -229,10 +229,8 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
 						count++;
 						execution.setValue(count);
 						event=it.next();
-						parent.getStore().addInstrumentationEvent(event);
+						parent.getStore().getInstrumentationEvents().add(event);
 					}
-					parent.getStore().processBuffers();
-				
 					logger.debug("Fetched " + count + " instrumentation events.");
 				}
 
@@ -247,9 +245,8 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
 					while(it.hasNext() && !execution.isInterrupted()) {
 						count++;
 						thread=it.next();
-						parent.getStore().addThreadInfo(thread);
+						parent.getStore().getThreadInfos().add(thread);
 					}
-					parent.getStore().processBuffers();
 				
 					logger.debug("Fetched " + count + " stacktraces.");
 				}
