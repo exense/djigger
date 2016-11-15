@@ -86,7 +86,7 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 						MemoryUsage u =b.getCollectionUsage();
 						if(u!=null) {
 							metrics.add(new Metric<>(time, "JMX/MemoryPool/"+b.getName()+"/Used",u.getUsed()));
-							metrics.add(new Metric<>(time, "JMX/MemoryPool/"+b.getName()+"/Used",u.getMax()));
+							metrics.add(new Metric<>(time, "JMX/MemoryPool/"+b.getName()+"/Max",u.getMax()));
 						}
 					}
 					

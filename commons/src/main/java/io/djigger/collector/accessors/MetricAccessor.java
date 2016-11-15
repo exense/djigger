@@ -98,7 +98,7 @@ public class MetricAccessor extends AbstractAccessor {
 	}
 
 	private Bson buildQuery(Bson mongoQuery, Date from, Date to) {
-		Bson result = and(gt("start", from), lt("start", to));
+		Bson result = and(gt("time", from), lt("time", to));
 		if (mongoQuery != null) {
 			result = and(mongoQuery, result);
 		}
@@ -128,7 +128,7 @@ public class MetricAccessor extends AbstractAccessor {
 		Metric<?> metric = taggedMetric.getMetric();
 		doc.append("name", metric.getName());
 		doc.append("value", metric.getValue());
-		doc.append("time", metric.getTime());
+		doc.append("time", new Date(metric.getTime()));
 		if (taggedMetric.getTags() != null) {
 			doc.putAll(taggedMetric.getTags());
 		}
@@ -138,7 +138,7 @@ public class MetricAccessor extends AbstractAccessor {
 	private Metric<?> fromDocument(Document doc) {
 		String name = doc.getString("name");
 		Object value = doc.get("value");
-		long time = doc.getLong("time");
+		long time = doc.getDate("time").getTime();
 		Metric<Object> metric = new Metric<Object>(time, name, value);
 		return metric;
 	}

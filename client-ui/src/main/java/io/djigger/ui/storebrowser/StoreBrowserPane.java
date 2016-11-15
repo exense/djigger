@@ -47,6 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.ql.OQLMongoDBBuilder;
 import io.djigger.ui.Session;
@@ -215,6 +216,7 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
 			final MonitoredExecution execution = new MonitoredExecution(parent.getMain().getFrame(), "Opening session... Please wait.", new MonitoredExecutionRunnable() {
 				protected void run(MonitoredExecution execution) {
 					retrieveThreadInfos(query, from, to, execution);
+					retrieveMetrics(query, from, to, execution);
     				retrieveInstumentationEvents(query, from, to, execution);
     			}
 
@@ -249,6 +251,23 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
 					}
 				
 					logger.debug("Fetched " + count + " stacktraces.");
+				}
+				
+				private void retrieveMetrics(final Bson query, final Date from, final Date to,
+						MonitoredExecution execution) {
+					execution.setText("Retrieving metrics...");
+					execution.setIndeterminate();
+					int count = 0;
+					Iterator<Metric<?>> it = parent.getStoreClient().getMetricAccessor().get(query, from, to);
+					
+					Metric<?> metrics;
+					while(it.hasNext() && !execution.isInterrupted()) {
+						count++;
+						metrics=it.next();
+						parent.getStore().getMetrics().add(metrics);
+					}
+				
+					logger.debug("Fetched " + count + " metrics.");
 				}
     		}, true);
 			

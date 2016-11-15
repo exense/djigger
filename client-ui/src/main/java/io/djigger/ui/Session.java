@@ -463,7 +463,7 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 	
 	@Override
 	public void metricsReceived(List<Metric<?>> metrics) {
-
+		store.getMetrics().addAll(metrics);
 	}
 
 	@Override

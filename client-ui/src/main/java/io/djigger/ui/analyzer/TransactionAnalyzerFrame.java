@@ -75,7 +75,7 @@ public class TransactionAnalyzerFrame extends JPanel {
 				public boolean isValid(InstrumentationEvent sample) {
 					return event.getTransactionID()!=null&&event.getTransactionID().equals(sample.getTransactionID());
 				}
-			});
+			}, null);
 		} else {
 			final UUID transactionID = event.getTransactionID();
 			filter = new StoreFilter(new Filter<ThreadInfo>() {
@@ -90,7 +90,7 @@ public class TransactionAnalyzerFrame extends JPanel {
 				public boolean isValid(InstrumentationEvent sample) {
 					return transactionID.equals(sample.getTransactionID());
 				}
-			});
+			}, null);
 		}
 		UUID transactionID = event.getTransactionID();
 

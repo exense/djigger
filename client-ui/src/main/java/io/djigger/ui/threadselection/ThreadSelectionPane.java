@@ -58,6 +58,7 @@ import org.slf4j.LoggerFactory;
 
 import io.djigger.model.Capture;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.ql.Filter;
 import io.djigger.ql.FilterFactory;
@@ -587,6 +588,13 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 				return (threadIds==null || threadIds.contains(sample.getThreadID()))
 						&& (startDate == null || sample.getStart()>=startDate)
 						&& (endDate == null || sample.getEnd()<=endDate);
+			}
+		}, new Filter<Metric<?>>() {
+			
+			@Override
+			public boolean isValid(Metric<?> sample) {
+				return (startDate == null || sample.getTime()>=startDate)
+						&& (endDate == null || sample.getTime()<=endDate);
 			}
 		});
 	}

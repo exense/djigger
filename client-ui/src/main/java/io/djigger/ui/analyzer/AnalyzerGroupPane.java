@@ -49,6 +49,7 @@ import io.djigger.ui.common.EnhancedTabbedPane;
 import io.djigger.ui.common.NodePresentationHelper;
 import io.djigger.ui.instrumentation.InstrumentationEventPane;
 import io.djigger.ui.instrumentation.SubscriptionPane;
+import io.djigger.ui.metrics.MetricPane;
 
 
 public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListener {
@@ -143,6 +144,15 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 				}
 
 			}));    
+            
+            add(new JMenuItem(new AbstractAction("Metrics") {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					addMetricsPane();
+			    	setVisible(false);
+				}
+
+			}));    
         }
     }
     
@@ -170,6 +180,11 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
     public void addSubscriptionPane() {
     	SubscriptionPane pane = new SubscriptionPane(parent);
     	addTab(pane, "Subscriptions", true);
+    }
+    
+    public void addMetricsPane() {
+    	MetricPane pane = new MetricPane(parent);
+    	addTab(pane, "Metrics", true);
     }
     
     public void setSamples(List<RealNodePathWrapper> pathSamples) {
