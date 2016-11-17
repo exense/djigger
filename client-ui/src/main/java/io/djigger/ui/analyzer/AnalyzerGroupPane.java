@@ -213,6 +213,7 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
         	addInstrumentationEventPane();
 			addSubscriptionPane();
         }
+        addMetricsPane();
         setSelectedIndex(0);
     }
 

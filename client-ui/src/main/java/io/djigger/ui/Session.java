@@ -45,6 +45,7 @@ import io.djigger.db.client.StoreClient;
 import io.djigger.model.Capture;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEventWithThreadInfo;
 import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.ql.Filter;
@@ -64,6 +65,7 @@ import io.djigger.ui.common.MonitoredExecutionRunnable;
 import io.djigger.ui.common.NodePresentationHelper;
 import io.djigger.ui.extensions.java.JavaBridge;
 import io.djigger.ui.instrumentation.InstrumentationStatisticsCache;
+import io.djigger.ui.model.InstrumentationEventWrapper;
 import io.djigger.ui.model.PseudoInstrumentationEvent;
 import io.djigger.ui.model.SessionExport;
 import io.djigger.ui.storebrowser.StoreBrowserPane;
@@ -106,6 +108,12 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 	private boolean showLineNumbers;
 		
 	private StoreFilter currentStoreFilter;
+	
+    StoreCollection<RealNodePathWrapper> realNodePathCache;
+    
+    StoreCollection<RealNodePathWrapper> realNodePathCacheWithLineNumbers;
+    
+    StoreCollection<InstrumentationEventWrapper> instrumentationEventWrapperCache;
 
     public Session(SessionConfiguration config, MainFrame main) {
 		super(new BorderLayout());
@@ -116,20 +124,44 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 		store = new Store();
 		
 		realNodePathCache = new StoreCollection<>();
+		realNodePathCacheWithLineNumbers = new StoreCollection<>();
+		instrumentationEventWrapperCache = new StoreCollection<>();
+		
 		store.getThreadInfos().setListener(new StoreCollectionListener<ThreadInfo>() {
 
 			@Override
 			public void onAdd(ThreadInfo entry) {
 				realNodePathCache.add(JavaBridge.toRealNodePath(entry, false));
+				realNodePathCacheWithLineNumbers.add(JavaBridge.toRealNodePath(entry, true));
 			}
 
 			@Override
 			public void onClear() {
 				realNodePathCache.clear();
+				realNodePathCacheWithLineNumbers.clear();
 			}
 		});
 		
-		statisticsCache = new InstrumentationStatisticsCache(store);
+		store.getInstrumentationEvents().setListener(new StoreCollectionListener<InstrumentationEvent>() {
+
+			@Override
+			public void onAdd(InstrumentationEvent entry) {
+				RealNodePathWrapper pathWrapper = null;
+				if(entry instanceof InstrumentationEventWithThreadInfo) {
+					ThreadInfo threadInfo = ((InstrumentationEventWithThreadInfo)entry).getThreadInfo();
+					pathWrapper = JavaBridge.toRealNodePath(threadInfo, false);
+				}
+				InstrumentationEventWrapper wrapper = new InstrumentationEventWrapper(entry, pathWrapper);
+				instrumentationEventWrapperCache.add(wrapper);
+			}
+
+			@Override
+			public void onClear() {
+				instrumentationEventWrapperCache.clear();
+			}
+		});
+		
+		statisticsCache = new InstrumentationStatisticsCache();
 		presentationHelper = new NodePresentationHelper(statisticsCache);
         
         facade = createFacade(config);
@@ -282,27 +314,49 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     public void refreshAll() {
     	stagingStore.drainTo(store);
 
-    	generatePseudoInstrumentationEvents();
+		if(presentationHelper.isShowMinCallCounts()) {
+			generatePseudoInstrumentationEvents();
+		}
 
-    	statisticsCache.reload();
+    	reloadStatisticsCache();
+		
     	threadSelectionPane.refresh();
     	refreshAnalyzerGroupPane(); 	
     }
     
-    StoreCollection<RealNodePathWrapper> realNodePathCache;
-    
-    void refreshAnalyzerGroupPane() {    	
-		List<ThreadInfo> threads = store.getThreadInfos().query(currentStoreFilter!=null?currentStoreFilter.getThreadInfoFilter():null);
-		List<RealNodePathWrapper> realNodePaths = JavaBridge.toRealNodePathList(threads, showLineNumbers);
+    void refreshAnalyzerGroupPane() {    
+    	List<RealNodePathWrapper> realNodePaths = queryRealNodePaths();
 		analyzerGroupPane.setSamples(realNodePaths);
 		analyzerGroupPane.refresh();
     }
+
+	private List<RealNodePathWrapper> queryRealNodePaths() {
+		Filter<RealNodePathWrapper> filter = getRealNodePathWrapperFilter();
+    	
+    	List<RealNodePathWrapper> realNodePaths;
+    	if(showLineNumbers) {
+    		realNodePaths = realNodePathCacheWithLineNumbers.query(filter);
+    	} else {
+    		realNodePaths = realNodePathCache.query(filter);
+    	}
+		return realNodePaths;
+	}
+
+	private Filter<RealNodePathWrapper> getRealNodePathWrapperFilter() {
+		Filter<RealNodePathWrapper> filter = new Filter<RealNodePathWrapper>() {
+			@Override
+			public boolean isValid(RealNodePathWrapper input) {
+				return currentStoreFilter==null||currentStoreFilter.getThreadInfoFilter().isValid(input.getThreadInfo());
+			}
+		};
+		return filter;
+	}
     
     private void generatePseudoInstrumentationEvents() {
-    	List<ThreadInfo> threadInfos = store.getThreadInfos().query(currentStoreFilter!=null?currentStoreFilter.getThreadInfoFilter():null);
+    	List<RealNodePathWrapper> realNodePaths = queryRealNodePaths();
     	
     	SequenceGenerator sequenceGenerator = new SequenceGenerator();
-    	List<io.djigger.aggregation.Thread> threads = sequenceGenerator.queryThreads(threadInfos);
+    	List<io.djigger.aggregation.Thread> threads = sequenceGenerator.buildThreads(realNodePaths);
     			
 		store.getInstrumentationEvents().remove(new Filter<InstrumentationEvent>() {
 			@Override
@@ -311,16 +365,13 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 			}
 		});
 
-		if(presentationHelper.isShowMinCallCounts()) {			
-			PseudoInstrumentationEventsGenerator a = new PseudoInstrumentationEventsGenerator(new Listener() {
-				@Override
-				public void onPseudoInstrumentationEvent(PseudoInstrumentationEvent event) {
-					store.getInstrumentationEvents().add(event);
-				}
-			}, getSubscriptions());
-			a.generateApproximatedEvents(threads);
-		}
-    	
+		PseudoInstrumentationEventsGenerator a = new PseudoInstrumentationEventsGenerator(new Listener() {
+			@Override
+			public void onPseudoInstrumentationEvent(PseudoInstrumentationEvent event) {
+				store.getInstrumentationEvents().add(event);
+			}
+		}, getSubscriptions());
+		a.generateApproximatedEvents(threads);	
     }
     
     public void showLineNumbers(boolean show) {
@@ -334,12 +385,31 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     }
 
     public void onThreadSelection(StoreFilter filter) {
+    	this.currentStoreFilter = filter;
     	
-    	statisticsCache.setStoreFilter(filter);
-    	statisticsCache.reload();
+    	reloadStatisticsCache();
 
     	refreshAnalyzerGroupPane();
     }
+
+	private void reloadStatisticsCache() {
+		List<InstrumentationEventWrapper> samples = queryInstrumentationEventWrappers();
+    	statisticsCache.reload(samples);
+	}
+
+	public StoreCollection<InstrumentationEventWrapper> getInstrumentationEventWrapperCache() {
+		return instrumentationEventWrapperCache;
+	}
+
+	private List<InstrumentationEventWrapper> queryInstrumentationEventWrappers() {
+		List<InstrumentationEventWrapper> samples = instrumentationEventWrapperCache.query(new Filter<InstrumentationEventWrapper>() {
+			@Override
+			public boolean isValid(InstrumentationEventWrapper input) {
+				return currentStoreFilter==null||currentStoreFilter.getInstrumentationEventsFilter().isValid(input.getEvent());
+			}
+		});
+		return samples;
+	}
 
     public void clear() {
     	store.clear();

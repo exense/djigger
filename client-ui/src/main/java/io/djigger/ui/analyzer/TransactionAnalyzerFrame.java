@@ -36,6 +36,7 @@ import io.djigger.ui.Session;
 import io.djigger.ui.common.NodePresentationHelper;
 import io.djigger.ui.extensions.java.JavaBridge;
 import io.djigger.ui.instrumentation.InstrumentationStatisticsCache;
+import io.djigger.ui.model.InstrumentationEventWrapper;
 import io.djigger.ui.model.PseudoInstrumentationEvent;
 
 public class TransactionAnalyzerFrame extends JPanel {
@@ -60,7 +61,7 @@ public class TransactionAnalyzerFrame extends JPanel {
             System.err.println("Couldn't use system look and feel.");
         }
 		
-		StoreFilter filter;
+		final StoreFilter filter;
 		if(event instanceof PseudoInstrumentationEvent) {
 			filter = new StoreFilter(new Filter<ThreadInfo>() {
 				
@@ -97,9 +98,17 @@ public class TransactionAnalyzerFrame extends JPanel {
         frame = new JFrame("djigger - Transaction "+(transactionID!=null?transactionID.toString():""));
         frame.setPreferredSize(new Dimension(1300,700));
 
-		statisticsCache = new InstrumentationStatisticsCache(main.getStore());
-		statisticsCache.setStoreFilter(filter);
-		statisticsCache.reload();
+		statisticsCache = new InstrumentationStatisticsCache();
+	
+		List<InstrumentationEventWrapper> events = main.getInstrumentationEventWrapperCache().query(new Filter<InstrumentationEventWrapper>() {
+
+			@Override
+			public boolean isValid(InstrumentationEventWrapper input) {
+				return filter==null||filter.getInstrumentationEventsFilter().isValid(input.getEvent());
+			}
+		});
+		
+		statisticsCache.reload(events);
 		
 		presentationHelper = new NodePresentationHelper(statisticsCache);
 

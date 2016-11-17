@@ -19,67 +19,43 @@
  *******************************************************************************/
 package io.djigger.ui.instrumentation;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.djigger.aggregation.Thread.RealNodePathWrapper;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
-import io.djigger.monitoring.java.instrumentation.InstrumentationEventWithThreadInfo;
-import io.djigger.store.Store;
-import io.djigger.store.filter.StoreFilter;
-import io.djigger.ui.extensions.java.JavaBridge;
+import io.djigger.ui.model.InstrumentationEventWrapper;
 import io.djigger.ui.model.RealNodePath;
 
 public class InstrumentationStatisticsCache {
-	
-	private Store store;
-	
-	private StoreFilter storeFilter;
-	
-	private Map<RealNodePath, InstrumentationStatistics> instrumentationStatisticsCache;
+			
+	private final Map<RealNodePath, InstrumentationStatistics> instrumentationStatisticsCache;
 		
-	private List<InstrumentationEvent> samples;
+	private List<InstrumentationEventWrapper> samples;
 	
-	public InstrumentationStatisticsCache(Store store) {
+	public InstrumentationStatisticsCache() {
 		super();
-		this.store = store;
-		reload();
-	}
-
-	public void setStoreFilter(StoreFilter storeFilter) {
-		this.storeFilter = storeFilter;
-	}
-
-	public void reload() {
-		samples = new ArrayList<InstrumentationEvent>();
 		instrumentationStatisticsCache = new HashMap<RealNodePath, InstrumentationStatistics>();
+	}
+
+	public void reload(List<InstrumentationEventWrapper> samples) {
+		this.samples = samples;
 		
-		samples = store.getInstrumentationEvents().query(storeFilter!=null?storeFilter.getInstrumentationEventsFilter():null);
+		instrumentationStatisticsCache.clear();
+		
+		for (InstrumentationEventWrapper sample : samples) {			
+			if (sample.getEventPath() != null) {
+				RealNodePath path = sample.getEventPath().getPath();
 
-		for (InstrumentationEvent sample : samples) {
-			if(sample instanceof InstrumentationEventWithThreadInfo) {
-				RealNodePathWrapper pathWrapper = JavaBridge.toRealNodePath(((InstrumentationEventWithThreadInfo)sample).getThreadInfo(), false);
-				if (pathWrapper != null) {
-					RealNodePath path = pathWrapper.getPath();
-
-					// statistics cache
-					if (!instrumentationStatisticsCache.containsKey(path)) {
-						instrumentationStatisticsCache.put(path, new InstrumentationStatistics());
-					}
-					instrumentationStatisticsCache.get(path).update(sample);
+				// statistics cache
+				if (!instrumentationStatisticsCache.containsKey(path)) {
+					instrumentationStatisticsCache.put(path, new InstrumentationStatistics());
 				}
+				instrumentationStatisticsCache.get(path).update(sample.getEvent());
 			}
 		}
+			
+		
 	}
 	
 	public synchronized InstrumentationStatistics getInstrumentationStatistics(RealNodePath path) {
@@ -89,23 +65,12 @@ public class InstrumentationStatisticsCache {
 
 	public synchronized InstrumentationStatistics getInstrumentationStatistics(InstrumentSubscription subscription) {
 		InstrumentationStatistics statistics = new InstrumentationStatistics();
-		for(InstrumentationEvent sample:samples) {
-			if(subscription.getId()==sample.getSubscriptionID()) {
-				statistics.update(sample);
+		for(InstrumentationEventWrapper sample:samples) {
+			if(subscription.getId()==sample.getEvent().getSubscriptionID()) {
+				statistics.update(sample.getEvent());
 			}
 		}
 		
 		return statistics;
-	}
-	
-	
-	public synchronized void exportSamples(File file) throws IOException {
-		BufferedWriter writer = new BufferedWriter(new FileWriter(file)); 
-		DateFormat format = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss.SSS");
-		for(InstrumentationEvent sample:samples) {
-			writer.write(format.format(new Date(sample.getStart()))+","+sample.getClassname()+","+sample.getMethodname()+","+sample.getDuration()+","+sample.getThreadID());
-			writer.newLine();
-		}
-		writer.close();
 	}
 }

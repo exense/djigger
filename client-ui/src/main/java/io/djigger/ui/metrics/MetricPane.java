@@ -1,7 +1,6 @@
 package io.djigger.ui.metrics;
 
 import java.awt.BorderLayout;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -11,7 +10,6 @@ import java.util.Vector;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
@@ -79,10 +77,10 @@ public class MetricPane extends Dashlet {
 		add(BorderLayout.WEST, new JScrollPane(metricNameList));
 		
 		dataset = new TimeSeriesCollection();
-		XYLineAndShapeRenderer dot = new XYLineAndShapeRenderer();
+		XYLineAndShapeRenderer dot = new XYLineAndShapeRenderer(true, false);
 		
 		DateAxis xax = new DateAxis();
-		NumberAxis yax = new NumberAxis("calls/min");
+		NumberAxis yax = new NumberAxis("");
 		
 		XYPlot plot = new XYPlot(dataset, xax, yax, dot);
 		
@@ -137,13 +135,10 @@ public class MetricPane extends Dashlet {
 	}
 	
 	protected void createPanel(Set<String> selectedMetrics, List<Metric<?>> metrics) {
-
 		dataset.removeAllSeries();
 		for(String metricName:selectedMetrics) {
 			addSerie(dataset, metricName, metrics);
 		}
-		//chartPanel.setPreferredSize(new Dimension(300, 300));
-		
 	}
 	
 	protected void addSerie(TimeSeriesCollection dataset, String metricName, List<Metric<?>> metrics) {
@@ -176,7 +171,6 @@ public class MetricPane extends Dashlet {
 	public void refresh() {
 		queryMetrics();
 		updateChart();
-		
 	}
 	
 }
