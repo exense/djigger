@@ -107,6 +107,57 @@ public class InstrumentationEventsApproximatorTest {
 		Assert.assertEquals(4, events.size());
 	}
 	
+	@Test
+	public void test5() {	
+		List<Thread> threads = threads(new Object[][]{{"m1","m2"},{"m1","m2","m3","m4"},{"m1","m2"},{"m1","m2","m3"}});
+				
+		final List<InstrumentationEvent> events = new ArrayList<>();
+		PseudoInstrumentationEventsGenerator a = new PseudoInstrumentationEventsGenerator(new Listener() {
+			
+			@Override
+			public void onPseudoInstrumentationEvent(PseudoInstrumentationEvent event) {
+				events.add(event);
+				System.out.println(event);
+			}
+		});
+		a.generateApproximatedEvents(threads);
+		Assert.assertEquals(5, events.size());
+	}
+	
+	@Test
+	public void test6() {	
+		List<Thread> threads = threads(new Object[][]{{"m1","m2","m3"},{"m1","m4","m5"},{"m1","m2","m3"}});
+				
+		final List<InstrumentationEvent> events = new ArrayList<>();
+		PseudoInstrumentationEventsGenerator a = new PseudoInstrumentationEventsGenerator(new Listener() {
+			
+			@Override
+			public void onPseudoInstrumentationEvent(PseudoInstrumentationEvent event) {
+				events.add(event);
+				System.out.println(event);
+			}
+		});
+		a.generateApproximatedEvents(threads);
+		Assert.assertEquals(7, events.size());
+	}
+	
+	@Test
+	public void test7() {	
+		List<Thread> threads = threads(new Object[][]{{"m1","m2","m3","m4"},{"m1","m2"},{"m1","m4","m3"}});
+				
+		final List<InstrumentationEvent> events = new ArrayList<>();
+		PseudoInstrumentationEventsGenerator a = new PseudoInstrumentationEventsGenerator(new Listener() {
+			
+			@Override
+			public void onPseudoInstrumentationEvent(PseudoInstrumentationEvent event) {
+				events.add(event);
+			}
+		});
+		a.generateApproximatedEvents(threads);
+		Assert.assertEquals(6, events.size());
+	}
+	
+	
 	private List<Thread> threads(Object[][] o) {
 		List<Thread> threads = new ArrayList<>();
 		threads.add(thread(o, 0));
@@ -125,9 +176,13 @@ public class InstrumentationEventsApproximatorTest {
 		for (Object[] objects : o) {
 			ArrayList<NodeID> path = new ArrayList<>();
 			for (int i=0;i<objects.length;i++) {
-				path.add(NodeID.getInstance(objects[i].toString()));
+				
+				NodeID nodeID = NodeID.getInstance(objects[i].toString());
+				nodeID.setAttachment(new StackTraceElement("Class1", objects[i].toString(), "", 0));
+				
+				path.add(nodeID);
 			}
-			paths.add(new RealNodePathWrapper(RealNodePath.getInstance(path), new ThreadInfo(null, id, t++)));
+			paths.add(new RealNodePathWrapper(RealNodePath.getInstance(path), new ThreadInfo(new StackTraceElement[objects.length], id, t++)));
 		}
 		return new Thread(id, paths);
 	}

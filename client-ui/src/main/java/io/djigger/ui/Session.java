@@ -468,7 +468,7 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 
 	public void addSubscription(InstrumentSubscription subscription) {
 		subscriptions.add(subscription);
-		if(facade!=null) {
+		if(facade!=null && facade.hasInstrumentationSupport()) {
 			facade.addInstrumentation(subscription);
 		}	
 		fireSubscriptionChangeEvent();
@@ -476,7 +476,7 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 
 	public void removeSubscription(InstrumentSubscription subscription) {
 		subscriptions.remove(subscription);
-		if(facade!=null) {
+		if(facade!=null && facade.hasInstrumentationSupport()) {
 			facade.removeInstrumentation(subscription);
 		}
 		fireSubscriptionChangeEvent();

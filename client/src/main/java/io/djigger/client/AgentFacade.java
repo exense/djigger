@@ -129,4 +129,9 @@ public class AgentFacade extends Facade implements MessageListener {
 	public boolean isConnected() {
 		return client!=null && client.isAlive();
 	}
+
+	@Override
+	public boolean hasInstrumentationSupport() {
+		return true;
+	}
 }

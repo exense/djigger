@@ -173,4 +173,9 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 		
 		garbageCollectorBeans = getPlatformMXBeans(GarbageCollectorMXBean.class);
 	}
+
+	@Override
+	public boolean hasInstrumentationSupport() {
+		return false;
+	}
 }

@@ -43,16 +43,23 @@ public class PseudoInstrumentationEventsGenerator {
 				List<NodeID> currentPath = realNodePath.getPath().getFullPath();
 				ThreadInfo threadInfo = realNodePath.getThreadInfo();
 				
-				for(int level=0; level<currentPath.size(); level++) {
-					NodeID currentNodeID = currentPath.get(level);					
+				for(int level=0; level<Math.max(currentPath.size(),(previousPath!=null?previousPath.size():0)); level++) {
+					NodeID currentNodeID = currentPath.size()>level?currentPath.get(level):null;					
 					NodeID previousNodeID = (previousPath!=null&&previousPath.size()>level)?previousPath.get(level):null;
 
-					if(!currentNodeID.equals(previousNodeID)) {
+					if(currentNodeID!=null) {
+						if(!currentNodeID.equals(previousNodeID)) {
+							if(previousPath!=null) {
+								leaveBranch(previousThreadInfo, previousPath, level);
+							}
+							enterBranch(threadInfo, currentPath, level);
+							break;
+						}
+					} else {
 						if(previousPath!=null) {
 							leaveBranch(previousThreadInfo, previousPath, level);
+							break;
 						}
-						enterBranch(threadInfo, currentPath, level);
-						break;
 					}
 				}
 				
@@ -107,18 +114,27 @@ public class PseudoInstrumentationEventsGenerator {
 							threadInfo.getTimestamp());
 					
 					event.setThreadInfo(clone);
-					stack.add(event);
+					stack.push(event);
 				} else {
 					throw new RuntimeException("Invalid argument. Attachment of node id "+nodeID.toString()+" is not an instance of "+StackTraceElement.class.getName() + " but of "+attachment.getClass().getName());
 				}
-			}
+			} else {
+				throw new RuntimeException("Attachment of node id "+nodeID.toString()+" is null.");
+			}	
+			
 		}
 	}
 	
 	private void leaveBranch(ThreadInfo threadInfo, List<NodeID> branch, int level) {
-		int diff = branch.size()-level;
-		for(int i=0;i<diff;i++) {
+		for(int i=branch.size()-1;i>=level;i--) {
+			
 			PseudoInstrumentationEvent event = stack.pop();
+//			The following lines can be used to debug a suspect behaviour. Due to the performance overhead these lines are commented out
+//			NodeID node = branch.get(i);
+//			if(!event.getClassname().equals(((StackTraceElement)node.getAttachment()).getClassName())||
+//					!event.getMethodname().equals(((StackTraceElement)node.getAttachment()).getMethodName())) {
+//				throw new RuntimeException("Unexepected error while generating pseudo events");
+//			}
 			closeEventAndCallListener(threadInfo, event);
 		}
 	}
