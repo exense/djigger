@@ -19,11 +19,6 @@
  *******************************************************************************/
 package io.djigger.client;
 
-import io.djigger.monitoring.java.agent.JavaAgentMessageType;
-import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
-import io.djigger.monitoring.java.model.ThreadInfo;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
@@ -33,6 +28,12 @@ import org.slf4j.LoggerFactory;
 import org.smb.core.Message;
 import org.smb.core.MessageListener;
 import org.smb.core.MessageRouter;
+
+import io.djigger.monitoring.java.agent.JavaAgentMessageType;
+import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.model.Metric;
+import io.djigger.monitoring.java.model.ThreadInfo;
 
 
 public class AgentFacade extends Facade implements MessageListener {
@@ -80,6 +81,10 @@ public class AgentFacade extends Facade implements MessageListener {
 			for(FacadeListener listener:listeners) {
 				listener.instrumentationSamplesReceived((List<InstrumentationEvent>) msg.getContent());
 			}
+		} else if (JavaAgentMessageType.METRICS.equals(msg.getType())) {
+			for(FacadeListener listener:listeners) {
+				listener.metricsReceived((List<Metric<?>>) msg.getContent());
+			}
 		}
 	}
 
@@ -123,6 +128,7 @@ public class AgentFacade extends Facade implements MessageListener {
 		client.start();
 		client.registerPermanentListener(JavaAgentMessageType.THREAD_SAMPLE, this);
 		client.registerPermanentListener(JavaAgentMessageType.INSTRUMENT_SAMPLE, this);
+		client.registerPermanentListener(JavaAgentMessageType.METRICS, this);
 	}
 
 	@Override

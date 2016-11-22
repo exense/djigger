@@ -22,6 +22,7 @@ package io.djigger.agent;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.net.Socket;
+import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
 
 import org.smb.core.Message;
@@ -35,6 +36,7 @@ import io.djigger.monitoring.eventqueue.ModuloEventSkipLogic;
 import io.djigger.monitoring.java.agent.JavaAgentMessageType;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.monitoring.java.sampling.Sampler;
 
@@ -51,6 +53,8 @@ public class AgentSession implements MessageListener, MessageRouterStateListener
 	private final EventQueue<InstrumentationEvent> instrumentationEventQueue;
 
 	private final EventQueue<ThreadInfo> threadInfoQueue;
+	
+	private final EventQueue<Metric<?>> metricsQueue;
 
 	public AgentSession(Socket socket, Instrumentation instrumentation) throws IOException {
 		super();
@@ -75,8 +79,20 @@ public class AgentSession implements MessageListener, MessageRouterStateListener
 				return object.getTimestamp();
 			}
 		});
+		
+		metricsQueue = new EventQueue<Metric<?>>(1, TimeUnit.SECONDS, new EventQueueConsumer<Metric<?>>() {
+			@Override
+			public void processBuffer(LinkedList<Metric<?>> collector) {
+				messageRouter.send(new Message(JavaAgentMessageType.METRICS, collector));
+			}
+		},new ModuloEventSkipLogic<Metric<?>>() {
+			@Override
+			protected long getSkipAttribute(Metric<?> object) {
+				return object.getTime();
+			}
+		});
 
-		sampler = new Sampler(new SamplerRunnable(threadInfoQueue));
+		sampler = new Sampler(new SamplerRunnable(threadInfoQueue, metricsQueue));
 		instrumentationService = new InstrumentationService(instrumentation);
 
 		messageRouter.start();

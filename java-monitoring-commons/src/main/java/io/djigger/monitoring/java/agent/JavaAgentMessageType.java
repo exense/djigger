@@ -40,6 +40,8 @@ public class JavaAgentMessageType {
 	public static String INSTRUMENT_SAMPLE = "INSTRUMENT_SAMPLE";
 
 	public static String THREAD_SAMPLE = "THREAD_SAMPLE";
+	
+	public static String METRICS = "METRICS";
 
 	public static String RESPONSE = "RESPONSE";
 	
