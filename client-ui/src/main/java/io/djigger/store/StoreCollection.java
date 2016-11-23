@@ -78,6 +78,9 @@ public class StoreCollection<T> implements Serializable {
 				
 			}, collection);
 		}
+		if(listener!=null) {
+			listener.onRemove(filter);			
+		}
 	}
 	
 	public List<T> queryAll() {
@@ -89,6 +92,8 @@ public class StoreCollection<T> implements Serializable {
 		public void onAdd(T entry);
 		
 		public void onClear();
+		
+		public void onRemove(Filter<T> filter);
 	}
 
 	

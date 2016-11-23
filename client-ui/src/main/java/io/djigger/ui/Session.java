@@ -140,6 +140,11 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 				realNodePathCache.clear();
 				realNodePathCacheWithLineNumbers.clear();
 			}
+
+			@Override
+			public void onRemove(Filter<ThreadInfo> filter) {
+				throw new RuntimeException("Not implemented!");
+			}
 		});
 		
 		store.getInstrumentationEvents().setListener(new StoreCollectionListener<InstrumentationEvent>() {
@@ -158,6 +163,18 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 			@Override
 			public void onClear() {
 				instrumentationEventWrapperCache.clear();
+			}
+
+			@Override
+			public void onRemove(final Filter<InstrumentationEvent> filter) {
+				if(filter!=null) {
+					instrumentationEventWrapperCache.remove(new Filter<InstrumentationEventWrapper>() {
+						@Override
+						public boolean isValid(InstrumentationEventWrapper input) {
+							return filter.isValid(input.getEvent());
+						}
+					});
+				}
 			}
 		});
 		
