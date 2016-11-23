@@ -21,7 +21,6 @@ package io.djigger.ui.model;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -45,21 +44,6 @@ public class AnalysisNode implements Comparable<AnalysisNode> {
 	public AnalysisNode() {
 		this.id = null;
 		this.parent = null;
-	}
-	
-	public int getMinCallCount() {
-		int minCallCount = 0;
-		HashSet<RealNode> realNodeSet = new HashSet<>();
-		for (RealNodeAggregation nodeAggregation : aggregations) {
-			RealNode realNode = nodeAggregation.getRealNode();
-			if(realNode!=null) {
-				realNodeSet.add(nodeAggregation.getRealNode());				
-			}
-		}
-		for (RealNode realNode : realNodeSet) {
-			minCallCount+=realNode.getMinCallCount();
-		}
-		return minCallCount;
 	}
 
 	public void sort() {

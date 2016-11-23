@@ -106,6 +106,8 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 	private boolean active;
 	
 	private boolean showLineNumbers;
+	
+	private boolean calculatePseudoEvents;
 		
 	private StoreFilter currentStoreFilter;
 	
@@ -331,7 +333,8 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     public void refreshAll() {
     	stagingStore.drainTo(store);
 
-		if(presentationHelper.isShowMinCallCounts()) {
+		clearPseudoEvents();
+		if(calculatePseudoEvents) {
 			generatePseudoInstrumentationEvents();
 		}
 
@@ -374,13 +377,6 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     	
     	SequenceGenerator sequenceGenerator = new SequenceGenerator();
     	List<io.djigger.aggregation.Thread> threads = sequenceGenerator.buildThreads(realNodePaths);
-    			
-		store.getInstrumentationEvents().remove(new Filter<InstrumentationEvent>() {
-			@Override
-			public boolean isValid(InstrumentationEvent input) {
-				return input instanceof PseudoInstrumentationEvent;
-			}
-		});
 
 		PseudoInstrumentationEventsGenerator a = new PseudoInstrumentationEventsGenerator(new Listener() {
 			@Override
@@ -390,14 +386,23 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 		}, getSubscriptions());
 		a.generateApproximatedEvents(threads);	
     }
+
+	private void clearPseudoEvents() {
+		store.getInstrumentationEvents().remove(new Filter<InstrumentationEvent>() {
+			@Override
+			public boolean isValid(InstrumentationEvent input) {
+				return input instanceof PseudoInstrumentationEvent;
+			}
+		});
+	}
     
     public void showLineNumbers(boolean show) {
     	showLineNumbers = show;    	
     	refreshAnalyzerGroupPane();
     }
     
-    public void showMinCallCounts(boolean show) {
-    	presentationHelper.setShowMinCallCounts(show);
+    public void calculatePseudoEvents(boolean show) {
+    	calculatePseudoEvents = show;
     	refreshAll();
     }
 
