@@ -37,6 +37,7 @@ import javax.swing.tree.TreePath;
 
 import io.djigger.ui.analyzer.AnalyzerGroupPane;
 import io.djigger.ui.analyzer.TreeType;
+import io.djigger.ui.model.PseudoInstrumentationEvent;
 
 
 @SuppressWarnings("serial")
@@ -44,11 +45,19 @@ public class SequenceTreeView extends SequenceTreePane implements TreeSelectionL
 
 	private SequenceTreeNode currentNode;
 
-	private final JTree tree;
+	private JTree tree;
 
 	public SequenceTreeView(final AnalyzerGroupPane parent, TreeType treeType, UUID transactionID) {
 		super(parent, treeType, transactionID);
-		
+		initView(parent);
+	}
+	
+	public SequenceTreeView(final AnalyzerGroupPane parent, TreeType treeType, PseudoInstrumentationEvent pseudoEvent) {
+		super(parent, treeType, pseudoEvent);
+		initView(parent);
+	}
+
+	private void initView(final AnalyzerGroupPane parent) {
 		tree = new JTree(new SequenceTreeModel(workNode));
 		//tree.setUI(new SeqT());
 		tree.addTreeSelectionListener(this);

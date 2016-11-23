@@ -29,6 +29,7 @@ import javax.swing.JMenuItem;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.ui.Session;
 import io.djigger.ui.analyzer.TransactionAnalyzerFrame;
+import io.djigger.ui.model.PseudoInstrumentationEvent;
 
 @SuppressWarnings("serial")
 public class TransactionMenu {
@@ -56,8 +57,13 @@ public class TransactionMenu {
 		target.add(new JMenuItem(new AbstractAction("Sequence tree") {	
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				UUID transactionID = callback.getCurrentEvent().getTransactionID();
-				session.getAnalyzerGroupPane().addSequenceTreePane(transactionID);
+				InstrumentationEvent event = callback.getCurrentEvent();
+				if(event instanceof PseudoInstrumentationEvent) {
+					session.getAnalyzerGroupPane().addSequenceTreePane((PseudoInstrumentationEvent)event);	
+				} else {
+					UUID transactionID = callback.getCurrentEvent().getTransactionID();
+					session.getAnalyzerGroupPane().addSequenceTreePane(transactionID);					
+				}
 			}
 		}));
 		target.add(new JMenuItem(new AbstractAction("Sampling tree") {	

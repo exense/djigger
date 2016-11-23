@@ -50,6 +50,7 @@ import io.djigger.ui.common.NodePresentationHelper;
 import io.djigger.ui.instrumentation.InstrumentationEventPane;
 import io.djigger.ui.instrumentation.SubscriptionPane;
 import io.djigger.ui.metrics.MetricPane;
+import io.djigger.ui.model.PseudoInstrumentationEvent;
 
 
 public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListener {
@@ -126,7 +127,7 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 				}
 
 			}));
-            add(new JMenuItem(new AbstractAction("Instrumentation events") {
+            add(new JMenuItem(new AbstractAction("Events") {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					InstrumentationEventPane view = new InstrumentationEventPane(parent, groupPane);
@@ -170,6 +171,11 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
     public void addSequenceTreePane(UUID trID) {
     	SequenceTreeView view = new SequenceTreeView(this, TreeType.NORMAL, trID);
 		addTab(view, "Sequence tree "+trID.toString(), true);
+    }
+    
+    public void addSequenceTreePane(PseudoInstrumentationEvent pseudoEvent) {
+    	SequenceTreeView view = new SequenceTreeView(this, TreeType.NORMAL, pseudoEvent);
+		addTab(view, "Sequence tree "+pseudoEvent.getMethodname(), true);
     }
     
     public void addInstrumentationEventPaneForTransaction(UUID trID) {
@@ -219,7 +225,7 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 
 	private void addInstrumentationEventPane() {
 		InstrumentationEventPane view = new InstrumentationEventPane(parent, this);
-		addTab(view, "Instrumentation events", true);
+		addTab(view, "Events", true);
 	}
 
 	@Override
