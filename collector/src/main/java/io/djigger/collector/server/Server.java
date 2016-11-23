@@ -143,6 +143,7 @@ public class Server {
 			instrumentationEventsAccessor.createIndexesIfNeeded(ttl);
 			
 			metricAccessor = new MetricAccessor(mongodbConnection.getDb());
+			metricAccessor.createIndexesIfNeeded(ttl);
 		} catch (MongoException e) {
 			logger.error("An error occurred while connection to DB", e);
 			throw e;

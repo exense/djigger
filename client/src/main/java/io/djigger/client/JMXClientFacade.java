@@ -25,8 +25,10 @@ import static java.lang.management.ManagementFactory.newPlatformMXBeanProxy;
 
 import java.io.IOException;
 import java.lang.management.GarbageCollectorMXBean;
+import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryUsage;
+import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
@@ -56,6 +58,8 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 	JMXConnector connector;
 	
 	volatile ThreadMXBean bean;
+	
+	volatile OperatingSystemMXBean operatingSystemBean;
 	
 	volatile List<MemoryPoolMXBean> memoryPoolBeans;
 	
@@ -94,6 +98,9 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 						metrics.add(new Metric<>(time, "JMX/GarbageCollector/"+b.getName()+"/CollectionCount",b.getCollectionCount()));
 						metrics.add(new Metric<>(time, "JMX/GarbageCollector/"+b.getName()+"/CollectionTime",b.getCollectionTime()));
 					}
+					
+					double systemLoadAverage = operatingSystemBean.getSystemLoadAverage();
+					metrics.add(new Metric<>(time, "JMX/OperatingSystem/SystemLoadAverage", systemLoadAverage));
 					
 					for(FacadeListener listener:listeners) {
 						listener.metricsReceived(metrics);
@@ -172,6 +179,8 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 		memoryPoolBeans = getPlatformMXBeans(MemoryPoolMXBean.class);
 		
 		garbageCollectorBeans = getPlatformMXBeans(GarbageCollectorMXBean.class);
+		
+		operatingSystemBean = newPlatformMXBeanProxy(connection, ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
 	}
 
 	@Override

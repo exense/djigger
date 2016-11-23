@@ -59,8 +59,7 @@ public class MetricAccessor extends AbstractAccessor {
 	}
 
 	public void createIndexesIfNeeded(Long ttl) {
-		createOrUpdateTTLIndex(metricsCollection, "start", ttl);
-		createOrUpdateIndex(metricsCollection, "tagged");
+		createOrUpdateTTLIndex(metricsCollection, "time", ttl);
 	}
 
 	public void save(TaggedMetric metric) {
