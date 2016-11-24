@@ -65,6 +65,8 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 	
 	volatile List<GarbageCollectorMXBean> garbageCollectorBeans;
 	
+	boolean collectMetrics;
+	
 	final Sampler sampler;
 	
 	public JMXClientFacade(Properties properties, boolean autoReconnect) {
@@ -84,26 +86,28 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 						listener.threadInfosReceived(dumps);
 					}
 					
-					long time = System.currentTimeMillis();
-					List<Metric<?>> metrics = new ArrayList<>();
-					for(MemoryPoolMXBean b:memoryPoolBeans) {
-						MemoryUsage u =b.getCollectionUsage();
-						if(u!=null) {
-							metrics.add(new Metric<>(time, "JMX/MemoryPool/"+b.getName()+"/Used",u.getUsed()));
-							metrics.add(new Metric<>(time, "JMX/MemoryPool/"+b.getName()+"/Max",u.getMax()));
+					if(collectMetrics) {
+						long time = System.currentTimeMillis();
+						List<Metric<?>> metrics = new ArrayList<>();
+						for(MemoryPoolMXBean b:memoryPoolBeans) {
+							MemoryUsage u =b.getCollectionUsage();
+							if(u!=null) {
+								metrics.add(new Metric<>(time, "JMX/MemoryPool/"+b.getName()+"/Used",u.getUsed()));
+								metrics.add(new Metric<>(time, "JMX/MemoryPool/"+b.getName()+"/Max",u.getMax()));
+							}
 						}
-					}
-					
-					for(GarbageCollectorMXBean b:garbageCollectorBeans) {
-						metrics.add(new Metric<>(time, "JMX/GarbageCollector/"+b.getName()+"/CollectionCount",b.getCollectionCount()));
-						metrics.add(new Metric<>(time, "JMX/GarbageCollector/"+b.getName()+"/CollectionTime",b.getCollectionTime()));
-					}
-					
-					double systemLoadAverage = operatingSystemBean.getSystemLoadAverage();
-					metrics.add(new Metric<>(time, "JMX/OperatingSystem/SystemLoadAverage", systemLoadAverage));
-					
-					for(FacadeListener listener:listeners) {
-						listener.metricsReceived(metrics);
+						
+						for(GarbageCollectorMXBean b:garbageCollectorBeans) {
+							metrics.add(new Metric<>(time, "JMX/GarbageCollector/"+b.getName()+"/CollectionCount",b.getCollectionCount()));
+							metrics.add(new Metric<>(time, "JMX/GarbageCollector/"+b.getName()+"/CollectionTime",b.getCollectionTime()));
+						}
+						
+						double systemLoadAverage = operatingSystemBean.getSystemLoadAverage();
+						metrics.add(new Metric<>(time, "JMX/OperatingSystem/SystemLoadAverage", systemLoadAverage));
+						
+						for(FacadeListener listener:listeners) {
+							listener.metricsReceived(metrics);
+						}
 					}
 				}
 			}
@@ -159,6 +163,8 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 		String username = properties.getProperty("username");
 		String password = properties.getProperty("password");
 		
+		collectMetrics = Boolean.parseBoolean(properties.getProperty("collectMetrics","true"));
+		
 		logger.info("Creating JMX connection to " + host + ":" + port);
 		
 		String urlPath = "/jndi/rmi://" + host + ":" + port + "/jmxrmi";
@@ -176,11 +182,13 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 		
 		bean = newPlatformMXBeanProxy(connection, THREAD_MXBEAN_NAME, ThreadMXBean.class);
 		
-		memoryPoolBeans = getPlatformMXBeans(MemoryPoolMXBean.class);
-		
-		garbageCollectorBeans = getPlatformMXBeans(GarbageCollectorMXBean.class);
-		
-		operatingSystemBean = newPlatformMXBeanProxy(connection, ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
+		if(collectMetrics) {
+			memoryPoolBeans = getPlatformMXBeans(MemoryPoolMXBean.class);
+			
+			garbageCollectorBeans = getPlatformMXBeans(GarbageCollectorMXBean.class);
+			
+			operatingSystemBean = newPlatformMXBeanProxy(connection, ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
+		}
 	}
 
 	@Override
