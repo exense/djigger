@@ -65,7 +65,7 @@ public class InstrumentationEventDetailsPane extends JDialog {
 		
 		SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.S");
 		data.add(addEntry("Event ID:", event.getId().toString()));
-		data.add(addEntry("Transaction ID:", event.getTransactionID().toString()));
+		data.add(addEntry("Transaction ID:", event.getTransactionID()!=null?event.getTransactionID().toString():""));
 
 		data.add(addEntry("Thread ID:", Long.toString(event.getThreadID())));
 		data.add(addEntry("Start:", format.format(new Date(event.getStart()))));

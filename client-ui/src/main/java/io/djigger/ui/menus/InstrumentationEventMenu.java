@@ -67,9 +67,9 @@ public class InstrumentationEventMenu {
 		JMenu transactionMenu = new JMenu("Analyze Transaction in");
 		new TransactionMenu(transactionMenu, session, new TransactionMenuCallback() {			
 			@Override
-			public UUID getCurrentTransactionID() {
+			public InstrumentationEvent getCurrentEvent() {
 				final InstrumentationEvent event = callback.getCurrentEvent();
-				return event.getTransactionID();
+				return event;
 			}
 		});
 		target.add(transactionMenu);

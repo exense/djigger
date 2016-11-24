@@ -20,12 +20,46 @@
 package io.djigger.store.filter;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.model.ThreadInfo;
+import io.djigger.ql.Filter;
 
-public interface StoreFilter {
+public class StoreFilter {
 
-	public boolean match(ThreadInfo dump);
+	private Filter<ThreadInfo> threadInfoFilter;
+	
+	private Filter<InstrumentationEvent> instrumentationEventsFilter;
+	
+	private Filter<Metric<?>> metricFilter;
+	
+	public StoreFilter(Filter<ThreadInfo> threadInfoFilter, Filter<InstrumentationEvent> instrumentationEventsFilter, Filter<Metric<?>> metricFilter) {
+		super();
+		this.threadInfoFilter = threadInfoFilter;
+		this.instrumentationEventsFilter = instrumentationEventsFilter;
+		this.metricFilter = metricFilter;
+	}
 
-	public boolean match(InstrumentationEvent sample);
+	public Filter<Metric<?>> getMetricFilter() {
+		return metricFilter;
+	}
 
+	public void setMetricFilter(Filter<Metric<?>> metricFilter) {
+		this.metricFilter = metricFilter;
+	}
+
+	public Filter<ThreadInfo> getThreadInfoFilter() {
+		return threadInfoFilter;
+	}
+
+	public void setThreadInfoFilter(Filter<ThreadInfo> threadInfoFilter) {
+		this.threadInfoFilter = threadInfoFilter;
+	}
+
+	public Filter<InstrumentationEvent> getInstrumentationEventsFilter() {
+		return instrumentationEventsFilter;
+	}
+
+	public void setInstrumentationEventsFilter(Filter<InstrumentationEvent> instrumentationEventsFilter) {
+		this.instrumentationEventsFilter = instrumentationEventsFilter;
+	}
 }

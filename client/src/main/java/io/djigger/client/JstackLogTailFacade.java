@@ -127,4 +127,11 @@ public class JstackLogTailFacade extends Facade {
 		return false;
 	}
 
+
+
+	@Override
+	public boolean hasInstrumentationSupport() {
+		return false;
+	}
+
 }

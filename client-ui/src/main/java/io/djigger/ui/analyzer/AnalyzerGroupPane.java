@@ -40,15 +40,17 @@ import javax.swing.event.ChangeListener;
 import org.bson.types.ObjectId;
 
 import io.djigger.aggregation.AnalyzerService;
+import io.djigger.aggregation.Thread.RealNodePathWrapper;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.sequencetree.SequenceTreeView;
-import io.djigger.store.filter.StoreFilter;
 import io.djigger.ui.Session;
 import io.djigger.ui.Session.SessionType;
 import io.djigger.ui.common.EnhancedTabbedPane;
 import io.djigger.ui.common.NodePresentationHelper;
 import io.djigger.ui.instrumentation.InstrumentationEventPane;
 import io.djigger.ui.instrumentation.SubscriptionPane;
+import io.djigger.ui.metrics.MetricPane;
+import io.djigger.ui.model.PseudoInstrumentationEvent;
 
 
 public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListener {
@@ -56,17 +58,11 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 	private static final long serialVersionUID = -894031577206042607L;
 
 	private final Session parent;
-
+	
 	protected final AnalyzerService analyzerService;
-	
-	protected StoreFilter storeFilter;
-	
-	protected boolean includeLineNumbers;
-	
+			
 	private final NodePresentationHelper presentationHelper;
-
-	//private AnalyzerPane currentSelection;
-
+	
 	private final List<AnalyzerPaneListener> listeners;
 
 	public AnalyzerGroupPane(final Session parent, final NodePresentationHelper presentationHelper) {
@@ -74,7 +70,7 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 		this.parent = parent;
 		listeners = new ArrayList<AnalyzerPaneListener>();
         addChangeListener(this);
-        analyzerService = new AnalyzerService(parent.getStore());
+        analyzerService = new AnalyzerService();
         this.presentationHelper = presentationHelper;  
         
         final AnalyzerGroupPane me = this;
@@ -131,7 +127,7 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 				}
 
 			}));
-            add(new JMenuItem(new AbstractAction("Instrumentation events") {
+            add(new JMenuItem(new AbstractAction("Events") {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					InstrumentationEventPane view = new InstrumentationEventPane(parent, groupPane);
@@ -148,19 +144,16 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 			    	setVisible(false);
 				}
 
-			}));
+			}));    
             
-//            add(new JMenuItem(new AbstractAction("Transaction Tree View") {
-//				@Override
-//				public void actionPerformed(ActionEvent e) {
-//					SequenceTreeView view = new SequenceTreeView(groupPane, TreeType.NORMAL);
-//					addTab(view, e.getActionCommand(), true);
-//			    	setVisible(false);
-//				}
-//
-//			}));
-            
-            
+            add(new JMenuItem(new AbstractAction("Metrics") {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					addMetricsPane();
+			    	setVisible(false);
+				}
+
+			}));    
         }
     }
     
@@ -180,6 +173,11 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 		addTab(view, "Sequence tree "+trID.toString(), true);
     }
     
+    public void addSequenceTreePane(PseudoInstrumentationEvent pseudoEvent) {
+    	SequenceTreeView view = new SequenceTreeView(this, TreeType.NORMAL, pseudoEvent);
+		addTab(view, "Sequence tree "+pseudoEvent.getMethodname(), true);
+    }
+    
     public void addInstrumentationEventPaneForTransaction(UUID trID) {
     	InstrumentationEventPane view = new InstrumentationEventPane(parent, "trid="+trID, this);
 		addTab(view, "Event list "+trID.toString(), true);
@@ -190,16 +188,17 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
     	addTab(pane, "Subscriptions", true);
     }
     
-    public void setStoreFilter(StoreFilter storeFilter) {
-    	this.storeFilter = storeFilter;
+    public void addMetricsPane() {
+    	MetricPane pane = new MetricPane(parent);
+    	addTab(pane, "Metrics", true);
     }
-
-    public StoreFilter getStoreFilter() {
-		return storeFilter;
-	}
-
-	public void refresh() {
-    	analyzerService.load(storeFilter, includeLineNumbers);
+    
+    public void setSamples(List<RealNodePathWrapper> pathSamples) {
+    	analyzerService.load(pathSamples);
+    	refresh();
+    }
+    
+	public void refresh() {	
     	for(Component component:getComponents()) {
             if(component instanceof Dashlet) {
                 ((Dashlet)component).refresh();
@@ -220,38 +219,18 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
         	addInstrumentationEventPane();
 			addSubscriptionPane();
         }
+        addMetricsPane();
         setSelectedIndex(0);
     }
 
 	private void addInstrumentationEventPane() {
 		InstrumentationEventPane view = new InstrumentationEventPane(parent, this);
-		addTab(view, "Instrumentation events", true);
+		addTab(view, "Events", true);
 	}
 
 	@Override
 	public void stateChanged(ChangeEvent e) {		
 		Component selection = getCurrentTab();
-		/*
-		// This feature seems to disturb more than it helps
-		if(selection!=null && currentSelection!=null) {
-			String oldExclude = currentSelection.getNodeFilter();
-			String oldFilter = currentSelection.getStacktraceFilter();
-			String newExclude = selection.getNodeFilter();
-			String newFilter = selection.getStacktraceFilter();
-
-			if((oldExclude!=null &&
-					!oldExclude.equals(newExclude)) ||
-				(oldFilter!=null &&
-						!oldFilter.equals(newFilter))) {
-				if(JOptionPane.showConfirmDialog(parent.getFrame(),
-						"Do you wish to reuse the filters of the previous view?") == JOptionPane.YES_OPTION) {
-					selection.setStacktraceFilter(oldFilter);
-					selection.setNodeFilter(oldExclude);
-					selection.refresh();
-				}
-			}
-		}
-		currentSelection = selection; */
 		if(selection!=null && selection instanceof AnalyzerPane) {
 			((AnalyzerPane)selection).resetFocus();
 		}
@@ -274,15 +253,8 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 	public NodePresentationHelper getPresentationHelper() {
 		return presentationHelper;
 	}
-	
-	public void showLineNumbers(boolean show) {
-		this.includeLineNumbers = show;
-		refresh();
-	}
 
 	public AnalyzerService getAnalyzerService() {
 		return analyzerService;
 	}
-
-
 }

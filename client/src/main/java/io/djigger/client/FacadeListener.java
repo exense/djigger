@@ -19,16 +19,19 @@
  *******************************************************************************/
 package io.djigger.client;
 
-import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
-import io.djigger.monitoring.java.model.ThreadInfo;
-
 import java.util.List;
+
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.model.Metric;
+import io.djigger.monitoring.java.model.ThreadInfo;
 
 public interface FacadeListener {
 	
 	public void threadInfosReceived(List<ThreadInfo> threaddumps);
 	
 	public void instrumentationSamplesReceived(List<InstrumentationEvent> samples);
+	
+	public void metricsReceived(List<Metric<?>> metrics);
 	
 	public void connectionClosed();
 	

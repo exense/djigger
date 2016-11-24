@@ -128,9 +128,9 @@ public class MessageRouter extends Thread {
 				SynchronMessageResponse response = (SynchronMessageResponse) m;
 				SynchronMessageResponseHolder responseHolder = register.remove(response.getCorrelationID());
 				if(responseHolder!=null) {
-					responseHolder.response = m.getContent();
-					responseHolder.processed = true;
 					synchronized (responseHolder) {
+						responseHolder.processed = true;
+						responseHolder.response = m.getContent();
 						responseHolder.notify();					
 					}
 				}
@@ -189,7 +189,9 @@ public class MessageRouter extends Thread {
 		send(synchronMessage);
 		
 		synchronized(responseHholder) {
-			responseHholder.wait(timeout);
+			if(!responseHholder.processed) {
+				responseHholder.wait(timeout);
+			}
 		}
 		
 		if(responseHholder.processed) {

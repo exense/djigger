@@ -19,13 +19,14 @@
  *******************************************************************************/
 package io.djigger.aggregation;
 
-import io.djigger.ql.Filter;
-import io.djigger.ui.model.RealNodePath;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import io.djigger.aggregation.Thread.RealNodePathWrapper;
+import io.djigger.ql.Filter;
+import io.djigger.ui.model.RealNodePath;
 
 
 
@@ -38,23 +39,19 @@ public class Aggregator {
 		aggregations = new HashMap<RealNodePath,Aggregation>();
 	}
 
- 	public void aggregate(List<Thread> threads) {
+ 	public void aggregate(List<RealNodePathWrapper> samples) {
  		aggregations.clear();
  		
- 		for(Thread thread:threads) {			
- 			for(RealNodePath nodePath:thread.getRealNodePathSequence()) {
- 				if(nodePath.getFullPath().size()>0) {
- 					Aggregation aggregation = aggregations.get(nodePath);
- 					if(aggregation == null) {
- 						aggregation = new Aggregation(nodePath);
- 						aggregations.put(nodePath, aggregation);
- 					}
- 					aggregation.addSample(new Thread(thread.getId(), null));
- 				}
- 			}
-		}
-		for(Aggregation aggregation:aggregations.values()) {
-			aggregation.trim();
+ 		for(RealNodePathWrapper sample:samples) {			
+			RealNodePath nodePath = sample.getPath();
+			if(nodePath.getFullPath().size()>0) {
+				Aggregation aggregation = aggregations.get(nodePath);
+				if(aggregation == null) {
+					aggregation = new Aggregation(nodePath);
+					aggregations.put(nodePath, aggregation);
+				}
+				aggregation.addSample(sample);
+			}
 		}
 	}
 

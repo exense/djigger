@@ -27,6 +27,7 @@ import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.ql.Filter;
 import io.djigger.store.Store;
 import io.djigger.ui.analyzer.TreeType;
+import io.djigger.ui.model.PseudoInstrumentationEvent;
 
 public class SequenceTreeService {
 
@@ -48,9 +49,23 @@ public class SequenceTreeService {
 		realTree = realdNodeTreeBuilder.buildRealNodeTree(threadInfos);
 	}
 	
+	public synchronized void load(PseudoInstrumentationEvent pseudoEvent) {
+		List<InstrumentationEvent> threadInfos = query(pseudoEvent);	
+		realTree = realdNodeTreeBuilder.buildRealNodeTree(threadInfos);
+	}
+	
+	private List<InstrumentationEvent> query(final PseudoInstrumentationEvent pseudoEvent) {
+		return store.getInstrumentationEvents().query(new Filter<InstrumentationEvent>() {
+			
+			@Override
+			public boolean isValid(InstrumentationEvent input) {
+				return pseudoEvent.getThreadID()==input.getThreadID()&&pseudoEvent.getStart()<=input.getStart()&&pseudoEvent.getEnd()>=input.getEnd();
+			}
+		});
+	}
 
 	private List<InstrumentationEvent> query(final UUID transactionID) {
-		return store.queryInstrumentationEvents(new Filter<InstrumentationEvent>() {
+		return store.getInstrumentationEvents().query(new Filter<InstrumentationEvent>() {
 			
 			@Override
 			public boolean isValid(InstrumentationEvent input) {

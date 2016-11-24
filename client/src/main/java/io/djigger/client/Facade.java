@@ -140,6 +140,8 @@ public abstract class Facade {
         addInstrumentation_(subscription);
     }
     
+    public abstract boolean hasInstrumentationSupport();
+    
     protected abstract void addInstrumentation_(InstrumentSubscription subscription);
 
 	public synchronized void removeInstrumentation(InstrumentSubscription subscription) {

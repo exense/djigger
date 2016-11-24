@@ -193,17 +193,17 @@ public class InstrumentationEventPane extends Dashlet {
 				JOptionPane.showMessageDialog(this,	e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			}
 		}
-		final StoreFilter storeFilter = this.parent.getStoreFilter();
+		final StoreFilter storeFilter = this.session.getStoreFilter();
 		final Filter<InstrumentationEvent> localFilter = eventFilter;
 		Filter<InstrumentationEvent> mergedFilter = new Filter<InstrumentationEvent>() {
 
 			@Override
 			public boolean isValid(InstrumentationEvent input) {
-				return (storeFilter==null||storeFilter.match(input))&&(localFilter==null||localFilter.isValid(input));
+				return (storeFilter==null||storeFilter.getInstrumentationEventsFilter().isValid(input))&&(localFilter==null||localFilter.isValid(input));
 			}
 		};
 		
-		samples = store.queryInstrumentationEvents(mergedFilter);
+		samples = store.getInstrumentationEvents().query(mergedFilter);
 		
 		Collections.sort(samples, new Comparator<InstrumentationEvent>() {
 			@Override

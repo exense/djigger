@@ -41,6 +41,7 @@ import io.djigger.ui.analyzer.AnalyzerGroupPane;
 import io.djigger.ui.analyzer.TreeType;
 import io.djigger.ui.common.EnhancedTextField;
 import io.djigger.ui.common.NodePresentationHelper;
+import io.djigger.ui.model.PseudoInstrumentationEvent;
 
 
 public abstract class SequenceTreePane extends JPanel implements ActionListener {
@@ -68,7 +69,7 @@ public abstract class SequenceTreePane extends JPanel implements ActionListener 
 	private final String STACKTRACE_FILTER = "Stacktrace filter (and, or, not operators allowed)";
 	private final String NODE_FILTER = "Node filter (and, or, not operators allowed)";
 
-	protected SequenceTreePane(AnalyzerGroupPane parent, TreeType treeType, UUID transactionID) {
+	protected SequenceTreePane(AnalyzerGroupPane parent, TreeType treeType) {
 		super(new BorderLayout());
 
 		this.parent = parent;
@@ -95,15 +96,24 @@ public abstract class SequenceTreePane extends JPanel implements ActionListener 
 
 		add(filterPanel, BorderLayout.PAGE_START);
 		add(contentPanel, BorderLayout.CENTER);
-
+	}
+	
+	protected SequenceTreePane(AnalyzerGroupPane parent, TreeType treeType, UUID transactionID) {
+		this(parent, treeType);
 		if(session.getSessionType()==SessionType.STORE) {
 			Iterator<InstrumentationEvent> events = session.getStoreClient().getInstrumentationAccessor().getByTransactionId(transactionID);
 			while(events.hasNext()) {
-				session.getStore().addInstrumentationEvent(events.next());
+				session.getStore().getInstrumentationEvents().add(events.next());
 			};
-			session.getStore().processBuffers();
 		}
 		sequenceTreeService.load(transactionID, false);			
+		transform();
+	}
+	
+	
+	protected SequenceTreePane(AnalyzerGroupPane parent, TreeType treeType, PseudoInstrumentationEvent pseudoEvent) {
+		this(parent, treeType);
+		sequenceTreeService.load(pseudoEvent);			
 		transform();
 	}
 

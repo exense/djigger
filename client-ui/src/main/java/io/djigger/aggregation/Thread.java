@@ -22,25 +22,26 @@ package io.djigger.aggregation;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.ui.model.RealNodePath;
 
 public class Thread {
 	
 	long id;
 
-	List<RealNodePath> realNodePathSequence = new  ArrayList<>();
+	List<RealNodePathWrapper> realNodePathSequence = new  ArrayList<>();
 
-	public Thread(long id, List<RealNodePath> realNodePathSequence) {
+	public Thread(long id, List<RealNodePathWrapper> realNodePathSequence) {
 		super();
 		this.realNodePathSequence = realNodePathSequence;
 		this.id = id;
 	}
 
-	public List<RealNodePath> getRealNodePathSequence() {
+	public List<RealNodePathWrapper> getRealNodePathSequence() {
 		return realNodePathSequence;
 	}
 
-	public void setRealNodePathSequence(List<RealNodePath> realNodePathSequence) {
+	public void setRealNodePathSequence(List<RealNodePathWrapper> realNodePathSequence) {
 		this.realNodePathSequence = realNodePathSequence;
 	}
 
@@ -50,5 +51,36 @@ public class Thread {
 
 	public void setId(long id) {
 		this.id = id;
+	}
+	
+	public static class RealNodePathWrapper {
+		
+		private RealNodePath path;
+		
+		private ThreadInfo threadInfo;
+
+		public RealNodePathWrapper(RealNodePath path, ThreadInfo threadInfo) {
+			super();
+			this.path = path;
+			this.threadInfo = threadInfo;
+		}
+
+		public RealNodePath getPath() {
+			return path;
+		}
+
+		protected void setPath(RealNodePath path) {
+			this.path = path;
+		}
+
+		public ThreadInfo getThreadInfo() {
+			return threadInfo;
+		}
+
+		protected void setThreadInfo(ThreadInfo threadInfo) {
+			this.threadInfo = threadInfo;
+		}
+		
+		
 	}
 }

@@ -21,51 +21,23 @@ package io.djigger.aggregation;
 
 import java.util.List;
 
+import io.djigger.aggregation.Thread.RealNodePathWrapper;
 import io.djigger.ui.model.NodeID;
 import io.djigger.ui.model.RealNode;
-import io.djigger.ui.model.RealNodePath;
 
 public class RealNodeBuilder {
 
-	public RealNode buildRealNodeTree(List<Thread> threads) {
+	public RealNode buildRealNodeTree(List<RealNodePathWrapper> threads) {
 		RealNode rootRealNode = new RealNode(null, null);
-		for(Thread thread:threads) {
-			List<NodeID> previousPath = null;
-			for(RealNodePath realNodePath:thread.getRealNodePathSequence()) {
-				List<NodeID> currentPath = realNodePath.getFullPath();
 
-				int i = 0;
-				RealNode currentNode  = rootRealNode;
-				boolean increasingCount=false;
-				for(NodeID currentNodeID:currentPath) {
-					currentNode = currentNode.getOrCreateChild(currentNodeID);
-					if(previousPath!=null){
-						if(previousPath.size()-1>=i) {		
-							NodeID previousNodeID = previousPath.get(i);
-							if(!previousNodeID.equals(currentNodeID)) {
-								increasingCount=true;
-							}
-						} else {
-							increasingCount=true;
-						}
-					} else {
-						increasingCount=true;
-					}
-					if(increasingCount) {
-						increaseMinCallCount(currentNode);
-					}
-					i++;
-				}
-				
-				previousPath = currentPath;
+		for(RealNodePathWrapper realNodePathWrapper:threads) {
+			RealNode currentNode  = rootRealNode;
+			List<NodeID> currentPath = realNodePathWrapper.getPath().getFullPath();
+			for(NodeID currentNodeID:currentPath) {
+				currentNode = currentNode.getOrCreateChild(currentNodeID);
 			}
 		}
 		
 		return rootRealNode;
 	}
-
-	private void increaseMinCallCount(RealNode node) {
-		node.setMinCallCount(node.getMinCallCount()+1);
-	}
-
 }

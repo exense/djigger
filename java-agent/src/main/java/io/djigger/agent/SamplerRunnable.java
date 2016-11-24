@@ -19,24 +19,37 @@
  *******************************************************************************/
 package io.djigger.agent;
 
+import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryPoolMXBean;
+import java.lang.management.MemoryUsage;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import io.djigger.monitoring.eventqueue.EventQueue;
 import io.djigger.monitoring.java.instrumentation.Transaction;
+import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.sampling.ThreadDumpHelper;
 
 public class SamplerRunnable implements Runnable {
 	
 	private final EventQueue<io.djigger.monitoring.java.model.ThreadInfo> threadInfoQueue;
 	
+	private final EventQueue<io.djigger.monitoring.java.model.Metric<?>> metricsQueue;
+	
 	private ThreadMXBean mxBean = ManagementFactory.getThreadMXBean();
 	
-	public SamplerRunnable(EventQueue<io.djigger.monitoring.java.model.ThreadInfo> threadInfoQueue) {
+	private List<MemoryPoolMXBean> memoryPoolBeans = ManagementFactory.getMemoryPoolMXBeans();
+	
+	private List<GarbageCollectorMXBean> garbageCollectorBeans = ManagementFactory.getGarbageCollectorMXBeans();
+	
+	public SamplerRunnable(EventQueue<io.djigger.monitoring.java.model.ThreadInfo> threadInfoQueue, EventQueue<io.djigger.monitoring.java.model.Metric<?>> metricsQueue) {
 		super();
 		this.threadInfoQueue = threadInfoQueue;
+		this.metricsQueue = metricsQueue;
 	}
 
 	@Override
@@ -50,5 +63,21 @@ public class SamplerRunnable implements Runnable {
 			event.setTransactionID(currentTrID);
 			threadInfoQueue.add(event);
 		}
+		
+		List<Metric<?>> metrics = new ArrayList<Metric<?>>();
+		for(MemoryPoolMXBean b:memoryPoolBeans) {
+			MemoryUsage u =b.getCollectionUsage();
+			if(u!=null) {
+				metrics.add(new Metric<Long>(timestamp, "JMX/MemoryPool/"+b.getName()+"/Used",u.getUsed()));
+				metrics.add(new Metric<Long>(timestamp, "JMX/MemoryPool/"+b.getName()+"/Max",u.getMax()));
+			}
+		}
+		
+		for(GarbageCollectorMXBean b:garbageCollectorBeans) {
+			metrics.add(new Metric<Long>(timestamp, "JMX/GarbageCollector/"+b.getName()+"/CollectionCount",b.getCollectionCount()));
+			metrics.add(new Metric<Long>(timestamp, "JMX/GarbageCollector/"+b.getName()+"/CollectionTime",b.getCollectionTime()));
+		}
+		
+		metricsQueue.add(metrics);
 	}
 }

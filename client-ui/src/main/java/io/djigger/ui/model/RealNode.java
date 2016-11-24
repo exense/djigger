@@ -31,8 +31,6 @@ public class RealNode {
 	private final RealNode parent;
 
 	private final Map<NodeID, RealNode> children = new HashMap<NodeID, RealNode>();
-	
-	private int minCallCount;
 
 	public RealNode(NodeID id, RealNode parent) {
 		super();
@@ -69,14 +67,5 @@ public class RealNode {
 			pathBuilder.add(id);
 		}
 	}
-
-	public int getMinCallCount() {
-		return minCallCount;
-	}
-
-	public void setMinCallCount(int minCallCount) {
-		this.minCallCount = minCallCount;
-	}
-	
 	
 }

@@ -154,10 +154,10 @@ public class SessionControlPane extends JPanel implements ActionListener {
 			}
 		},20));
 		
-		controlPanel.add(new CommandButton("calc.png", "Show minimum call counts", new Command() {
+		controlPanel.add(new CommandButton("calc.png", "Calculate pseudo events (based on sampling)", new Command() {
 			@Override
 			public void execute(boolean selected) {
-				parent.showMinCallCounts(selected);
+				parent.calculatePseudoEvents(selected);
 			}
 		},20));
 

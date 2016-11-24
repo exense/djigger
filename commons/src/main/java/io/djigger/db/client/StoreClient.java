@@ -20,6 +20,7 @@
 package io.djigger.db.client;
 
 import io.djigger.collector.accessors.InstrumentationEventAccessor;
+import io.djigger.collector.accessors.MetricAccessor;
 import io.djigger.collector.accessors.MongoConnection;
 import io.djigger.collector.accessors.ThreadInfoAccessor;
 import io.djigger.collector.accessors.stackref.ThreadInfoAccessorImpl;
@@ -30,11 +31,14 @@ public class StoreClient {
 	
 	InstrumentationEventAccessor instrumentationAccessor;
 	
+	MetricAccessor metricAccessor;
+	
 	public void connect(String host, int port) throws Exception {
 		MongoConnection connection = new MongoConnection();
 		connection.connect(host, port);
 		threadInfoAccessor = new ThreadInfoAccessorImpl(connection.getDb());
 		instrumentationAccessor = new InstrumentationEventAccessor(connection.getDb());
+		metricAccessor = new MetricAccessor(connection.getDb());
 	}
 
 	public ThreadInfoAccessor getThreadInfoAccessor() {
@@ -43,5 +47,9 @@ public class StoreClient {
 
 	public InstrumentationEventAccessor getInstrumentationAccessor() {
 		return instrumentationAccessor;
+	}
+
+	public MetricAccessor getMetricAccessor() {
+		return metricAccessor;
 	}
 }

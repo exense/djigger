@@ -20,11 +20,18 @@
 package io.djigger.client;
 
 import static java.lang.management.ManagementFactory.THREAD_MXBEAN_NAME;
+import static java.lang.management.ManagementFactory.getPlatformMXBeans;
 import static java.lang.management.ManagementFactory.newPlatformMXBeanProxy;
 
 import java.io.IOException;
+import java.lang.management.GarbageCollectorMXBean;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryPoolMXBean;
+import java.lang.management.MemoryUsage;
+import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
@@ -40,6 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
+import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.sampling.Sampler;
 import io.djigger.monitoring.java.sampling.ThreadDumpHelper;
 
@@ -50,6 +58,14 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 	JMXConnector connector;
 	
 	volatile ThreadMXBean bean;
+	
+	volatile OperatingSystemMXBean operatingSystemBean;
+	
+	volatile List<MemoryPoolMXBean> memoryPoolBeans;
+	
+	volatile List<GarbageCollectorMXBean> garbageCollectorBeans;
+	
+	boolean collectMetrics;
 	
 	final Sampler sampler;
 	
@@ -68,6 +84,30 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 					
 					for(FacadeListener listener:listeners) {
 						listener.threadInfosReceived(dumps);
+					}
+					
+					if(collectMetrics) {
+						long time = System.currentTimeMillis();
+						List<Metric<?>> metrics = new ArrayList<>();
+						for(MemoryPoolMXBean b:memoryPoolBeans) {
+							MemoryUsage u =b.getCollectionUsage();
+							if(u!=null) {
+								metrics.add(new Metric<>(time, "JMX/MemoryPool/"+b.getName()+"/Used",u.getUsed()));
+								metrics.add(new Metric<>(time, "JMX/MemoryPool/"+b.getName()+"/Max",u.getMax()));
+							}
+						}
+						
+						for(GarbageCollectorMXBean b:garbageCollectorBeans) {
+							metrics.add(new Metric<>(time, "JMX/GarbageCollector/"+b.getName()+"/CollectionCount",b.getCollectionCount()));
+							metrics.add(new Metric<>(time, "JMX/GarbageCollector/"+b.getName()+"/CollectionTime",b.getCollectionTime()));
+						}
+						
+						double systemLoadAverage = operatingSystemBean.getSystemLoadAverage();
+						metrics.add(new Metric<>(time, "JMX/OperatingSystem/SystemLoadAverage", systemLoadAverage));
+						
+						for(FacadeListener listener:listeners) {
+							listener.metricsReceived(metrics);
+						}
 					}
 				}
 			}
@@ -123,6 +163,8 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 		String username = properties.getProperty("username");
 		String password = properties.getProperty("password");
 		
+		collectMetrics = Boolean.parseBoolean(properties.getProperty("collectMetrics","true"));
+		
 		logger.info("Creating JMX connection to " + host + ":" + port);
 		
 		String urlPath = "/jndi/rmi://" + host + ":" + port + "/jmxrmi";
@@ -139,7 +181,18 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 		MBeanServerConnection connection = connector.getMBeanServerConnection();
 		
 		bean = newPlatformMXBeanProxy(connection, THREAD_MXBEAN_NAME, ThreadMXBean.class);
+		
+		if(collectMetrics) {
+			memoryPoolBeans = getPlatformMXBeans(MemoryPoolMXBean.class);
+			
+			garbageCollectorBeans = getPlatformMXBeans(GarbageCollectorMXBean.class);
+			
+			operatingSystemBean = newPlatformMXBeanProxy(connection, ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
+		}
+	}
 
-//		MemoryMXBean bean2 = newPlatformMXBeanProxy(connection, ManagementFactory.MEMORY_MXBEAN_NAME, MemoryMXBean.class);
+	@Override
+	public boolean hasInstrumentationSupport() {
+		return false;
 	}
 }

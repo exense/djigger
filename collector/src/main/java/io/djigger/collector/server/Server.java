@@ -35,6 +35,7 @@ import com.mongodb.MongoException;
 import io.djigger.client.Facade;
 import io.djigger.client.FacadeListener;
 import io.djigger.collector.accessors.InstrumentationEventAccessor;
+import io.djigger.collector.accessors.MetricAccessor;
 import io.djigger.collector.accessors.MongoConnection;
 import io.djigger.collector.accessors.ThreadInfoAccessor;
 import io.djigger.collector.accessors.stackref.ThreadInfoAccessorImpl;
@@ -46,8 +47,10 @@ import io.djigger.collector.server.conf.ConnectionsConfig;
 import io.djigger.collector.server.conf.MongoDBParameters;
 import io.djigger.collector.server.services.ServiceServer;
 import io.djigger.model.TaggedInstrumentationEvent;
+import io.djigger.model.TaggedMetric;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.model.ThreadInfo;
 
 public class Server {
@@ -64,6 +67,8 @@ public class Server {
 	private ThreadInfoAccessor threadInfoAccessor;
 	
 	private InstrumentationEventAccessor instrumentationEventsAccessor;
+	
+	private MetricAccessor metricAccessor;
 
 	private List<ClientConnection> clients = new ArrayList<>();
 
@@ -136,6 +141,9 @@ public class Server {
 			
 			instrumentationEventsAccessor = new InstrumentationEventAccessor(mongodbConnection.getDb());
 			instrumentationEventsAccessor.createIndexesIfNeeded(ttl);
+			
+			metricAccessor = new MetricAccessor(mongodbConnection.getDb());
+			metricAccessor.createIndexesIfNeeded(ttl);
 		} catch (MongoException e) {
 			logger.error("An error occurred while connection to DB", e);
 			throw e;
@@ -183,6 +191,15 @@ public class Server {
 					taggedEvents.add(taggedEvent);
 				}
 				instrumentationEventsAccessor.save(taggedEvents);
+			}
+			
+			@Override
+			public void metricsReceived(List<Metric<?>> metrics) {
+				List<TaggedMetric> taggedMetrics = new ArrayList<>();
+				for(Metric<?> metric:metrics) {
+					taggedMetrics.add(new TaggedMetric(attributes, metric));
+				}
+				metricAccessor.save(taggedMetrics);
 			}
 
 			@Override

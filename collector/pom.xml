@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>io.djigger</groupId>
 		<artifactId>parent</artifactId>
-		<version>1.5.2</version>
+		<version>1.6.1</version>
 		<relativePath>../parent</relativePath>
 	</parent>
 	<artifactId>collector</artifactId>
@@ -109,7 +109,7 @@
 			<artifactId>tools</artifactId>
 			<version>1.7</version>
 			<scope>system</scope>
-			<systemPath>${java.home}/../lib/tools.jar</systemPath>
+			<systemPath>${java.home}/lib/tools.jar</systemPath>
 		</dependency>
 	</dependencies>
 </project>
