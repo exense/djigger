@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.concurrent.TimeoutException;
 
 
 
@@ -99,18 +100,15 @@ public class Client implements MessageRouterStateListener {
 			return serverSocket.getLocalPort();
 		}
 
-		public void waitForConnection(long timeout) {		
-			if(!isAlive) {
-				synchronized (this) {
-					try {
-						wait(timeout);
-					} catch (InterruptedException e) {
-						
-					}				
+		public void waitForConnection(long timeout) throws TimeoutException, InterruptedException {
+			synchronized (this) {
+				if (!isAlive) {
+					wait(timeout);
 				}
 			}
-			
-			router.start();
+			if(!isAlive) {
+				throw new TimeoutException("Timeout occured while waiting for connection.");
+			}
 		}
 	}
 	
