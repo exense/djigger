@@ -14,7 +14,7 @@ public class StoreCollection<T> implements Serializable {
 
 	List<T> collection = new ArrayList<T>();
 
-	StoreCollectionListener<T> listener;
+	transient StoreCollectionListener<T> listener;
 	
 	public StoreCollection() {
 		super();		
