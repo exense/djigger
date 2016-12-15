@@ -21,6 +21,7 @@ package io.djigger.agent;
 
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryUsage;
 import java.lang.management.ThreadInfo;
@@ -45,6 +46,8 @@ public class SamplerRunnable implements Runnable {
 	private List<MemoryPoolMXBean> memoryPoolBeans = ManagementFactory.getMemoryPoolMXBeans();
 	
 	private List<GarbageCollectorMXBean> garbageCollectorBeans = ManagementFactory.getGarbageCollectorMXBeans();
+	
+	private MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
 	
 	public SamplerRunnable(EventQueue<io.djigger.monitoring.java.model.ThreadInfo> threadInfoQueue, EventQueue<io.djigger.monitoring.java.model.Metric<?>> metricsQueue) {
 		super();
@@ -78,6 +81,14 @@ public class SamplerRunnable implements Runnable {
 			metrics.add(new Metric<Long>(timestamp, "JMX/GarbageCollector/"+b.getName()+"/CollectionTime",b.getCollectionTime()));
 		}
 		
+		MemoryUsage heapUsage = memoryBean.getHeapMemoryUsage();
+		metrics.add(new Metric<Long>(timestamp, "JMX/Memory/HeapMemoryUsage/Used",heapUsage.getUsed()));
+		metrics.add(new Metric<Long>(timestamp, "JMX/Memory/HeapMemoryUsage/Max",heapUsage.getMax()));
+		
+		MemoryUsage nonHeapUsage = memoryBean.getNonHeapMemoryUsage();
+		metrics.add(new Metric<Long>(timestamp, "JMX/Memory/NonHeapMemoryUsage/Used",nonHeapUsage.getUsed()));
+		metrics.add(new Metric<Long>(timestamp, "JMX/Memory/NonHeapMemoryUsage/Max",nonHeapUsage.getMax()));
+
 		metricsQueue.add(metrics);
 	}
 }
