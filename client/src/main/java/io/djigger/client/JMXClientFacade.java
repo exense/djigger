@@ -26,6 +26,7 @@ import static java.lang.management.ManagementFactory.newPlatformMXBeanProxy;
 import java.io.IOException;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryUsage;
 import java.lang.management.OperatingSystemMXBean;
@@ -64,6 +65,8 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 	volatile List<MemoryPoolMXBean> memoryPoolBeans;
 	
 	volatile List<GarbageCollectorMXBean> garbageCollectorBeans;
+	
+	volatile MemoryMXBean memoryBean;
 	
 	boolean collectMetrics;
 	
@@ -104,6 +107,15 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 						
 						double systemLoadAverage = operatingSystemBean.getSystemLoadAverage();
 						metrics.add(new Metric<>(time, "JMX/OperatingSystem/SystemLoadAverage", systemLoadAverage));
+						
+						MemoryUsage heapUsage = memoryBean.getHeapMemoryUsage();
+						metrics.add(new Metric<>(time, "JMX/Memory/HeapMemoryUsage/Used",heapUsage.getUsed()));
+						metrics.add(new Metric<>(time, "JMX/Memory/HeapMemoryUsage/Max",heapUsage.getMax()));
+						
+						MemoryUsage nonHeapUsage = memoryBean.getNonHeapMemoryUsage();
+						metrics.add(new Metric<>(time, "JMX/Memory/NonHeapMemoryUsage/Used",nonHeapUsage.getUsed()));
+						metrics.add(new Metric<>(time, "JMX/Memory/NonHeapMemoryUsage/Max",nonHeapUsage.getMax()));
+
 						
 						for(FacadeListener listener:listeners) {
 							listener.metricsReceived(metrics);
@@ -183,9 +195,11 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 		bean = newPlatformMXBeanProxy(connection, THREAD_MXBEAN_NAME, ThreadMXBean.class);
 		
 		if(collectMetrics) {
-			memoryPoolBeans = getPlatformMXBeans(MemoryPoolMXBean.class);
+			memoryBean = newPlatformMXBeanProxy(connection, ManagementFactory.MEMORY_MXBEAN_NAME, MemoryMXBean.class);
 			
-			garbageCollectorBeans = getPlatformMXBeans(GarbageCollectorMXBean.class);
+			memoryPoolBeans = getPlatformMXBeans(connection, MemoryPoolMXBean.class);
+			
+			garbageCollectorBeans = getPlatformMXBeans(connection, GarbageCollectorMXBean.class);
 			
 			operatingSystemBean = newPlatformMXBeanProxy(connection, ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
 		}
