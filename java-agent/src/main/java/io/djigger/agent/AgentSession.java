@@ -25,11 +25,10 @@ import java.net.Socket;
 import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
 
-import org.smb.core.Message;
-import org.smb.core.MessageListener;
-import org.smb.core.MessageRouter;
-import org.smb.core.MessageRouterStateListener;
-
+import io.denkbar.smb.core.Message;
+import io.denkbar.smb.core.MessageListener;
+import io.denkbar.smb.core.MessageRouter;
+import io.denkbar.smb.core.MessageRouterStateListener;
 import io.djigger.monitoring.eventqueue.EventQueue;
 import io.djigger.monitoring.eventqueue.EventQueue.EventQueueConsumer;
 import io.djigger.monitoring.eventqueue.ModuloEventSkipLogic;

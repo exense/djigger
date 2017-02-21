@@ -25,10 +25,10 @@ import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smb.core.Message;
-import org.smb.core.MessageListener;
-import org.smb.core.MessageRouter;
 
+import io.denkbar.smb.core.Message;
+import io.denkbar.smb.core.MessageListener;
+import io.denkbar.smb.core.MessageRouter;
 import io.djigger.monitoring.java.agent.JavaAgentMessageType;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
