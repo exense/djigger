@@ -104,8 +104,13 @@ public class AttachConnectionParameters implements ConnectionParameterFrame {
 							boolean cellHasFocus) {
 						if (value != null) {
 							VirtualMachineDescriptor vm = (VirtualMachineDescriptor) value;
-							value = vm.id() + " " + vm.displayName();
+							String valueStr = vm.id() + " " + vm.displayName();
+							if(valueStr.length()>200) {
+								valueStr = valueStr.substring(0,Math.min(200, valueStr.length())) + "...";
+							}
+							value = valueStr;
 						}
+						
 						return super.getListCellRendererComponent(list, value, index,
 								isSelected, cellHasFocus);
 					}
