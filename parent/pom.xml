@@ -25,7 +25,6 @@
 		<module>../commons</module>
 		<module>../java-monitoring-collector</module>
 		<module>../java-monitoring-commons</module>
-		<module>../smb-core</module>
 		<module>../distribution</module>
 	</modules>
 
