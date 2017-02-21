@@ -19,15 +19,15 @@
  *******************************************************************************/
 package io.djigger.agent;
 
-import io.djigger.monitoring.eventqueue.EventQueue.EventQueueConsumer;
-import io.djigger.monitoring.java.agent.JavaAgentMessageType;
-import io.djigger.monitoring.java.model.ThreadInfo;
-
 import java.util.LinkedList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smb.core.Message;
+
+import io.denkbar.smb.core.Message;
+import io.djigger.monitoring.eventqueue.EventQueue.EventQueueConsumer;
+import io.djigger.monitoring.java.agent.JavaAgentMessageType;
+import io.djigger.monitoring.java.model.ThreadInfo;
 
 public class ThreadInfoEventQueueConsumer implements EventQueueConsumer<ThreadInfo> {
 	
