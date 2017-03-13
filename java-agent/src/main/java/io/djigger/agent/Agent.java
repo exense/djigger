@@ -20,6 +20,7 @@
 package io.djigger.agent;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,6 +52,8 @@ public class Agent extends Thread {
 	private AgentSession session;
 	
 	private final Instrumentation instrumentation;
+	
+	private File pluginFolder;
 
 	public static void agentmain(String agentArgs, Instrumentation inst) {
 		premain(agentArgs, inst);
@@ -75,7 +78,8 @@ public class Agent extends Thread {
 
 			String clientHost = parameterMap.get("host");
 			Integer port = parameterMap.containsKey("port")?Integer.decode(parameterMap.get("port")):null;
-			Agent agent = new Agent(instrumentation, clientHost, port);
+			File pluginFolder = parameterMap.containsKey("pluginFolder")?new File(parameterMap.get("pluginFolder")):null;
+			Agent agent = new Agent(instrumentation, clientHost, port, pluginFolder);
 			agent.start();
 		} catch(Exception e) {
 			System.out.println("Agent: an error occurred while trying to parse the agent parameters.");
@@ -84,20 +88,37 @@ public class Agent extends Thread {
 	}
 	
 	protected Agent(Instrumentation instrumentation, String host, Integer port) {
+		this(instrumentation, host, port, null);
+	}
+	
+	protected Agent(Instrumentation instrumentation, String host, Integer port, File pluginFolder) {
 		super();
 		this.port = port!=null?port:DEFAULT_PORT;
 		this.clientHost = host;
 		this.instrumentation = instrumentation;
 		this.agentToClientConnection = clientHost!=null;
+		this.pluginFolder = pluginFolder;
 
 		addCollectorToBootstrap(instrumentation);
+
+		if(pluginFolder!=null) {
+			if(pluginFolder.isDirectory()) {
+				for(File file:pluginFolder.listFiles(new FileFilter() {
+					@Override
+					public boolean accept(File pathname) {
+						return pathname.getName().endsWith(".jar");
+					}
+				})) {
+					addJarToSystemClassLoaderSearch(instrumentation, file);
+				}
+			}
+		}
 	}
 
 	private void addCollectorToBootstrap(Instrumentation instrumentation) {
 		try {
 			InputStream is = getClass().getClassLoader().getResourceAsStream("collector.jar");
 			File collectorJar = File.createTempFile("collector-"+UUID.randomUUID(),".jar");
-			System.out.println("Adding " + collectorJar + " to bootstrap search.");
 			FileOutputStream os = new FileOutputStream(collectorJar);		
 			byte[] buffer = new byte[1024];
             int bytesRead;
@@ -108,9 +129,30 @@ public class Agent extends Thread {
             os.flush();
             os.close();
             
-			instrumentation.appendToBootstrapClassLoaderSearch(new JarFile(collectorJar));
+            addJarToBootstrapClassloader(instrumentation, collectorJar);
 		} catch (IOException e1) {
 			e1.printStackTrace();
+		}
+	}
+
+
+	private void addJarToBootstrapClassloader(Instrumentation instrumentation, File collectorJar) {
+		System.out.println("Adding " + collectorJar + " to bootstrap search.");
+		try {
+			instrumentation.appendToBootstrapClassLoaderSearch(new JarFile(collectorJar));
+		} catch (IOException e) {
+			System.err.println("Agent: error while trying to add file "+collectorJar.getName()+" to bootstrap classloader");
+			e.printStackTrace();
+		}
+	}
+	
+	private void addJarToSystemClassLoaderSearch(Instrumentation instrumentation, File collectorJar) {
+		System.out.println("Adding " + collectorJar + " to system search.");
+		try {
+			instrumentation.appendToSystemClassLoaderSearch(new JarFile(collectorJar));
+		} catch (IOException e) {
+			System.err.println("Agent: error while trying to add file "+collectorJar.getName()+" to bootstrap classloader");
+			e.printStackTrace();
 		}
 	}
 
