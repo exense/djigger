@@ -35,8 +35,7 @@ import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.smb.core.Message;
-
+import io.denkbar.smb.core.Message;
 import io.djigger.monitoring.java.agent.JavaAgentMessageType;
 
 public class Agent extends Thread {

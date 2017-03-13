@@ -23,7 +23,7 @@ import io.djigger.ui.Session.SessionType;
 
 public enum ConnectionType {
 
-	STORE("Store", SessionType.STORE, HostConnectionParameter.class),
+	STORE("Collector DB", SessionType.STORE, HostConnectionParameter.class),
 	
 	JMX("JMX", SessionType.JMX, HostConnectionParameter.class),
 	
