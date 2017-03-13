@@ -3,11 +3,12 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.djigger</groupId>
 	<artifactId>parent</artifactId>
-	<version>1.6.2</version>
+	<version>1.7.0</version>
 	<packaging>pom</packaging>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<java.home>C:\Program Files\Java\jdk1.8.0_101</java.home>
 	</properties>
 
 	<modules>
