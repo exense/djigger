@@ -142,10 +142,10 @@ public class InstrumentationEventAccessor extends AbstractAccessor {
 				event.setTransactionID(UUID.fromString(doc.getString("trid")));
 
 				if(doc.containsKey("data")) {
-					BsonArray array = (BsonArray) doc.get("data");
+					List<?> array = (List<?>) doc.get("data");
 					List<InstrumentationEventData> list = new LinkedList<InstrumentationEventData>();
-					for(BsonValue value:array) {
-						list.add(new StringInstrumentationEventData(value.asString().getValue()));
+					for(Object value:array) {
+						list.add(new StringInstrumentationEventData((String)value));
 					}
 					event.setData(list);
 				}

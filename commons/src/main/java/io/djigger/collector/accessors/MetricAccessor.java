@@ -113,7 +113,9 @@ public class MetricAccessor extends AbstractAccessor {
 			
 			log(document);
 		}
-		metricsCollection.insertMany(documents);
+		if(documents.size()>0) {
+			metricsCollection.insertMany(documents);			
+		}
 	}
 
 	private void log(Document document) {

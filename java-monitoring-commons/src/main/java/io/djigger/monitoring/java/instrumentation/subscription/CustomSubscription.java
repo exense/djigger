@@ -39,6 +39,10 @@ public class CustomSubscription extends RegexSubscription {
 	
 	protected boolean measureDuration;
 	
+	public CustomSubscription(String classNameRegex, String methodNameRegex, boolean tagEvent) {
+		super(classNameRegex, methodNameRegex, tagEvent);
+	}
+	
 	public String getCapture() {
 		return capture;
 	}
@@ -61,10 +65,6 @@ public class CustomSubscription extends RegexSubscription {
 
 	public void setMaxCaptureSize(Integer maxCaptureSize) {
 		this.maxCaptureSize = maxCaptureSize;
-	}
-
-	public CustomSubscription(String classNameRegex, String methodNameRegex, boolean tagEvent) {
-		super(classNameRegex, methodNameRegex, tagEvent);
 	}
 
 	@Override
