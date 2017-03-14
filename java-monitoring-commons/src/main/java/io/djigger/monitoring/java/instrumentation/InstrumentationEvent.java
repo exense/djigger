@@ -20,6 +20,8 @@
 package io.djigger.monitoring.java.instrumentation;
 
 import java.io.Serializable;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 
 import org.bson.types.ObjectId;
@@ -47,7 +49,7 @@ public class InstrumentationEvent implements Serializable {
 	
 	private long threadID;
 	
-	private InstrumentationEventData data;
+	private List<InstrumentationEventData> data;
 	
 	private transient long startNano;
 	
@@ -149,12 +151,19 @@ public class InstrumentationEvent implements Serializable {
 		this.duration = duration;
 	}
 
-	public InstrumentationEventData getData() {
+	public List<InstrumentationEventData> getData() {
 		return data;
 	}
 
-	public void setData(InstrumentationEventData data) {
+	public void setData(List<InstrumentationEventData> data) {
 		this.data = data;
+	}
+	
+	public synchronized void addData(InstrumentationEventData data) {
+		if(this.data==null) {
+			this.data = new LinkedList<InstrumentationEventData>();
+		}
+		this.data.add(data);
 	}
 
 	@Override

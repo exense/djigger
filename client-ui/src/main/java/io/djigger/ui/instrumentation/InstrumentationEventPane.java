@@ -221,13 +221,17 @@ public class InstrumentationEventPane extends Dashlet {
 			Vector<Object> vector = new Vector<Object>(3);
 			InstrumentationEvent sample = samples.get(i);
 			vector.add(sample.getClassname()+"."+sample.getMethodname());
-			InstrumentationEventData eventData = sample.getData();
-			String eventDataStr = null;
-			if(eventData!=null) {
-				if(eventData instanceof StringInstrumentationEventData) {
-					eventDataStr = ((StringInstrumentationEventData)eventData).getPayload();
+			String eventDataStr = null;	
+			List<InstrumentationEventData> eventDataList = sample.getData();
+			if(eventDataList!=null) {
+				StringBuilder dataStr = new StringBuilder();
+				for(InstrumentationEventData eventData:eventDataList) {
+					if(eventData instanceof StringInstrumentationEventData) {
+						dataStr.append(((StringInstrumentationEventData)eventData).getPayload()).append(";");
+					}				
 				}
-			} 
+				eventDataStr = dataStr.toString();	
+			}	
 			vector.add(eventDataStr!=null?eventDataStr:"");
 			vector.add(new Date(sample.getStart()));
 			vector.add(sample.getDuration()/1000000.0);
@@ -285,10 +289,17 @@ public class InstrumentationEventPane extends Dashlet {
 	    });
 	}
 	
-	private boolean instrumentationDataMatches(InstrumentationEventData data, String expression) {
-		if(data!=null && data instanceof StringInstrumentationEventData) {
-			String payload = ((StringInstrumentationEventData)data).getPayload();
-			return payload!=null?payload.contains(expression):false;
+	private boolean instrumentationDataMatches(List<InstrumentationEventData> dataList, String expression) {
+		if(dataList!=null) {
+			for(InstrumentationEventData data:dataList) {
+				if(data!=null && data instanceof StringInstrumentationEventData) {
+					String payload = ((StringInstrumentationEventData)data).getPayload();
+					if(payload.contains(expression)) {
+						return true;
+					}
+				}
+			}
+			return false;
 		} else {
 			return false;
 		}

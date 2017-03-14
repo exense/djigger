@@ -174,7 +174,7 @@ public class InstrumentationEventCollector {
 		event.setTransactionID(transaction.getId());
 		
 		if(data!=null) {
-			event.setData(data);
+			event.addData(data);
 		}
 
 		eventCollector.add(event);
@@ -186,10 +186,11 @@ public class InstrumentationEventCollector {
 				event.setParentID(transaction.getParentId());
 			}
 			
-			List<InstrumentationEventData> trData = transaction.collectData();
-			if(trData.size()>0) {
-				// TODO the event object should accept a list of data
-				event.setData(trData.get(0));
+			List<InstrumentationEventData> trDataList = transaction.collectData();
+			if(trDataList.size()>0) {
+				for(InstrumentationEventData trData:trDataList) {
+					event.addData(trData);
+				}
 			}
 		}
 	}

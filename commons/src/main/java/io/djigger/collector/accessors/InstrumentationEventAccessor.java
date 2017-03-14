@@ -26,9 +26,13 @@ import static com.mongodb.client.model.Filters.lt;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
+import org.bson.BsonArray;
+import org.bson.BsonString;
+import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
@@ -138,8 +142,12 @@ public class InstrumentationEventAccessor extends AbstractAccessor {
 				event.setTransactionID(UUID.fromString(doc.getString("trid")));
 
 				if(doc.containsKey("data")) {
-					StringInstrumentationEventData data = new StringInstrumentationEventData(doc.getString("data"));
-					event.setData(data);
+					BsonArray array = (BsonArray) doc.get("data");
+					List<InstrumentationEventData> list = new LinkedList<InstrumentationEventData>();
+					for(BsonValue value:array) {
+						list.add(new StringInstrumentationEventData(value.asString().getValue()));
+					}
+					event.setData(list);
 				}
 				
 				return event;
@@ -208,11 +216,15 @@ public class InstrumentationEventAccessor extends AbstractAccessor {
 			List<Object> stacktrace = stackTraceAsTable(((InstrumentationEventWithThreadInfo)event).getThreadInfo());
 			doc.append("stacktrace", stacktrace);
 		}
-		InstrumentationEventData data = event.getData();
+		List<InstrumentationEventData> data = event.getData();
 		if(data!=null) {
-			if(data instanceof StringInstrumentationEventData) {
-				doc.append("data", ((StringInstrumentationEventData)data).getPayload());
+			BsonArray array = new BsonArray();
+			for(InstrumentationEventData eventData:data) {
+				if(eventData instanceof StringInstrumentationEventData) {
+					array.add(new BsonString(((StringInstrumentationEventData)eventData).getPayload()));
+				}				
 			}
+			doc.append("data", array);
 		}
 		
 		return doc;

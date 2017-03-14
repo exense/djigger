@@ -23,6 +23,7 @@ import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Vector;
 
 import javax.swing.JDialog;
@@ -73,11 +74,15 @@ public class InstrumentationEventDetailsPane extends JDialog {
 		data.add(addEntry("Classname: ", event.getClassname()));
 		data.add(addEntry("Methodname: ", event.getMethodname()));
 
-		InstrumentationEventData eventData = event.getData();
-		if(eventData!=null) {
-			if(eventData instanceof StringInstrumentationEventData) {
-				data.add(addEntry("Data: ", ((StringInstrumentationEventData)eventData).getPayload()));
+		List<InstrumentationEventData> eventDataList = event.getData();
+		if(eventDataList!=null) {
+			StringBuilder dataStr = new StringBuilder();
+			for(InstrumentationEventData eventData:eventDataList) {
+				if(eventData instanceof StringInstrumentationEventData) {
+					dataStr.append(((StringInstrumentationEventData)eventData).getPayload()).append(";");
+				}				
 			}
+			data.add(addEntry("Data: ", dataStr.toString()));	
 		}		
 		
 		JPanel panel = new JPanel(new GridLayout(0,1));
