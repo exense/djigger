@@ -148,5 +148,6 @@ public class AgentSession implements MessageListener, MessageRouterStateListener
 		sampler.destroy();
 		instrumentationEventQueue.shutdown();
 		threadInfoQueue.shutdown();
+		metricsQueue.shutdown();
 	}
 }
