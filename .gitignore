@@ -7,3 +7,5 @@ djigger.settings
 *lastsession.xml
 agent.jar
 collector.jar
+.idea/
+*.iml
