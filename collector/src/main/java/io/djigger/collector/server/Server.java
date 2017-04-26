@@ -127,13 +127,16 @@ public class Server {
 		
 		try {
 			MongoDBParameters connectionParams = config.getDb();
+
+			int port = 27017;
+
 			if(connectionParams.getPort()!=null) {
-				Integer port = Integer.parseInt(connectionParams.getPort());
-				mongodbConnection.connect(connectionParams.getHost(), port);				
-			} else {
-				mongodbConnection.connect(connectionParams.getHost());			
+				port = Integer.parseInt(connectionParams.getPort());
 			}
-			
+
+			mongodbConnection.connect(connectionParams.getHost(), port, connectionParams.getUser(), connectionParams.getPassword());
+
+
 			Long ttl = config.getDataTTL();
 			
 			threadInfoAccessor = new ThreadInfoAccessorImpl(mongodbConnection.getDb());

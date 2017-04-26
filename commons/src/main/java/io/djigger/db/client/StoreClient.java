@@ -33,9 +33,9 @@ public class StoreClient {
 	
 	MetricAccessor metricAccessor;
 	
-	public void connect(String host, int port) throws Exception {
+	public void connect(String host, int port, String user, String password) throws Exception {
 		MongoConnection connection = new MongoConnection();
-		connection.connect(host, port);
+		connection.connect(host, port, user, password);
 		threadInfoAccessor = new ThreadInfoAccessorImpl(connection.getDb());
 		instrumentationAccessor = new InstrumentationEventAccessor(connection.getDb());
 		metricAccessor = new MetricAccessor(connection.getDb());
