@@ -140,6 +140,10 @@ public class InstrumentationEventPane extends Dashlet {
 		add(new JScrollPane(sampleList),BorderLayout.CENTER);
 		add(status,BorderLayout.SOUTH);
 
+		setQueryAndSearch(query);
+	}
+
+	public void setQueryAndSearch(final String query) {
 		if(query!=null) {
 			filterTextField.setText(query);
 		}

@@ -24,13 +24,17 @@ import java.awt.Dimension;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 import org.slf4j.Logger;
@@ -62,7 +66,7 @@ public class MainFrame extends JPanel {
     
     private final OutOfMemoryPreventionPane outOfMemoryPreventionPane;
     
-	public MainFrame(ArgumentParser options) {
+	public MainFrame(final ArgumentParser options) {
 		super(new BorderLayout());
 		
 		this.options = options;
@@ -111,6 +115,16 @@ public class MainFrame extends JPanel {
         frame.add(this);
         frame.pack();
         frame.setVisible(true);
+        
+        if(options.hasOption("sessionFile")) {
+    		SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					File sessionFile = new File(options.getOption("sessionFile"));
+					importSessionFile(sessionFile);
+				}
+    		});
+        }
 	}
 	
 	public synchronized void addSession(final Session session) {
@@ -122,7 +136,8 @@ public class MainFrame extends JPanel {
 			groupPane.addSession(session);
 			groupPane.selectSession(session);
 			exportSessions(new File("djigger_lastsession.xml"));
-    		displayWelcomeDialog(session);
+			displayWelcomeDialog(session);
+			session.setupInitialState();
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(this, e.toString(), "Error", JOptionPane.ERROR_MESSAGE);
 		}
@@ -196,16 +211,41 @@ public class MainFrame extends JPanel {
 	}
 	
 	public synchronized void importSessions() {
-		XStream xstream = new XStream();
 		File file = FileChooserHelper.selectFile("Import session list", "Open");
+		importSessionFile(file);
+	}
+
+	private void importSessionFile(File file) {
+		XStream xstream = new XStream();
 		if(file!=null) {
+        	String configXml;
+			try {
+				configXml = new String(Files.readAllBytes(file.toPath()));
+			} catch (IOException e) {
+				throw new RuntimeException("Error while reading file "+file,e);
+			}
+			
+			configXml = replacePlaceholders(configXml);
+			
         	@SuppressWarnings("unchecked")
-			List<SessionConfiguration> configs = (List<SessionConfiguration>) xstream.fromXML(file);
+			List<SessionConfiguration> configs = (List<SessionConfiguration>) xstream.fromXML(configXml);
     		for(SessionConfiguration config:configs) {
     			Session session = new Session(config, this);
     			addSession(session);
     		}
         }
+	}
+
+	private String replacePlaceholders(String configXml) {
+		StringBuffer sb = new StringBuffer();
+		Matcher m =  Pattern.compile("\\$\\{(.+?)\\}").matcher(configXml);
+		while(m.find()) {
+			String key = m.group(1);
+			String replacement = options.getOption(key);
+			m.appendReplacement(sb, replacement);
+		}
+		m.appendTail(sb);
+		return sb.toString();
 	}
 
 	public void selectSession(Session session) {

@@ -60,7 +60,19 @@ public class SessionConfiguration {
 		
 		PASSWORD,
 		
-		FILE;
+		FILE,
+		
+		QUERY,
+		
+		TIMEINTERVAL_START,
+		
+		TIMEINTERVAL_END,
+		
+		CALCULATE_PSEUDO_EVENTS,
+		
+		INITIAL_PANE_SELECTION,
+		
+		EVENT_LIST_QUERY;
 	}
 
 }

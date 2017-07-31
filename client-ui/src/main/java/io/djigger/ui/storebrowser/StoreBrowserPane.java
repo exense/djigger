@@ -177,7 +177,17 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
 			toDateSpinner.setVisible(true);
 		}
 	}
+	
+	public void setQuery(String query) {
+		queryTextField.setText(query);
+	}
 
+	public void setTimeinterval(Date start, Date end) {
+		datePresets.setSelectedItem(DatePresets.CUSTOM);
+		fromDateSpinner.getModel().setValue(start);
+		toDateSpinner.getModel().setValue(end);
+	}
+	
 	private void applyPreset() {
 		DatePresets preset = (DatePresets) datePresets.getSelectedItem();
 		if(preset!=DatePresets.CUSTOM) {
@@ -195,7 +205,7 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
 		search();
 	}
 
-	private void search() {
+	public void search() {
 		parent.clear();
 		
 		applyPreset();

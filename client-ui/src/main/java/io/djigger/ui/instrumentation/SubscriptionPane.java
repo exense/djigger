@@ -51,10 +51,11 @@ import io.djigger.monitoring.java.instrumentation.subscription.CapturingSubscrip
 import io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription;
 import io.djigger.ui.Session;
 import io.djigger.ui.SessionListener;
+import io.djigger.ui.analyzer.Dashlet;
 import io.djigger.ui.common.CommandButton;
 import io.djigger.ui.common.FileChooserHelper;
 
-public class SubscriptionPane extends JPanel {
+public class SubscriptionPane extends Dashlet {
 	
 	private static final Logger logger = LoggerFactory.getLogger(SubscriptionPane.class);
 	
@@ -249,6 +250,10 @@ public class SubscriptionPane extends JPanel {
 				frame.setVisible(false);
 			}
 		}
+	}
+
+	@Override
+	public void refresh() {
 	}
 
 }

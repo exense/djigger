@@ -124,6 +124,9 @@ public class CommandButton extends JToggleButton {
 	  {
 	    java.awt.Graphics2D g2 = (java.awt.Graphics2D) g;
 	    g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+	    if(toggle) {
+			setBorderPainted(isSelected());
+		}
 	    super.paintComponent(g2);
 	  }
 	
@@ -141,13 +144,6 @@ public class CommandButton extends JToggleButton {
 		@Override
 		public void mousePressed(MouseEvent e) {
 			setAlpha(0.5f);
-			if(toggle) {
-				Component component = e.getComponent();
-	            if (component instanceof AbstractButton) {
-	                AbstractButton button = (AbstractButton) component;
-	                button.setBorderPainted(!button.isSelected());
-	            }
-			}
 		}
 
 		@Override

@@ -57,6 +57,9 @@ public class SessionControlPane extends JPanel implements ActionListener {
 	private CommandButton startButton;
 	private CommandButton stopButton;
 	
+	private CommandButton showLineNumbersButton;
+	private CommandButton pseudoEventsButton;
+	
 	public SessionControlPane(final Session parent) {
 		super();
 
@@ -147,19 +150,21 @@ public class SessionControlPane extends JPanel implements ActionListener {
 
 		add(controlPanel);
 
-		controlPanel.add(new CommandButton("numbered-list.png", "Show line numbers", new Command() {
+		showLineNumbersButton = new CommandButton("numbered-list.png", "Show line numbers", new Command() {
 			@Override
 			public void execute(boolean selected) {
 				parent.showLineNumbers(selected);
 			}
-		},20));
+		},20);
+		controlPanel.add(showLineNumbersButton);
 		
-		controlPanel.add(new CommandButton("calc.png", "Calculate pseudo events (based on sampling)", new Command() {
+		pseudoEventsButton = new CommandButton("calc.png", "Calculate pseudo events (based on sampling)", new Command() {
 			@Override
 			public void execute(boolean selected) {
 				parent.calculatePseudoEvents(selected);
 			}
-		},20));
+		},20);
+		controlPanel.add(pseudoEventsButton);
 
 		samplerSettingPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		samplerSettingPanel.add(new JLabel("Sampler interval (ms)"));
@@ -170,6 +175,14 @@ public class SessionControlPane extends JPanel implements ActionListener {
 		add(samplerSettingPanel);
 		
 
+	}
+
+	public void selectShowLineNumbersButton() {
+		showLineNumbersButton.doClick();
+	}
+	
+	public void selectPseudoEventsButton() {
+		pseudoEventsButton.doClick();
 	}
 
 	@Override

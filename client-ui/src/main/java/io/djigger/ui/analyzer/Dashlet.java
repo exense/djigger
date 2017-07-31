@@ -25,6 +25,8 @@ import javax.swing.JPanel;
 
 public abstract class Dashlet extends JPanel {
 
+	protected String title;
+	
 	public Dashlet() {
 		super();
 	}
@@ -33,14 +35,14 @@ public abstract class Dashlet extends JPanel {
 		super(layout);
 	}
 
-	public Dashlet(boolean isDoubleBuffered) {
-		super(isDoubleBuffered);
-	}
-
-	public Dashlet(LayoutManager layout, boolean isDoubleBuffered) {
-		super(layout, isDoubleBuffered);
-	}
-
 	public abstract void refresh();
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
 
 }

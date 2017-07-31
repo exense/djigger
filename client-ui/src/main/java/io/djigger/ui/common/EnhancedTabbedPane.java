@@ -32,6 +32,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
+import io.djigger.ui.analyzer.Dashlet;
+
 @SuppressWarnings("serial")
 public class EnhancedTabbedPane extends JTabbedPane {
 
@@ -83,6 +85,9 @@ public class EnhancedTabbedPane extends JTabbedPane {
 	}
 	
     public void addTab(Component analyzer, String name, boolean closeButton) {
+    	if(analyzer instanceof Dashlet) {
+    		((Dashlet)analyzer).setTitle(name);
+    	}
     	insertTab(name, null, analyzer, null, Math.max(0, getTabCount()-1));
     	setTabComponentAt(indexOfComponent(analyzer), getTitlePanelWithCloseButton(analyzer, name, closeButton));
     	setSelectedComponent(analyzer);
@@ -138,4 +143,17 @@ public class EnhancedTabbedPane extends JTabbedPane {
         Component _component = getSelectedComponent();
         return _component;
     }
+    
+	public void selectTabByName(String name) {
+		setSelectedComponent(getTabByName(name));
+	}
+	
+	public Component getTabByName(String name) {
+		for (Component component : getComponents()) {
+			if(component instanceof Dashlet && name.equals(((Dashlet)component).getTitle())) {
+				return component;
+			}
+		}
+		throw new RuntimeException("Tab with name "+name+" not found");
+	}
 }

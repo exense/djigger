@@ -21,6 +21,7 @@ package io.djigger.ui;
 
 import java.awt.BorderLayout;
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -64,6 +65,7 @@ import io.djigger.ui.common.MonitoredExecution;
 import io.djigger.ui.common.MonitoredExecutionRunnable;
 import io.djigger.ui.common.NodePresentationHelper;
 import io.djigger.ui.extensions.java.JavaBridge;
+import io.djigger.ui.instrumentation.InstrumentationEventPane;
 import io.djigger.ui.instrumentation.InstrumentationStatisticsCache;
 import io.djigger.ui.model.InstrumentationEventWrapper;
 import io.djigger.ui.model.PseudoInstrumentationEvent;
@@ -98,6 +100,8 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     private final StoreBrowserPane storeBrowserPane;
 
     private final ThreadSelectionPane threadSelectionPane;
+    
+    private final SessionControlPane controlPane;
     
 	protected final NodePresentationHelper presentationHelper;
 	
@@ -205,8 +209,9 @@ public class Session extends JPanel implements FacadeListener, Closeable {
         } else {
         	storeBrowserPane = null;
         }
-        
-        add(new SessionControlPane(this),BorderLayout.PAGE_END);
+
+        controlPane = new SessionControlPane(this);
+        add(controlPane,BorderLayout.PAGE_END);
 
         threadSelectionPane.initialize();
         analyzerGroupPane.initialize();
@@ -279,10 +284,45 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     			refreshAll();
     		}    		
     	}
-    	
     }
     
     public void configure() {}
+    
+    public void setupInitialState() {
+    	String query = config.getParameters().get(SessionParameter.QUERY);
+    	if(query!=null) {
+    		storeBrowserPane.setQuery(query);
+    	}
+    	
+    	String start = config.getParameters().get(SessionParameter.TIMEINTERVAL_START);
+    	if(start!=null) {
+    		String end = config.getParameters().get(SessionParameter.TIMEINTERVAL_END);
+    		SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+    		try {
+    			storeBrowserPane.setTimeinterval(format.parse(start), format.parse(end));        			
+    		} catch (Exception e) {
+    			throw new RuntimeException("Unable to parse timeinterval "+start+" - "+end, e);
+    		}
+    		storeBrowserPane.search();
+    	}
+    	
+    	String calculatePseudoEvents = config.getParameters().get(SessionParameter.CALCULATE_PSEUDO_EVENTS);
+    	if(calculatePseudoEvents!=null && Boolean.parseBoolean(calculatePseudoEvents)) {
+    		this.controlPane.selectPseudoEventsButton();
+    	}
+    	
+    	String initialPaneSelection = config.getParameters().get(SessionParameter.INITIAL_PANE_SELECTION);
+    	if(initialPaneSelection!=null) {
+    		analyzerGroupPane.selectTabByName(initialPaneSelection);
+    	}    	
+    	
+    	String eventListQuery = config.getParameters().get(SessionParameter.EVENT_LIST_QUERY);
+    	if(eventListQuery!=null) {
+    		InstrumentationEventPane pane = (InstrumentationEventPane) analyzerGroupPane.getTabByName("Events");
+    		pane.setQueryAndSearch(eventListQuery);
+    	}
+    	
+    }
     
     public Facade getFacade() {
 		return facade;
