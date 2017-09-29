@@ -127,40 +127,41 @@ public class Configurator {
 
 	private static ConnectionsConfig parseConnectionsCSV(String connectionsConfigFilename) {
 
-		ConnectionsConfig cc = new ConnectionsConfig();
 		BufferedReader br = null;
 		try {
 			br = new BufferedReader(new FileReader(connectionsConfigFilename));
 		} catch (FileNotFoundException e1) {
-			logger.error("Error while parsing connection definitions from file "+connectionsConfigFilename,e1);
-		}
-		String line = null;
-		try {
-			line = br.readLine();
-		} catch (IOException e1) {
-			logger.error("Error while parsing connection definitions from file "+connectionsConfigFilename,e1);
+			logger.error("Connection definitions file not found: "+connectionsConfigFilename,e1);
+			// not the ideal way of signaling an exception, but at least it will throw another exception later on
+			return null;
 		}
 
 		// Build a single ConnectionGroup to hold all Connections with flat, potentially redundant attributes
-		ConnectionGroup cg = new ConnectionGroup();
 		List<ConnectionGroupNode> cgnList = new ArrayList<ConnectionGroupNode>();
 
-		// @bugfix (cosmetic, since exception gets caught anyway)
-		// empty line bug : test if line contains something
-		while (line != null && !line.trim().isEmpty())
-		{
-			try {
-				cgnList.add(parseAndBuildConnection(line));
-			} catch (Exception e) {
-				logger.error("Error while parsing line "+line,e);
+		try {
+			for (String line = br.readLine(); line != null; line = br.readLine()) {
+				// ignore completely empty lines, and comment lines (starting with a "#")
+				// the "#" character is not a legal character for an IP or hostname anyway, so we're on the safe side here.
+				if(line.startsWith("#") || line.trim().isEmpty()) {
+					continue;
+				}
+				try {
+					cgnList.add(parseAndBuildConnection(line));
+				} catch (Exception e) {
+					logger.error("Error while parsing connection definition line in " + connectionsConfigFilename+": "+line,e);
+					// fatal exception will be thrown later
+					return null;
+				}
 			}
-			try {
-				line = br.readLine();
-			} catch (IOException e) {
-				logger.error("Error while reading line",e);
-			}
+		} catch (IOException e1) {
+			logger.error("Error while reading connection definitions from file "+connectionsConfigFilename,e1);
+			// fatal exception will be thrown later
+			return null;
 		}
 
+		ConnectionsConfig cc = new ConnectionsConfig();
+		ConnectionGroup cg = new ConnectionGroup();
 		cg.setGroups(cgnList);
 		cc.setConnectionGroup(cg);
 
@@ -197,7 +198,7 @@ public class Configurator {
 		String[] splitLine = csvLine.split(";");
 
 		if(splitLine.length < 5)
-			throw new Exception("The following JMX Config line is missing mendatory arguments:\n" + csvLine);
+			throw new Exception("The following JMX Config line is missing mandatory arguments:\n" + csvLine);
 
 		// JMX Connection Properties
 		Properties connectionProperties = new Properties();
