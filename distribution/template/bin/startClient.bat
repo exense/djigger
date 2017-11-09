@@ -13,5 +13,5 @@ set DJIGGER_LIBDIR=%DJIGGER_HOME%\lib\
 popd
 
 set START_OPTS=-Dlogback.configurationFile=%DJIGGER_CONFDIR%logback-client.xml %JAVA_OPTS%
-
-"%JAVA_PATH%java.exe" %START_OPTS% -cp %DJIGGER_LIBDIR%* io.djigger.ui.MainFrame
+cd /d %DJIGGER_HOME%
+"%JAVA_PATH%java.exe" %START_OPTS% -cp "%DJIGGER_LIBDIR%*;%JAVA_PATH%\..\lib\tools.jar" io.djigger.ui.MainFrame
