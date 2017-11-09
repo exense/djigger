@@ -4,7 +4,14 @@ rem if java.exe isn't on your path or is too old, then set your own as follows (
 rem SET JAVA_PATH=C:\Program Files\Java\jdk1.8.0_101\bin\
 SET JAVA_PATH=
 
-SET JAVA_OPTS=-Dlogback.configurationFile=logback-client.xml
+set execdir=%~dp0
+pushd %execdir%\..
 
-"%JAVA_PATH%java.exe" %JAVA_OPTS% -cp "..\lib\*;%JAVA_PATH%\..\lib\tools.jar" io.djigger.ui.MainFrame
+set DJIGGER_HOME=%CD%
+set DJIGGER_CONFDIR=%DJIGGER_HOME%\conf\
+set DJIGGER_LIBDIR=%DJIGGER_HOME%\lib\
+popd
 
+set START_OPTS=-Dlogback.configurationFile=%DJIGGER_CONFDIR%logback-client.xml %JAVA_OPTS%
+
+"%JAVA_PATH%java.exe" %START_OPTS% -cp %DJIGGER_LIBDIR%* io.djigger.ui.MainFrame
