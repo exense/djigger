@@ -1,11 +1,11 @@
 <configuration scan="true">
 	<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${DJIGGER_HOME}/log/client.log</file>
+		<file>log/client.log</file>
 		<encoder>
 			<pattern>%date %level [%thread] %logger{10} [%file:%line] %msg%n</pattern>
 		</encoder>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>${DJIGGER_HOME}/log/clientlog/client.%d{yyyy-MM-dd}.log</fileNamePattern>
+      <fileNamePattern>log/clientlog/client.%d{yyyy-MM-dd}.log</fileNamePattern>
       <maxHistory>30</maxHistory>
     </rollingPolicy>
 	</appender>

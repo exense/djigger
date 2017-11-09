@@ -15,5 +15,5 @@ START_OPTS+=("-Dlogback.configurationFile=${DJIGGER_CONFDIR}/logback-collector.x
 START_OPTS+=("${JAVA_OPTS}")
 
 cd "${DJIGGER_HOME}" \
-    && exec "${JAVA_HOME}java" ${START_OPTS[@]} -cp "${DJIGGER_LIBDIR}/*:${JAVA_PATH}/../lib/tools.jar" io.djigger.collector.server.Server \
+    && exec "${JAVA_HOME}java" ${START_OPTS[@]} -cp "${DJIGGER_LIBDIR}/*" io.djigger.collector.server.Server \
     || echo "Error: Invalid DJIGGER_HOME"
