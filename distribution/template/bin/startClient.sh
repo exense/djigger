@@ -13,16 +13,15 @@ DJIGGER_LIBDIR="${DJIGGER_LIBDIR:-${DJIGGER_HOME}/lib}"
 # Required JVM arguments for djigger
 DJIGGER_OPTS=("-Dlogback.configurationFile=${DJIGGER_CONFDIR}/logback-client.xml")
 
-# Custom JVM arguments can be set by exporting JAVA_OPTS in your profile
-
+# For the direct attach feature the JDK home must be defined so we can properly add tools.jar
+# to the classpath
 if [ -n "${JAVA_HOME:-${DJIGGER_JAVA_HOME}}" ]; then
-    RUNJAVA="${JAVA_HOME:-${DJIGGER_JAVA_HOME}}/bin/java"
-    JDK_LIBS="${JAVA_HOME:-${DJIGGER_JAVA_HOME}}/lib"
-else
-    RUNJAVA="java"
+    JAVA="${JAVA_HOME:-${DJIGGER_JAVA_HOME}}/bin/java"
+    TOOLS_JAR=":${JAVA_HOME:-${DJIGGER_JAVA_HOME}}/lib/tools.jar"
 fi
 
+# Custom JVM arguments can be set by exporting JAVA_OPTS in your profile
 cd "${DJIGGER_HOME}" \
-    && exec "${RUNJAVA}" ${DJIGGER_OPTS[@]} -cp "${DJIGGER_LIBDIR}/*:${JDK_LIBS}/tools.jar"
+    && exec "${JAVA:-java}" ${DJIGGER_OPTS[@]} -cp "${DJIGGER_LIBDIR}/*${TOOLS_JAR}" \
          ${JAVA_OPTS} io.djigger.ui.MainFrame \
     || echo "Error: Invalid DJIGGER_HOME"
