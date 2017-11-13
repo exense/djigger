@@ -1,0 +1,18 @@
+# /etc/sysconfig/djigger-collector
+#
+# Modify these options if you want to change the way the collector daemon runs
+
+# User account which is used to run the collector process
+DJIGGER_USER=djigger
+
+# Djigger installation directory
+DJIGGER_HOME=/opt/denkbar/djigger
+
+# Where to write collector stdout/stderr. Set this to /dev/null to disable output.
+DJIGGER_OUTFILE="${DJIGGER_HOME}/log/collector.out"
+
+# Custom JVM home
+#JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk.x86_64
+
+# Custom startup arguments
+#JAVA_ARGS=""

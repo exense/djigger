@@ -1,0 +1,59 @@
+#!/bin/bash
+#
+# djigger-collector - Startup script for the djigger Collector
+#
+# chkconfig: - 91 19
+#
+### BEGIN INIT INFO
+# Provides: djigger-collector
+# Required-Start: $mongod $time
+# Should-Start:
+# Default-Start: 3 4 5
+# Short-Description: djigger Collector
+# Description: djigger Collector for storing Java performance data in a MongoDB
+### END INIT INFO
+
+## Source function library
+. /etc/init.d/functions
+
+if [ ! -f /etc/sysconfig/djigger-collector ]; then
+    exit 6
+fi
+
+. /etc/sysconfig/djigger-collector
+
+collector_pid() {
+    pgrep -u "${DJIGGER_USER}" -f io.djigger.collector.server.Server
+}
+
+case "$1" in
+    start)
+        echo -n "Starting djigger Collector: "
+        su - ${DJIGGER_USER} -c "${DJIGGER_HOME}/bin/startCollector.sh >>${DJIGGER_OUTFILE} 2>&1 &"
+        sleep 1
+        test -n "$(collector_pid)" && success || failure
+        echo
+    ;;
+    stop)
+        echo -n "Stopping djigger Collector: "
+        kill -15 $(collector_pid)
+        sleep 5
+        test -z "$(collector_pid)" && success || failure
+        echo
+    ;;
+    status)
+        pid=$(collector_pid)
+        if [ -n "${pid}" ]; then
+            echo "djigger Collector (pid: ${pid}) is running"
+        else
+            echo "djigger Collector is stopped"
+        fi
+    ;;
+    restart)
+        $0 stop
+        $0 start
+    ;;
+    *)
+        echo "usage: $0 (start|stop|restart|status|help)"
+    ;;
+esac
