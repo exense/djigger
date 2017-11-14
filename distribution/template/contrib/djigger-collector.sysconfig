@@ -15,4 +15,4 @@ DJIGGER_OUTFILE="${DJIGGER_HOME}/log/collector.out"
 #JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk.x86_64
 
 # Custom startup arguments
-#JAVA_ARGS=""
+#JAVA_OPTS=""
