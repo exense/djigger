@@ -63,19 +63,71 @@ to your djigger setup:
 
 To enable autostart on system boot, enable the service via `systemctl`:
 
-    # systemctl enable djigger-collector
+    # systemctl enable djigger-collector.service
 
 **Start/Stop Service**
 
 To start/stop/restart the collector service run:
 
-    # systemctl start djigger-collector
-    # systemctl stop djigger-collector
-    # systemctl restart djigger-collector
+    # systemctl start djigger-collector.service
+    # systemctl stop djigger-collector.service
+    # systemctl restart djigger-collector.service
 
 Check the status of the collector service:
 
-    # systemctl status djigger-collector
+    # systemctl status djigger-collector.service
+
+**Logging**
+
+The stdout/stderr on a host running `systemd` is usually availble via
+"journal". To check the messages run:
+
+    # journalctl -u djigger-collector.service
+
+#### Developer Setup
+
+**Ad-Hoc Startup**
+
+It's possible to run the djigger collector in an ad-hoc mode by simply starting
+it with the `bin/startCollector.sh` script. In case you need some customization
+the start script will read the following variables from your shell environment:
+
+* `JAVA_HOME`: Root directory of your Java Development Kit installation. This
+  must be set if you want to use the direct process attach feature of the
+  collector service.
+
+* `JAVA_OPTS`:  Custom Java VM startup arguments.
+
+* `DJIGGER_HOME`: This is automatically detected if unset.
+
+* `DJIGGER_CONFDIR`: Configuration directory where `Collector.xml`,
+  `Connections.csv` and such are read.
+
+* `DJIGGER_LIBDIR`: Classpath configuration pointing to the collector
+  libraries.
+
+**systemd User Session**
+
+`systemd` supports the management of services within a user session. This
+allows a developer to run its individual copy of the collector daemon and still
+leverage all the systemd amenities. Run the following commands prefixed with a
+`$` with your personal user account:
+
+    $ mkdir -p ~/.config/systemd/user
+    $ cp contrib/djigger-collector.service ~/.config/systemd/user/djigger-collector.service
+    $ chmod 0644 ~/.config/systemd/user/djigger-collector.service
+
+Adjust the `User=` and `Group=` settings in `~/.config/systemd/user/djigger-collector.service`
+with your Linux account name and adjust the `ExecStart=` configuration with the
+path to your djigger copy and make sure that your user account has write access
+to it. For more details to the remaining configuration options check the
+corresponding section in the "Production Setup" chapter.
+
+The `systemctl` commands described above are also valid for the user session
+mode of `systemd`. They only have to be extended with the `--user` argument.
+E.g. to start your personal djigger collector, run:
+
+    $ systemctl --user start djigger-collector.service
 
 ### SYSV Init
 
@@ -105,8 +157,8 @@ service startup:
   this to `/dev/null` if those messages shouldn't be stored.
   
 * `JAVA_HOME` (unset by default): Root directory of your Java Development Kit
-  installation. You must set this if you want to use the direct process attach
-  feature of the collector service.
+  installation. This must be defined if you want to use the direct process
+  attach feature of the collector service.
   
 * `JAVA_OPTS` (unset by default): Custom Java VM startup arguments. Here you
   can e.g. restrict the heap size via `-Xmx512m`
@@ -119,11 +171,15 @@ root and make it executable:
      # cp contrib/djigger-collector.initd /etc/init.d/djigger-collector
      # chown root:root /etc/init.d/djigger-collector
      # chmod 0755 /etc/init.d/djigger-collector
-     
+
+**Autostart**
+
 To enable autostart on system boot, register the service via `chkconfig`:
 
     # chkconfig djigger-collector on
-    
+
+**Start/Stop Service**
+
 To manually start/stop/restart the collector service run:
 
     # service djigger-collector start
