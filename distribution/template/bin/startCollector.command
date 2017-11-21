@@ -1,10 +1,31 @@
-#!/bin/sh
+#!/bin/bash
 
 JAVA_PATH=""
 #JAVA_PATH="/usr/sbin/jre1.8.0_77/bin/"
+TARGET_FILE=$(dirname ${BASH_SOURCE[0]})
 
-ABSPATH=$(cd "$(dirname "$0")"; pwd)
+cd `dirname $TARGET_FILE`
+TARGET_FILE=`basename $TARGET_FILE`
 
-JAVA_OPTS="-DcollectorConfig=${ABSPATH}/../conf/Collector.xml -Dlogback.configurationFile=logback-collector.xml"
+while [ -L "$TARGET_FILE" ]
+do
+    TARGET_FILE=`readlink $TARGET_FILE`
+    cd `dirname $TARGET_FILE`
+    TARGET_FILE=`basename $TARGET_FILE`
+done
 
-${JAVA_PATH}java ${JAVA_OPTS} -cp ${ABSPATH}/../lib/*: io.djigger.collector.server.Server
+PHYS_DIR=`pwd -P`
+execdir=$PHYS_DIR/$TARGET_FILE
+
+DJIGGER_HOME="${DJIGGER_HOME:-$(dirname ${execdir})}"
+DJIGGER_CONFDIR="${DJIGGER_CONFDIR:-${DJIGGER_HOME}/conf}"
+DJIGGER_LIBDIR="${DJIGGER_LIBDIR:-${DJIGGER_HOME}/lib}"
+
+START_OPTS=()
+START_OPTS+=("-DcollectorConfig=${DJIGGER_CONFDIR}/Collector.xml")
+START_OPTS+=("-Dlogback.configurationFile=${DJIGGER_CONFDIR}/logback-collector.xml")
+START_OPTS+=("${JAVA_OPTS}")
+
+cd "${DJIGGER_HOME}" \
+    && exec "${JAVA_HOME}java" ${START_OPTS[@]} -cp "${DJIGGER_LIBDIR}/*" io.djigger.collector.server.Server \
+    || echo "Error: Invalid DJIGGER_HOME"
