@@ -20,26 +20,23 @@
 package io.djigger.client;
 
 import static java.lang.management.ManagementFactory.THREAD_MXBEAN_NAME;
-import static java.lang.management.ManagementFactory.getPlatformMXBeans;
 import static java.lang.management.ManagementFactory.newPlatformMXBeanProxy;
 
 import java.io.IOException;
-import java.lang.management.GarbageCollectorMXBean;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
-import java.lang.management.MemoryPoolMXBean;
-import java.lang.management.MemoryUsage;
-import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.management.MBeanServerConnection;
 import javax.management.Notification;
 import javax.management.NotificationListener;
+import javax.management.ObjectInstance;
+import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
@@ -47,6 +44,8 @@ import javax.management.remote.JMXServiceURL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.djigger.client.mbeans.MBeanCollector;
+import io.djigger.client.mbeans.MBeanCollector.ValueListener;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.sampling.Sampler;
@@ -56,21 +55,15 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 	
 	private static final Logger logger = LoggerFactory.getLogger(JMXClientFacade.class);
 	
-	JMXConnector connector;
+	protected JMXConnector connector;
 	
-	volatile ThreadMXBean bean;
+	protected MBeanCollector mBeanCollector;
 	
-	volatile OperatingSystemMXBean operatingSystemBean;
+	protected volatile ThreadMXBean bean;
 	
-	volatile List<MemoryPoolMXBean> memoryPoolBeans;
+	protected boolean collectMetrics;
 	
-	volatile List<GarbageCollectorMXBean> garbageCollectorBeans;
-	
-	volatile MemoryMXBean memoryBean;
-	
-	boolean collectMetrics;
-	
-	final Sampler sampler;
+	protected final Sampler sampler;
 	
 	public JMXClientFacade(Properties properties, boolean autoReconnect) {
 		super(properties, autoReconnect);
@@ -90,32 +83,14 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 					}
 					
 					if(collectMetrics) {
-						long time = System.currentTimeMillis();
-						List<Metric<?>> metrics = new ArrayList<>();
-						for(MemoryPoolMXBean b:memoryPoolBeans) {
-							MemoryUsage u =b.getCollectionUsage();
-							if(u!=null) {
-								metrics.add(new Metric<>(time, "JMX/MemoryPool/"+b.getName()+"/Used",u.getUsed()));
-								metrics.add(new Metric<>(time, "JMX/MemoryPool/"+b.getName()+"/Max",u.getMax()));
+						final List<Metric<?>> metrics = new ArrayList<>();
+						
+						mBeanCollector.collect(new ValueListener() {	
+							@Override
+							public void valueReceived(Metric<?> metric) {
+								metrics.add(metric);
 							}
-						}
-						
-						for(GarbageCollectorMXBean b:garbageCollectorBeans) {
-							metrics.add(new Metric<>(time, "JMX/GarbageCollector/"+b.getName()+"/CollectionCount",b.getCollectionCount()));
-							metrics.add(new Metric<>(time, "JMX/GarbageCollector/"+b.getName()+"/CollectionTime",b.getCollectionTime()));
-						}
-						
-						double systemLoadAverage = operatingSystemBean.getSystemLoadAverage();
-						metrics.add(new Metric<>(time, "JMX/OperatingSystem/SystemLoadAverage", systemLoadAverage));
-						
-						MemoryUsage heapUsage = memoryBean.getHeapMemoryUsage();
-						metrics.add(new Metric<>(time, "JMX/Memory/HeapMemoryUsage/Used",heapUsage.getUsed()));
-						metrics.add(new Metric<>(time, "JMX/Memory/HeapMemoryUsage/Max",heapUsage.getMax()));
-						
-						MemoryUsage nonHeapUsage = memoryBean.getNonHeapMemoryUsage();
-						metrics.add(new Metric<>(time, "JMX/Memory/NonHeapMemoryUsage/Used",nonHeapUsage.getUsed()));
-						metrics.add(new Metric<>(time, "JMX/Memory/NonHeapMemoryUsage/Max",nonHeapUsage.getMax()));
-
+						});
 						
 						for(FacadeListener listener:listeners) {
 							listener.metricsReceived(metrics);
@@ -195,13 +170,9 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 		bean = newPlatformMXBeanProxy(connection, THREAD_MXBEAN_NAME, ThreadMXBean.class);
 		
 		if(collectMetrics) {
-			memoryBean = newPlatformMXBeanProxy(connection, ManagementFactory.MEMORY_MXBEAN_NAME, MemoryMXBean.class);
-			
-			memoryPoolBeans = getPlatformMXBeans(connection, MemoryPoolMXBean.class);
-			
-			garbageCollectorBeans = getPlatformMXBeans(connection, GarbageCollectorMXBean.class);
-			
-			operatingSystemBean = newPlatformMXBeanProxy(connection, ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
+			Set<ObjectInstance> mBeans = new HashSet<>();
+			mBeans.addAll(connection.queryMBeans(new ObjectName("java.lang:*"), null));
+			mBeanCollector = new MBeanCollector(connection, mBeans);
 		}
 	}
 

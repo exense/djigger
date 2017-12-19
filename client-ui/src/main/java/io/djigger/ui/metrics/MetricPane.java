@@ -1,18 +1,19 @@
 package io.djigger.ui.metrics;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.util.Date;
-import java.util.HashSet;
+import java.util.Enumeration;
 import java.util.List;
-import java.util.Set;
-import java.util.Vector;
 
+import javax.json.JsonNumber;
+import javax.json.JsonObject;
+import javax.json.JsonValue;
 import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.JTree;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.TreePath;
 
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -30,12 +31,13 @@ import io.djigger.store.Store;
 import io.djigger.store.filter.StoreFilter;
 import io.djigger.ui.Session;
 import io.djigger.ui.analyzer.Dashlet;
+import io.djigger.ui.metrics.MetricTreeModel.MetricNode;
 
 public class MetricPane extends Dashlet {
-
-	private final JTable metricNameList;
 	
-	private final DefaultTableModel model;
+	private final JTree metricTree;
+	
+	private MetricTreeModel metricTreeModel = new MetricTreeModel();
 	
 	private final TimeSeriesCollection dataset;
 		
@@ -48,33 +50,16 @@ public class MetricPane extends Dashlet {
 		
 		this.session = session;
 		
-		metricNameList = new JTable();
-		
-		Vector<String> vector = new Vector<>(3);
-		vector.add("Name");
-		
-		model = new DefaultTableModel(null, vector) {
-			public Class getColumnClass(int c) {				
-	            switch(c) {
-	            case 0:return String.class;
-	            default:throw new RuntimeException();
-	            }
-	        }
-		};
-
-		metricNameList.setModel(model);
-		metricNameList.setAutoCreateRowSorter(true);
-
-		ListSelectionModel cellSelectionModel = metricNameList.getSelectionModel();
-	    cellSelectionModel.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-	    cellSelectionModel.addListSelectionListener(new ListSelectionListener() {
+		metricTree = new JTree(metricTreeModel);
+		metricTree.addTreeSelectionListener(new TreeSelectionListener() {
 			@Override
-			public void valueChanged(ListSelectionEvent e) {
+			public void valueChanged(TreeSelectionEvent arg0) {
 				updateChart();
 			}
-	    	
-	    });		
-		add(BorderLayout.WEST, new JScrollPane(metricNameList));
+		});
+		JScrollPane metricTreePane = new JScrollPane(metricTree);
+		metricTreePane.setPreferredSize(new Dimension(400, 0));
+		add(BorderLayout.WEST, metricTreePane);
 		
 		dataset = new TimeSeriesCollection();
 		XYLineAndShapeRenderer dot = new XYLineAndShapeRenderer(true, false);
@@ -106,67 +91,72 @@ public class MetricPane extends Dashlet {
 		
 		metrics = store.getMetrics().query(mergedFilter);
 		
-		Set<String> metricNameDistinct = new HashSet<>();
+		metricTreeModel = new MetricTreeModel(metrics);
+		TreePath[] selectionBefore = metricTree.getSelectionPaths();
+		Enumeration<TreePath> expandedDesc = metricTree.getExpandedDescendants(new TreePath(metricTree.getModel().getRoot()));
 		
-		for(Metric<?> metric:metrics) {
-			metricNameDistinct.add(metric.getName());
-		}
-		
-		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
-		for(String metricName:metricNameDistinct) {
-			Vector<Object> vector = new Vector<Object>(1);
-			vector.add(metricName);
-			data.addElement(vector);
-		}
-		
-		Vector<String> headers = new Vector<>(1);
-		headers.add("Name");
-		
-		final Set<String> selectedMetrics = getSelectedMetrics();
-		model.setDataVector(data, headers);
-		
-		for(int i=0;i<metricNameList.getRowCount();i++) {
-			if(selectedMetrics.contains(metricNameList.getValueAt(i,0))) {
-				metricNameList.getSelectionModel().addSelectionInterval(i, i);
+		metricTree.setModel(metricTreeModel);
+		if(expandedDesc!=null) {
+			while(expandedDesc.hasMoreElements()) {
+				TreePath path = expandedDesc.nextElement();
+				metricTree.expandPath(path);
 			}
 		}
-		
-		metricNameList.getRowSorter().toggleSortOrder(0);
-	}
-	
-	protected void createPanel(Set<String> selectedMetrics, List<Metric<?>> metrics) {
-		dataset.removeAllSeries();
-		for(String metricName:selectedMetrics) {
-			addSerie(dataset, metricName, metrics);
-		}
-	}
-	
-	protected void addSerie(TimeSeriesCollection dataset, String metricName, List<Metric<?>> metrics) {
-		TimeSeries series1 = new TimeSeries(metricName);
-		for(Metric<?> metric:metrics) {
-			if(metric.getName().equals(metricName)) {
-				series1.addOrUpdate(new Second(new Date(metric.getTime())), (Number) metric.getValue());
-			}
-		}
-		dataset.addSeries(series1);			
+		metricTree.setSelectionPaths(selectionBefore);
 	}
 	
 	private void updateChart() {
-		if(metricNameList.getSelectedRows().length>0) {
-			Set<String> selectedMetrics = getSelectedMetrics();
-			createPanel(selectedMetrics, metrics);
+		dataset.removeAllSeries();
+		TreePath[] selectedPaths = metricTree.getSelectionModel().getSelectionPaths();
+		for(TreePath path:selectedPaths) {
+			Object[] reportNodePath = path.getPath();
+			if(reportNodePath.length>1) {
+				MetricNode firstNode = (MetricNode) reportNodePath[1];
+			
+				StringBuilder serieName = new StringBuilder();
+				for(int i=1;i<reportNodePath.length;i++) {
+					MetricNode node = (MetricNode) reportNodePath[i];
+					serieName.append("/").append(node.name);
+				}
+				TimeSeries series1 = new TimeSeries(serieName.toString().replaceFirst("/", ""));
+				
+				for(Metric<?> m:metrics) {
+					if(m.getName().equals(firstNode.name)) {
+						if(reportNodePath.length>2) {
+							Object value = m.getValue();
+							if(value instanceof JsonValue) {
+								JsonValue json = (JsonValue) value;
+								for(int i=2;i<reportNodePath.length;i++) {
+									MetricNode node = (MetricNode) reportNodePath[i];
+									if(json instanceof JsonObject) {
+										if(((JsonObject)json).containsKey(node.name)) {
+											json = ((JsonObject)json).get(node.name);
+										} else {
+											json = null;
+											break;
+											// TODO
+										}
+									}
+								}
+								if(json!=null) {
+									if(json instanceof JsonNumber) {
+										Number longValue = ((JsonNumber)json).numberValue();
+										series1.addOrUpdate(new Second(new Date(m.getTime())), longValue);
+										
+									}
+								}
+							}
+						}
+						
+					}
+					
+				}
+				
+				dataset.addSeries(series1);
+			}
 		}
 	}
-
-	private Set<String> getSelectedMetrics() {
-		Set<String> selectedMetrics = new HashSet<>();
-		int[] selectedRows = metricNameList.getSelectedRows(); 
-		for(int i=0;i<selectedRows.length;i++) {
-			selectedMetrics.add((String)metricNameList.getValueAt(selectedRows[i],0));
-		}
-		return selectedMetrics;
-	}
-
+	
 	@Override
 	public void refresh() {
 		queryMetrics();

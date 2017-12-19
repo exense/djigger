@@ -145,7 +145,7 @@ public class Server {
 			instrumentationEventsAccessor = new InstrumentationEventAccessor(mongodbConnection.getDb());
 			instrumentationEventsAccessor.createIndexesIfNeeded(ttl);
 			
-			metricAccessor = new MetricAccessor(mongodbConnection.getDb());
+			metricAccessor = new MetricAccessor(mongodbConnection);
 			metricAccessor.createIndexesIfNeeded(ttl);
 		} catch (MongoException e) {
 			logger.error("An error occurred while connection to DB", e);

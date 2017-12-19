@@ -38,7 +38,7 @@ public class StoreClient {
 		connection.connect(host, port, user, password);
 		threadInfoAccessor = new ThreadInfoAccessorImpl(connection.getDb());
 		instrumentationAccessor = new InstrumentationEventAccessor(connection.getDb());
-		metricAccessor = new MetricAccessor(connection.getDb());
+		metricAccessor = new MetricAccessor(connection);
 	}
 
 	public ThreadInfoAccessor getThreadInfoAccessor() {

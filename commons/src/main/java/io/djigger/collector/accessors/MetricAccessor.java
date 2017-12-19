@@ -23,19 +23,25 @@ import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.gt;
 import static com.mongodb.client.model.Filters.lt;
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.json.JsonObject;
+import javax.json.spi.JsonProvider;
+
+import org.bson.BsonDocument;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
-import com.mongodb.client.MongoDatabase;
 
 import io.djigger.collector.accessors.stackref.AbstractAccessor;
 import io.djigger.model.TaggedMetric;
@@ -47,15 +53,17 @@ public class MetricAccessor extends AbstractAccessor {
 	
 	private static final Logger metricWriter = LoggerFactory.getLogger("MetricWriter");
 	
-	MongoDatabase db;
-
+	protected ObjectMapper mapper;
+	
+	MongoConnection dbConnection;
+	
 	MongoCollection<Document> metricsCollection;
-
-	public MetricAccessor(MongoDatabase db) {
+		
+	public MetricAccessor(MongoConnection dbConnection) {
 		super();
-
-		this.db = db;
-		metricsCollection = db.getCollection("metrics");
+		this.dbConnection = dbConnection;
+		metricsCollection = dbConnection.getDb().getCollection("metrics");
+		mapper = ObjectMapperBuilder.createMapper();
 	}
 
 	public void createIndexesIfNeeded(Long ttl) {
@@ -64,8 +72,9 @@ public class MetricAccessor extends AbstractAccessor {
 
 	public void save(TaggedMetric metric) {
 		Document doc = toDocument(metric);
-		log(doc);
 		metricsCollection.insertOne(doc);
+
+		log(metric);
 	}
 
 	public Iterator<Metric<?>> get(Bson filter, Date from, Date to) {
@@ -111,16 +120,22 @@ public class MetricAccessor extends AbstractAccessor {
 			
 			documents.add(document);
 			
-			log(document);
+			log(metric);
 		}
 		if(documents.size()>0) {
-			metricsCollection.insertMany(documents);			
+			metricsCollection.insertMany(documents);
 		}
 	}
 
-	private void log(Document document) {
+	private void log(TaggedMetric metric) {
 		if(metricWriter.isTraceEnabled()) {
-			metricWriter.trace(document.toJson());
+			String metricAsJson;
+			try {
+				metricAsJson = mapper.writeValueAsString(metric);
+				metricWriter.trace(metricAsJson);
+			} catch (JsonProcessingException e) {
+				logger.error("Error while logging metric", e);
+			}
 		}
 	}
 
@@ -128,7 +143,12 @@ public class MetricAccessor extends AbstractAccessor {
 		Document doc = new Document();
 		Metric<?> metric = taggedMetric.getMetric();
 		doc.append("name", metric.getName());
-		doc.append("value", metric.getValue());
+		if(metric.getValue() instanceof JsonObject) {
+			// TODO implement this without serialization/deserialization
+			doc.append("value",BsonDocument.parse(((JsonObject)metric.getValue()).toString()));
+		} else {
+			doc.append("value", metric.getValue());			
+		}
 		doc.append("time", new Date(metric.getTime()));
 		if (taggedMetric.getTags() != null) {
 			doc.putAll(taggedMetric.getTags());
@@ -136,11 +156,17 @@ public class MetricAccessor extends AbstractAccessor {
 		return doc;
 	}
 	
+	private static JsonProvider jsonProvider = JsonProvider.provider();
+	
 	private Metric<?> fromDocument(Document doc) {
 		String name = doc.getString("name");
 		Object value = doc.get("value");
 		long time = doc.getDate("time").getTime();
 		Metric<Object> metric = new Metric<Object>(time, name, value);
+		if(value instanceof Document) {
+			JsonObject o = jsonProvider.createReader(new StringReader(((Document)value).toJson())).readObject();
+			metric.setValue(o);
+		}
 		return metric;
 	}
 }
