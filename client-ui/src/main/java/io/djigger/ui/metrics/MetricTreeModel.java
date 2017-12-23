@@ -22,13 +22,12 @@ package io.djigger.ui.metrics;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonValue;
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
+import io.djigger.monitoring.java.model.GenericArray;
+import io.djigger.monitoring.java.model.GenericObject;
 import io.djigger.monitoring.java.model.Metric;
 
 public class MetricTreeModel implements TreeModel {
@@ -98,8 +97,8 @@ public class MetricTreeModel implements TreeModel {
 				root.children.add(child);
 			}
 			
-			if(m.getValue() instanceof JsonObject) {
-				loadJson(child, (JsonObject)m.getValue());
+			if(m.getValue() instanceof GenericObject) {
+				loadJson(child, (GenericObject)m.getValue());
 			} else {
 				// This is a leaf. Nothing else to do here.
 			}
@@ -116,7 +115,7 @@ public class MetricTreeModel implements TreeModel {
 		return null;
 	}
 	
-	public void loadJson(MetricNode parent, JsonObject o) {
+	public void loadJson(MetricNode parent, GenericObject o) {
 		for(String key:o.keySet()) {
 			MetricNode child = findChildByName(parent.children, key);
 			if(child==null) {
@@ -124,10 +123,10 @@ public class MetricTreeModel implements TreeModel {
 				child.name = key;
 				parent.children.add(child);
 			}
-			JsonValue value = o.get(key);
-			if(value instanceof JsonObject) {
-				loadJson(child, (JsonObject)value);
-			} else if(value instanceof JsonArray) {
+			Object value = o.get(key);
+			if(value instanceof GenericObject) {
+				loadJson(child, (GenericObject)value);
+			} else if(value instanceof GenericArray) {
 				// todo
 			} else {
 				// this is a leaf. Nothing to do here

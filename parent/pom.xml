@@ -8,7 +8,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<java.home>C:\Program Files\Java\jdk1.8.0_131</java.home>
+		<java.home>C:\Program Files\Java\jdk1.8.0_144</java.home>
 	</properties>
 	
 	<repositories>

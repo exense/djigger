@@ -23,16 +23,11 @@ import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.gt;
 import static com.mongodb.client.model.Filters.lt;
 
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.json.JsonObject;
-import javax.json.spi.JsonProvider;
-
-import org.bson.BsonDocument;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
@@ -45,6 +40,7 @@ import com.mongodb.client.MongoCursor;
 
 import io.djigger.collector.accessors.stackref.AbstractAccessor;
 import io.djigger.model.TaggedMetric;
+import io.djigger.monitoring.java.model.GenericObject;
 import io.djigger.monitoring.java.model.Metric;
 
 public class MetricAccessor extends AbstractAccessor {
@@ -63,7 +59,7 @@ public class MetricAccessor extends AbstractAccessor {
 		super();
 		this.dbConnection = dbConnection;
 		metricsCollection = dbConnection.getDb().getCollection("metrics");
-		mapper = ObjectMapperBuilder.createMapper();
+		mapper = new ObjectMapper();
 	}
 
 	public void createIndexesIfNeeded(Long ttl) {
@@ -143,9 +139,8 @@ public class MetricAccessor extends AbstractAccessor {
 		Document doc = new Document();
 		Metric<?> metric = taggedMetric.getMetric();
 		doc.append("name", metric.getName());
-		if(metric.getValue() instanceof JsonObject) {
-			// TODO implement this without serialization/deserialization
-			doc.append("value",BsonDocument.parse(((JsonObject)metric.getValue()).toString()));
+		if(metric.getValue() instanceof GenericObject) {
+			doc.append("value",genericObjectToDocument((GenericObject) metric.getValue()));
 		} else {
 			doc.append("value", metric.getValue());			
 		}
@@ -156,16 +151,39 @@ public class MetricAccessor extends AbstractAccessor {
 		return doc;
 	}
 	
-	private static JsonProvider jsonProvider = JsonProvider.provider();
+	private Document genericObjectToDocument(GenericObject object) {
+		Document doc = new Document();
+		for(String key:object.keySet()) {
+			Object value = object.get(key);
+			if(value instanceof GenericObject) {
+				doc.append(key, genericObjectToDocument((GenericObject)value));
+			} else {
+				doc.append(key, value);
+			}
+		}
+		return doc;
+	}
 	
+	private GenericObject documentToGenericObject(Document document) {
+		GenericObject object = new GenericObject();
+		for(String key: document.keySet()) {
+			Object value = document.get(key);
+			if(value instanceof Document) {
+				object.put(key, documentToGenericObject((Document)value));
+			} else {
+				object.put(key, value);
+			}
+		}
+		return object;
+	}
+		
 	private Metric<?> fromDocument(Document doc) {
 		String name = doc.getString("name");
 		Object value = doc.get("value");
 		long time = doc.getDate("time").getTime();
 		Metric<Object> metric = new Metric<Object>(time, name, value);
 		if(value instanceof Document) {
-			JsonObject o = jsonProvider.createReader(new StringReader(((Document)value).toJson())).readObject();
-			metric.setValue(o);
+			metric.setValue(documentToGenericObject((Document) value));
 		}
 		return metric;
 	}

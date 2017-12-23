@@ -48,5 +48,4 @@ public class Metric<T> implements Serializable {
 	public void setValue(T value) {
 		this.value = value;
 	}
-	
 }

@@ -6,9 +6,6 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 
-import javax.json.JsonNumber;
-import javax.json.JsonObject;
-import javax.json.JsonValue;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.event.TreeSelectionEvent;
@@ -25,6 +22,7 @@ import org.jfree.data.time.Second;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
+import io.djigger.monitoring.java.model.GenericObject;
 import io.djigger.monitoring.java.model.Metric;
 import io.djigger.ql.Filter;
 import io.djigger.store.Store;
@@ -124,25 +122,25 @@ public class MetricPane extends Dashlet {
 					if(m.getName().equals(firstNode.name)) {
 						if(reportNodePath.length>2) {
 							Object value = m.getValue();
-							if(value instanceof JsonValue) {
-								JsonValue json = (JsonValue) value;
+							if(value instanceof GenericObject) {
+								Object currentValue = value;
 								for(int i=2;i<reportNodePath.length;i++) {
 									MetricNode node = (MetricNode) reportNodePath[i];
-									if(json instanceof JsonObject) {
-										if(((JsonObject)json).containsKey(node.name)) {
-											json = ((JsonObject)json).get(node.name);
+									if(currentValue instanceof GenericObject) {
+										GenericObject genericObject = (GenericObject) currentValue;
+										if(genericObject.containsKey(node.name)) {
+											currentValue = genericObject.get(node.name);
 										} else {
-											json = null;
+											currentValue = null;
 											break;
 											// TODO
 										}
 									}
 								}
-								if(json!=null) {
-									if(json instanceof JsonNumber) {
-										Number longValue = ((JsonNumber)json).numberValue();
-										series1.addOrUpdate(new Second(new Date(m.getTime())), longValue);
-										
+								if(currentValue!=null) {
+									 	if(currentValue instanceof Number) {
+										Number numberValue = (Number)currentValue;
+										series1.addOrUpdate(new Second(new Date(m.getTime())), numberValue);
 									}
 								}
 							}

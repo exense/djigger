@@ -225,8 +225,8 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
 			
 			final MonitoredExecution execution = new MonitoredExecution(parent.getMain().getFrame(), "Opening session... Please wait.", new MonitoredExecutionRunnable() {
 				protected void run(MonitoredExecution execution) {
-					retrieveThreadInfos(query, from, to, execution);
 					retrieveMetrics(query, from, to, execution);
+					retrieveThreadInfos(query, from, to, execution);
     				retrieveInstumentationEvents(query, from, to, execution);
     			}
 

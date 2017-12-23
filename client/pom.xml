@@ -31,15 +31,5 @@
 			<scope>system</scope>
 			<systemPath>${java.home}/lib/tools.jar</systemPath>
 		</dependency>
-		<dependency>
-		    <groupId>javax.json</groupId>
-		    <artifactId>javax.json-api</artifactId>
-		    <version>1.1.2</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.glassfish</groupId>
-		    <artifactId>javax.json</artifactId>
-		    <version>1.1.2</version>
-		</dependency>
 	</dependencies>
 </project>
