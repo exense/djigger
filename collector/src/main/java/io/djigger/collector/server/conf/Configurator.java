@@ -25,15 +25,12 @@
 
 package io.djigger.collector.server.conf;
 
-import io.djigger.client.JMXClientFacade;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -42,7 +39,11 @@ import java.util.TreeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.xstream.XStream;
+
+import io.djigger.client.JMXClientFacade;
 
 public class Configurator {
 
@@ -80,7 +81,9 @@ public class Configurator {
 
 			if(connectionsFile.trim().toLowerCase().endsWith(".xml"))
 				ccList.add(parseConnectionsXML(connectionsFile));
-			else{
+			else if(connectionsFile.trim().toLowerCase().endsWith(".json"))
+				ccList.add(parseConnectionsJson(connectionsFile));
+			else {
 				if(connectionsFile.trim().toLowerCase().endsWith(".csv"))
 					ccList.add(parseConnectionsCSV(connectionsFile));
 				else{
@@ -191,6 +194,29 @@ public class Configurator {
 			throw new RuntimeException("Unable to load " + connectionsConfigFilename, e);
 		}
 	}
+	
+	private static ConnectionsConfig parseConnectionsJson(String connectionsConfigFilename) {
+
+		ConnectionsConfig cc = new ConnectionsConfig();
+
+		ObjectMapper mapper = new ObjectMapper();
+		
+		JavaType type = mapper.getTypeFactory().constructCollectionType(List.class, Connection.class);
+		
+		List<ConnectionGroupNode> connections;
+		try {
+			connections = mapper.readValue(new File(connectionsConfigFilename), type);
+			ConnectionGroup group = new ConnectionGroup();
+			group.groups = connections;
+			cc.connectionGroup = group;
+			return cc;
+		} catch (IOException e) {
+			String errorMsg = "Error while reading connection file: "+connectionsConfigFilename;
+			logger.error(errorMsg, e);
+			throw new RuntimeException(errorMsg, e);
+		}
+		
+	}
 
 	private static ConnectionGroupNode parseAndBuildConnection(String csvLine) throws Exception {
 		Connection connection = new io.djigger.collector.server.conf.Connection();
@@ -206,6 +232,9 @@ public class Configurator {
 		connectionProperties.setProperty("port", splitLine[1]);
 		connectionProperties.setProperty("username", splitLine[2]);
 		connectionProperties.setProperty("password", resolvePasswordFromPath(splitLine[3]));
+		
+		//connectionProperties.setProperty(arg0, arg1)
+		
 		connection.setConnectionProperties(connectionProperties);
 
 		// Sampling Rate Object

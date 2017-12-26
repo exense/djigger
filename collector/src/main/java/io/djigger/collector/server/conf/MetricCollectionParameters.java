@@ -17,35 +17,20 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.monitoring.java.agent;
+package io.djigger.collector.server.conf;
 
-public class JavaAgentMessageType {
-	
-	public static String SUBSCRIBE_THREAD_SAMPLING = "SUBSCRIBE_THREAD_SAMPLING";
+import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 
-	public static String UNSUBSCRIBE_THREAD_SAMPLING = "UNSUBSCRIBE_THREAD_SAMPLING";
-	
-	public static String SUBSCRIBE_METRIC_COLLECTION = "SUBSCRIBE_METRIC_COLLECTION";
+public class MetricCollectionParameters {
 
-	public static String GET_RATE = "GET_RATE";
+	@XStreamAsAttribute
+	private int samplingRate;
 
-	public static String RESUME = "RESUME";
+	public int getSamplingRate() {
+		return samplingRate;
+	}
 
-	public static String PAUSE = "PAUSE";
-
-	public static String INSTRUMENT = "INSTRUMENT";
-
-	public static String DEINSTRUMENT = "DEINSTRUMENT";
-
-	public static String INSTRUMENT_BATCH_INTERVAL = "INSTRUMENT_BATCH_INTERVAL";
-
-	public static String INSTRUMENT_SAMPLE = "INSTRUMENT_SAMPLE";
-
-	public static String THREAD_SAMPLE = "THREAD_SAMPLE";
-	
-	public static String METRICS = "METRICS";
-
-	public static String RESPONSE = "RESPONSE";
-	
-	public static String MAX_AGENT_SESSIONS_REACHED = "MAX_AGENT_SESSIONS_REACHED";
+	public void setSamplingRate(int samplingRate) {
+		this.samplingRate = samplingRate;
+	}
 }

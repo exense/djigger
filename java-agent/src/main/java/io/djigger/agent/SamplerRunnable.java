@@ -26,8 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import javax.management.MBeanServer;
-
 import io.djigger.monitoring.eventqueue.EventQueue;
 import io.djigger.monitoring.java.instrumentation.Transaction;
 import io.djigger.monitoring.java.mbeans.MBeanCollector;
@@ -45,14 +43,12 @@ public class SamplerRunnable implements Runnable {
 	
 	private MBeanCollector collector;
 	
-	public SamplerRunnable(EventQueue<io.djigger.monitoring.java.model.ThreadInfo> threadInfoQueue, EventQueue<io.djigger.monitoring.java.model.Metric<?>> metricsQueue) {
+	public SamplerRunnable(EventQueue<io.djigger.monitoring.java.model.ThreadInfo> threadInfoQueue, EventQueue<io.djigger.monitoring.java.model.Metric<?>> metricsQueue, MBeanCollector collector) {
 		super();
 		this.threadInfoQueue = threadInfoQueue;
 		this.metricsQueue = metricsQueue;
 		
-		MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-		collector = new MBeanCollector(mBeanServer);
-		// TODO implement configuration collector.registerMBeanAttribute("");
+		this.collector = collector;
 		
 	}
 

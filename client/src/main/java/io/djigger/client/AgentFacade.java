@@ -29,9 +29,11 @@ import org.slf4j.LoggerFactory;
 import io.denkbar.smb.core.Message;
 import io.denkbar.smb.core.MessageListener;
 import io.denkbar.smb.core.MessageRouter;
+import io.djigger.client.mbeans.MBeanCollectionConfigurationBuilder;
 import io.djigger.monitoring.java.agent.JavaAgentMessageType;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.mbeans.MBeanCollectorConfiguration;
 import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.model.ThreadInfo;
 
@@ -59,7 +61,17 @@ public class AgentFacade extends Facade implements MessageListener {
 	    	} catch (IOException e) {
 	    		logger.error("Error while sending message to agent:",e);
 	    	}
+	    	subscribeToMetricCollection();
     	}	
+    }
+    
+    protected void subscribeToMetricCollection() {
+    	MBeanCollectorConfiguration configuration = MBeanCollectionConfigurationBuilder.parse(getProperties());
+    	try {
+    		client.sendMessage(JavaAgentMessageType.SUBSCRIBE_METRIC_COLLECTION, configuration);
+    	} catch (IOException e) {
+    		logger.error("Error while sending message to agent:",e);
+    	}
     }
 
     protected void stopSampling() {

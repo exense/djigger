@@ -29,8 +29,6 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.management.MBeanServerConnection;
 import javax.management.Notification;
@@ -42,9 +40,11 @@ import javax.management.remote.JMXServiceURL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.djigger.client.mbeans.MBeanCollectionConfigurationBuilder;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.mbeans.MBeanCollector;
 import io.djigger.monitoring.java.mbeans.MBeanCollector.ValueListener;
+import io.djigger.monitoring.java.mbeans.MBeanCollectorConfiguration;
 import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.sampling.Sampler;
 import io.djigger.monitoring.java.sampling.ThreadDumpHelper;
@@ -168,26 +168,10 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 		bean = newPlatformMXBeanProxy(connection, THREAD_MXBEAN_NAME, ThreadMXBean.class);
 		
 		if(collectMetrics) {			
-			String mbeanAttributeList = properties.getProperty("metrics.mbeans.attributes");
-			String mbeanOperationList = properties.getProperty("metrics.mbeans.operations");
+			MBeanCollectorConfiguration configuration = MBeanCollectionConfigurationBuilder.parse(properties);
 			mBeanCollector = new MBeanCollector(connection);
 			mBeanCollector.registerMBeanAttribute("java.lang:*");
-			if(mbeanAttributeList!=null) {
-				String[] list = mbeanAttributeList.split("#");
-				for(String mBeanAttribute:list) {
-					mBeanCollector.registerMBeanAttribute(mBeanAttribute);
-				}
-			}
-			if(mbeanOperationList!=null) {
-				String[] list = mbeanOperationList.split("#");
-				for(String mBeanOperation:list) {
-					Pattern mBeanOperationPattern = Pattern.compile("(.*)\\.([^\\.]+)\\((.?)\\)");
-					Matcher mBeanOperationMatcher = mBeanOperationPattern.matcher(mBeanOperation);
-					if(mBeanOperationMatcher.matches()) {
-						mBeanCollector.registerMBeanOperation(mBeanOperationMatcher.group(1), mBeanOperationMatcher.group(2), mBeanOperationMatcher.group(3).split(","));						
-					}
-				}
-			}
+			mBeanCollector.configure(configuration);
 		}
 	}
 

@@ -1,0 +1,9 @@
+[
+{
+ "connectionClass":"io.djigger.client.JMXClientFacade",
+ "samplingParameters":{"samplingRate":10000},
+ "connectionProperties":{"host":"localhost", "port":1098,
+ "metrics.mbeans.operations":"java.lang:type=Memory.gc()" },
+ "attributes":{"foo":"bar"}
+}
+]

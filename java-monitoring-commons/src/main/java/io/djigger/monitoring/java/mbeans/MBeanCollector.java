@@ -49,17 +49,25 @@ public class MBeanCollector {
 
 	private Set<ObjectInstance> mBeans = new HashSet<ObjectInstance>();
 
-	private Set<MBeanOperation> mBeanOperations = new HashSet<MBeanOperation>();
+	private Set<MBeanOperationConfiguration> mBeanOperations = new HashSet<MBeanOperationConfiguration>();
 
 	public MBeanCollector(MBeanServerConnection connection) {
 		super();
 		this.mBeanServerConnection = connection;
 	}
 	
-	private static class MBeanOperation {
-		ObjectName objectName;
-		String operationName;
-		String[] operationArguments;
+	public void clearConfiguration() {
+		mBeanOperations.clear();
+		mBeans.clear();
+	}
+	
+	public void configure(MBeanCollectorConfiguration configuration) {
+		for(String mBeanAttribute:configuration.getmBeanAttributes()) {
+			registerMBeanAttribute(mBeanAttribute);				
+		}
+		for(MBeanOperation mBeanOperation:configuration.getmBeanOperations()) {
+			registerMBeanOperation(mBeanOperation);
+		}
 	}
 	
 	// "java.lang:*"
@@ -79,13 +87,30 @@ public class MBeanCollector {
 		}
 	}
 	
-	public void registerMBeanOperation(String objectName, String operationName,  String... operationArguments) throws MalformedObjectNameException {
-		MBeanOperation operation = new MBeanOperation();
-		operation.objectName = new ObjectName(objectName);
-		operation.operationName = operationName;
-		operation.operationArguments = operationArguments;
-		mBeanOperations.add(operation);
+	public void registerMBeanOperation(MBeanOperation mBeanOperation) {
+		try {
+			mBeanOperations.add(new MBeanOperationConfiguration(new ObjectName(mBeanOperation.objectName),
+					mBeanOperation.operationName, mBeanOperation.operationArguments));
+		} catch (MalformedObjectNameException e) {
+			logger.log(Level.SEVERE, "Error while registering mBeanOperation: "+mBeanOperation.getObjectName(), e);
+		}
 	}
+	
+	public static class MBeanOperationConfiguration {
+		
+		ObjectName objectName;
+		String operationName;
+		String[] operationArguments;
+		
+		public MBeanOperationConfiguration(ObjectName objectName, String operationName, String[] operationArguments) {
+			super();
+			this.objectName = objectName;
+			this.operationName = operationName;
+			this.operationArguments = operationArguments;
+		}
+		
+	}
+	
 
 	@FunctionalInterface
 	public interface ValueListener {
@@ -106,12 +131,16 @@ public class MBeanCollector {
 	
 	protected void collectMBeanOperationResults(ValueListener listener) {
 		long timestamp = System.currentTimeMillis();
-		for(MBeanOperation operation:mBeanOperations) {
-			invokeMBeanOperationAndCollectResults(timestamp, listener, operation.objectName, operation.operationName, operation.operationArguments);
+		for(MBeanOperationConfiguration operation:mBeanOperations) {
+			invokeMBeanOperationAndCollectResults(timestamp, listener, operation);
 		}
 	}
 	
-	protected void invokeMBeanOperationAndCollectResults(long timestamp, ValueListener listener, ObjectName mbeanName, String operationName, String... operationArguments) {
+	protected void invokeMBeanOperationAndCollectResults(long timestamp, ValueListener listener, MBeanOperationConfiguration mBeanOperation) {
+		ObjectName mbeanName = mBeanOperation.objectName;
+		String operationName = mBeanOperation.operationName;
+		String[] operationArguments = mBeanOperation.operationArguments;
+		
 		MBeanInfo info;
 		try {
 			info = mBeanServerConnection.getMBeanInfo(mbeanName);

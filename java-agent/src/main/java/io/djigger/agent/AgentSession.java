@@ -21,9 +21,13 @@ package io.djigger.agent;
 
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
+import java.lang.management.ManagementFactory;
 import java.net.Socket;
 import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
+
+import javax.management.MBeanServer;
 
 import io.denkbar.smb.core.Message;
 import io.denkbar.smb.core.MessageListener;
@@ -35,12 +39,16 @@ import io.djigger.monitoring.eventqueue.ModuloEventSkipLogic;
 import io.djigger.monitoring.java.agent.JavaAgentMessageType;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.mbeans.MBeanCollector;
+import io.djigger.monitoring.java.mbeans.MBeanCollectorConfiguration;
 import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.monitoring.java.sampling.Sampler;
 
 public class AgentSession implements MessageListener, MessageRouterStateListener {
 
+	private static final Logger logger = Logger.getLogger(AgentSession.class.getName());
+	
 	private final MessageRouter messageRouter;
 
 	private volatile boolean isAlive;
@@ -54,6 +62,8 @@ public class AgentSession implements MessageListener, MessageRouterStateListener
 	private final EventQueue<ThreadInfo> threadInfoQueue;
 	
 	private final EventQueue<Metric<?>> metricsQueue;
+	
+	private final MBeanCollector mBeanCollector;
 
 	public AgentSession(Socket socket, Instrumentation instrumentation) throws IOException {
 		super();
@@ -90,8 +100,11 @@ public class AgentSession implements MessageListener, MessageRouterStateListener
 				return object.getTime();
 			}
 		});
+		
+		MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+		mBeanCollector = new MBeanCollector(mBeanServer);
 
-		sampler = new Sampler(new SamplerRunnable(threadInfoQueue, metricsQueue));
+		sampler = new Sampler(new SamplerRunnable(threadInfoQueue, metricsQueue, mBeanCollector));
 		instrumentationService = new InstrumentationService(instrumentation);
 
 		messageRouter.start();
@@ -110,6 +123,10 @@ public class AgentSession implements MessageListener, MessageRouterStateListener
 			sampler.setRun(true);
 		} else if (JavaAgentMessageType.UNSUBSCRIBE_THREAD_SAMPLING.equals(command)) {
 			sampler.setRun(false);
+		} else if (JavaAgentMessageType.SUBSCRIBE_METRIC_COLLECTION.equals(command)) {
+			mBeanCollector.clearConfiguration();
+			mBeanCollector.configure((MBeanCollectorConfiguration) msg.getContent());
+			sampler.setRun(true);
 		} else if (JavaAgentMessageType.INSTRUMENT.equals(command)) {
 			InstrumentSubscription subscription = (InstrumentSubscription) msg.getContent();
 			instrumentationService.addSubscription(subscription);
