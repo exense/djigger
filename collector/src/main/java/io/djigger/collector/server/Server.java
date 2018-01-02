@@ -221,6 +221,10 @@ public class Server {
 			}
 		}
 		
+		if(connectionConfig.getMetrics()!=null) {
+			client.setMetricCollectionConfiguration(connectionConfig.getMetrics());
+		}
+		
 		return client;
 	}
 

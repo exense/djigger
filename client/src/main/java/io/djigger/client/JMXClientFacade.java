@@ -40,11 +40,9 @@ import javax.management.remote.JMXServiceURL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.djigger.client.mbeans.MBeanCollectionConfigurationBuilder;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.mbeans.MBeanCollector;
 import io.djigger.monitoring.java.mbeans.MBeanCollector.ValueListener;
-import io.djigger.monitoring.java.mbeans.MBeanCollectorConfiguration;
 import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.sampling.Sampler;
 import io.djigger.monitoring.java.sampling.ThreadDumpHelper;
@@ -58,8 +56,6 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 	protected MBeanCollector mBeanCollector;
 	
 	protected volatile ThreadMXBean bean;
-	
-	protected boolean collectMetrics;
 	
 	protected final Sampler sampler;
 	
@@ -79,20 +75,18 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 					for(FacadeListener listener:listeners) {
 						listener.threadInfosReceived(dumps);
 					}
+
+					final List<Metric<?>> metrics = new ArrayList<>();
 					
-					if(collectMetrics) {
-						final List<Metric<?>> metrics = new ArrayList<>();
-						
-						mBeanCollector.collect(new ValueListener() {	
-							@Override
-							public void valueReceived(Metric<?> metric) {
-								metrics.add(metric);
-							}
-						});
-						
-						for(FacadeListener listener:listeners) {
-							listener.metricsReceived(metrics);
+					mBeanCollector.collect(new ValueListener() {	
+						@Override
+						public void valueReceived(Metric<?> metric) {
+							metrics.add(metric);
 						}
+					});
+					
+					for(FacadeListener listener:listeners) {
+						listener.metricsReceived(metrics);
 					}
 				}
 			}
@@ -148,8 +142,6 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 		String username = properties.getProperty("username");
 		String password = properties.getProperty("password");
 		
-		collectMetrics = Boolean.parseBoolean(properties.getProperty("collectMetrics","true"));
-		
 		logger.info("Creating JMX connection to " + host + ":" + port);
 		
 		String urlPath = "/jndi/rmi://" + host + ":" + port + "/jmxrmi";
@@ -167,11 +159,9 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 		
 		bean = newPlatformMXBeanProxy(connection, THREAD_MXBEAN_NAME, ThreadMXBean.class);
 		
-		if(collectMetrics) {			
-			MBeanCollectorConfiguration configuration = MBeanCollectionConfigurationBuilder.parse(properties);
-			mBeanCollector = new MBeanCollector(connection);
-			mBeanCollector.registerMBeanAttribute("java.lang:*");
-			mBeanCollector.configure(configuration);
+		mBeanCollector = new MBeanCollector(connection);
+		if(metricCollectionConfiguration != null) {
+			mBeanCollector.configure(metricCollectionConfiguration.getmBeans());
 		}
 	}
 

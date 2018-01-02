@@ -1,9 +1,9 @@
 [
 {
+ "attributes":{"foo":"bar"},
  "connectionClass":"io.djigger.client.JMXClientFacade",
+ "connectionProperties":{"host":"localhost", "port":1098},
  "samplingParameters":{"samplingRate":10000},
- "connectionProperties":{"host":"localhost", "port":1098,
- "metrics.mbeans.operations":"java.lang:type=Memory.gc()" },
- "attributes":{"foo":"bar"}
+ "metrics":{"mBeans":{"mBeanAttributes":["java.lang:*"]}}
 }
 ]

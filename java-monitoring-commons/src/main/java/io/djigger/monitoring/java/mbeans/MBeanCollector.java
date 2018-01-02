@@ -62,11 +62,15 @@ public class MBeanCollector {
 	}
 	
 	public void configure(MBeanCollectorConfiguration configuration) {
-		for(String mBeanAttribute:configuration.getmBeanAttributes()) {
-			registerMBeanAttribute(mBeanAttribute);				
+		if(configuration.getmBeanAttributes()!=null) {
+			for(String mBeanAttribute:configuration.getmBeanAttributes()) {
+				registerMBeanAttribute(mBeanAttribute);				
+			}			
 		}
-		for(MBeanOperation mBeanOperation:configuration.getmBeanOperations()) {
-			registerMBeanOperation(mBeanOperation);
+		if(configuration.getmBeanOperations()!=null) {
+			for(MBeanOperation mBeanOperation:configuration.getmBeanOperations()) {
+				registerMBeanOperation(mBeanOperation);
+			}			
 		}
 	}
 	

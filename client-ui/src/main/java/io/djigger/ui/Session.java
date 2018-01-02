@@ -42,11 +42,13 @@ import io.djigger.client.FacadeListener;
 import io.djigger.client.JMXClientFacade;
 import io.djigger.client.JstackLogTailFacade;
 import io.djigger.client.ProcessAttachFacade;
+import io.djigger.client.mbeans.MetricCollectionConfiguration;
 import io.djigger.db.client.StoreClient;
 import io.djigger.model.Capture;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEventWithThreadInfo;
+import io.djigger.monitoring.java.mbeans.MBeanCollectorConfiguration;
 import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.ql.Filter;
@@ -191,6 +193,13 @@ public class Session extends JPanel implements FacadeListener, Closeable {
         
         if(facade!=null) {
     		facade.addListener(this);
+
+    		// TODO expose the metric collection parameters to the GUI
+    		MetricCollectionConfiguration metricCollectionConfig = new MetricCollectionConfiguration();
+    		MBeanCollectorConfiguration mBeanCollectionConfig = new MBeanCollectorConfiguration();
+    		mBeanCollectionConfig.addMBeanAttribute("java.lang:*");
+    		metricCollectionConfig.setmBeans(mBeanCollectionConfig);
+    		facade.setMetricCollectionConfiguration(metricCollectionConfig);
         }
 
         splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);        

@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.djigger.client.mbeans.MetricCollectionConfiguration;
 import io.djigger.model.Capture;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 
@@ -57,8 +58,10 @@ public abstract class Facade {
     private final Set<InstrumentSubscription> subscriptions = new HashSet<InstrumentSubscription>();
     
     private Timer timer;
-            
-    public Facade(final Properties properties, boolean autoReconnect) {
+    
+    protected MetricCollectionConfiguration metricCollectionConfiguration;
+
+	public Facade(final Properties properties, boolean autoReconnect) {
 		super();
 		this.properties = properties;
 		
@@ -184,6 +187,14 @@ public abstract class Facade {
 
 	public boolean isSampling() {
 		return samplingState;
+	}
+	
+	public MetricCollectionConfiguration getMetricCollectionConfiguration() {
+		return metricCollectionConfiguration;
+	}
+
+	public void setMetricCollectionConfiguration(MetricCollectionConfiguration metricCollectionConfiguration) {
+		this.metricCollectionConfiguration = metricCollectionConfiguration;
 	}
 		
     private void fireConnectionEvent() {

@@ -17,20 +17,19 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.collector.server.conf;
+package io.djigger.client.mbeans;
 
-import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
+import io.djigger.monitoring.java.mbeans.MBeanCollectorConfiguration;
 
-public class MetricCollectionParameters {
+public class MetricCollectionConfiguration {
 
-	@XStreamAsAttribute
-	private int samplingRate;
-
-	public int getSamplingRate() {
-		return samplingRate;
+	MBeanCollectorConfiguration mBeans;
+	
+	public MBeanCollectorConfiguration getmBeans() {
+		return mBeans;
 	}
 
-	public void setSamplingRate(int samplingRate) {
-		this.samplingRate = samplingRate;
+	public void setmBeans(MBeanCollectorConfiguration mBeans) {
+		this.mBeans = mBeans;
 	}
 }

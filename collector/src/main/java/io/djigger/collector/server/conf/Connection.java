@@ -19,14 +19,14 @@
  *******************************************************************************/
 package io.djigger.collector.server.conf;
 
-import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
-
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
+
+import io.djigger.client.mbeans.MetricCollectionConfiguration;
+import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 
 public class Connection implements ConnectionGroupNode {
 	
@@ -36,6 +36,8 @@ public class Connection implements ConnectionGroupNode {
 	private Properties connectionProperties;
 	
 	private SamplingParameters samplingParameters;
+	
+	private MetricCollectionConfiguration metrics;
 	
 	private List<InstrumentSubscription> subscriptions;
 	
@@ -71,6 +73,14 @@ public class Connection implements ConnectionGroupNode {
 
 	public void setSubscriptions(List<InstrumentSubscription> subscriptions) {
 		this.subscriptions = subscriptions;
+	}
+
+	public MetricCollectionConfiguration getMetrics() {
+		return metrics;
+	}
+
+	public void setMetrics(MetricCollectionConfiguration metrics) {
+		this.metrics = metrics;
 	}
 
 	public Map<String, String> getAttributes() {
