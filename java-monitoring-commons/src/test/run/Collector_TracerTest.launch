@@ -10,5 +10,5 @@
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="io.djigger.collector.server.Server"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="collector"/>
 <stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.eclipse.m2e.launchconfig.sourcepathProvider"/>
-<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-DcollectorConfig=../java-monitoring/src/test/conf/Collector.xml"/>
+<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-DcollectorConfig=../java-monitoring-commons/src/test/conf/Collector.xml"/>
 </launchConfiguration>

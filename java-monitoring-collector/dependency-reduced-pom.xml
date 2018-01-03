@@ -3,11 +3,7 @@
   <parent>
     <artifactId>parent</artifactId>
     <groupId>io.djigger</groupId>
-<<<<<<< HEAD
-    <version>1.7.0</version>
-=======
-    <version>1.6.2</version>
->>>>>>> branch 'master' of https://github.com/denkbar/djigger.git
+    <version>1.7.1</version>
     <relativePath>../parent/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
