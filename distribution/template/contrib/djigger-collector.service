@@ -1,0 +1,18 @@
+# /etc/systemd/system/djigger-collector.service
+
+[Unit]
+Description=Denkbar djigger Collector
+After=network.target mongod.service
+Requires=mongod.service
+
+[Service]
+User=djigger
+Group=djigger
+#Environment=JAVA_HOME=/usr/lib/jvm/java
+ExecStart=/opt/denkbar/djigger/bin/startCollector.sh
+SuccessExitStatus=143
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
