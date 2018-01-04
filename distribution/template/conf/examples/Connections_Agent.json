@@ -1,0 +1,12 @@
+[
+{
+ "attributes":{"server":"MyServer2","foo":"bar2"},
+ "connectionClass":"io.djigger.client.AgentFacade",
+ "connectionProperties":{"host":"localhost", "port":12121},
+ "samplingParameters":{"samplingRate":10000},
+ "metrics":{"mBeans":{"mBeanAttributes":["java.lang:*"]}},
+ "subscriptions":[
+ 	{"@class":"io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription","classNamePattern":".*djigger.*","methodNamePattern":"refreshAll","tagEvent":true},
+ 	{"@class":"io.djigger.monitoring.java.instrumentation.subscription.CustomSubscription","classNamePattern":".*djigger.*","methodNamePattern":"refreshAll","tagEvent":true,"measureDuration":true}]
+}
+]

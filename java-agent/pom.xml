@@ -36,6 +36,7 @@
 								<artifactItem>
 									<groupId>io.djigger</groupId>
 									<artifactId>java-monitoring-collector</artifactId>
+									<version>${project.version}</version>
 									<type>jar</type>
 									<overWrite>false</overWrite>
 									<outputDirectory>${project.basedir}/src/main/resources</outputDirectory>

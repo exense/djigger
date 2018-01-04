@@ -19,6 +19,7 @@
  *******************************************************************************/
 package io.djigger.monitoring.java.mbeans;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -28,6 +29,7 @@ import java.util.logging.Logger;
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanInfo;
 import javax.management.MBeanOperationInfo;
+import javax.management.MBeanParameterInfo;
 import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectInstance;
@@ -94,7 +96,7 @@ public class MBeanCollector {
 	public void registerMBeanOperation(MBeanOperation mBeanOperation) {
 		try {
 			mBeanOperations.add(new MBeanOperationConfiguration(new ObjectName(mBeanOperation.objectName),
-					mBeanOperation.operationName, mBeanOperation.operationArguments));
+					mBeanOperation.operationName, mBeanOperation.operationArgumentTypes, mBeanOperation.operationArguments));
 		} catch (MalformedObjectNameException e) {
 			logger.log(Level.SEVERE, "Error while registering mBeanOperation: "+mBeanOperation.getObjectName(), e);
 		}
@@ -104,12 +106,14 @@ public class MBeanCollector {
 		
 		ObjectName objectName;
 		String operationName;
+		String[] operationArgumentsTypes;
 		String[] operationArguments;
 		
-		public MBeanOperationConfiguration(ObjectName objectName, String operationName, String[] operationArguments) {
+		public MBeanOperationConfiguration(ObjectName objectName, String operationName, String[] operationArgumentsTypes, String[] operationArguments) {
 			super();
 			this.objectName = objectName;
 			this.operationName = operationName;
+			this.operationArgumentsTypes = operationArgumentsTypes;
 			this.operationArguments = operationArguments;
 		}
 		
@@ -153,24 +157,75 @@ public class MBeanCollector {
 			return;
 		}
 		
+		String[] argTypes = getOperationArgumentTypes(mBeanOperation);
+		
+		boolean matchingOperationFound = false;
 		MBeanOperationInfo[] operations = info.getOperations();
 		for (MBeanOperationInfo mBeanOperationInfo : operations) {
 			if(mBeanOperationInfo.getName().equals(operationName)) {
-				try {
-					String[] argTypes = new String[operationArguments.length];
-					for(int i=0;i<operationArguments.length;i++) {
-						argTypes[i] = String.class.getName();
-					}
-					Object result = mBeanServerConnection.invoke(mbeanName, operationName, operationArguments, argTypes);
-					GenericObject object = new GenericObject();
-					recursive(object, operationName, result);
-					invokeListener(timestamp, listener, mbeanName, object);
-				} catch (Exception e) {
-					logger.log(Level.SEVERE,"Error while invoking operation "+ mBeanOperationInfo.toString(), e);
+				MBeanParameterInfo[] parameterInfos = mBeanOperationInfo.getSignature();
+				String[] mBeanParameterTypes = new String[parameterInfos.length];
+				for(int i=0;i<parameterInfos.length;i++) {
+					mBeanParameterTypes[i] = parameterInfos[i].getType();
 				}
-				
+				if(Arrays.equals(mBeanParameterTypes, argTypes)) {
+					matchingOperationFound = true;
+					
+					Object[] operationArgumentsCast = new Object[operationArguments.length];
+					for(int i=0;i<operationArguments.length;i++) {
+						String type = argTypes[i];
+						if(type.equals("long")) {
+							operationArgumentsCast[i] = Long.parseLong(operationArguments[i]);							
+						} else if(type.equals("int")) {
+							operationArgumentsCast[i] = Integer.parseInt(operationArguments[i]);							
+						} else if(type.equals("String")) {
+							operationArgumentsCast[i] = operationArguments[i];							
+						} else {
+							throw new RuntimeException("Unsupported argument type "+operationArguments[i]);
+						}
+					}
+					
+					try {
+						String signature = getOperationSignatureAsString(operationArguments);
+						Object result = mBeanServerConnection.invoke(mbeanName, operationName, operationArgumentsCast, argTypes);
+						
+						GenericObject object = new GenericObject();
+						recursive(object, operationName+signature, result);
+						invokeListener(timestamp, listener, mbeanName, object);
+					} catch (Exception e) {
+						logger.log(Level.SEVERE,"Error while invoking operation "+ mBeanOperationInfo.toString(), e);
+					}					
+				}
 			}
 		}
+		
+		if(!matchingOperationFound) {
+			logger.log(Level.SEVERE,"Unable to find MBean operation "+ mbeanName.toString()+"."+operationName + " with the following signature "+Arrays.toString(argTypes));
+		}
+	}
+
+	protected String[] getOperationArgumentTypes(MBeanOperationConfiguration mBeanOperation) {
+		Object[] operationArguments = mBeanOperation.operationArguments;
+		String[] argTypes;
+		if(mBeanOperation.operationArgumentsTypes==null) {
+			argTypes = new String[operationArguments.length];
+			for (int i = 0; i < operationArguments.length; i++) {
+				argTypes[i] = operationArguments[i].getClass().getName();
+			}			
+		} else {
+			argTypes = mBeanOperation.operationArgumentsTypes;
+		}
+		return argTypes;
+	}
+
+	protected String getOperationSignatureAsString(Object[] operationArguments) {
+		StringBuilder signature = new StringBuilder();
+		signature.append("(");
+		for (int i = 0; i < operationArguments.length; i++) {
+			signature.append(operationArguments[i].toString()).append(",");
+		}
+		signature.append(")");
+		return signature.toString().replace(",)",")");
 	}
 
 	private void collectMBeanAttributes(long timestamp, ValueListener listener, ObjectName mbeanName) {

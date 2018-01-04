@@ -1,0 +1,8 @@
+[
+{
+ "attributes":{"server":"MyServer2"},
+ "connectionClass":"io.djigger.client.JstackLogTailFacade",
+ "connectionProperties":{"file":"C:/path/to/my/jstack/output/file"},
+ "samplingParameters":{"samplingRate":1000}
+}
+]

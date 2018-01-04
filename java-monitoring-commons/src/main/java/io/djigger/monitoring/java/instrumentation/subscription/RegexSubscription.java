@@ -40,6 +40,10 @@ public class RegexSubscription extends InstrumentSubscription implements Transfo
 	private Pattern methodNamePattern;
 	private transient Matcher methodNameMatcher;
 
+	public RegexSubscription() {
+		super();
+	}
+
 	public RegexSubscription(String classNameRegex, String methodNameRegex, boolean tagEvent) {
 		super(tagEvent);
 		setClassNamePattern(classNameRegex);

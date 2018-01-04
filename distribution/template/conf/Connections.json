@@ -4,6 +4,6 @@
  "connectionClass":"io.djigger.client.JMXClientFacade",
  "connectionProperties":{"host":"localhost", "port":1098},
  "samplingParameters":{"samplingRate":10000},
- "metrics":{"mBeans":{"mBeanAttributes":["java.lang:*"]}}
+ "metrics":{"mBeans":{"mBeanAttributes":["java.lang:*"],"mBeanOperations":[{"objectName":"java.lang:type=Threading","operationName":"getThreadCpuTime","operationArgumentTypes":["long"],"operationArguments":["1"]}]}}
 }
 ]

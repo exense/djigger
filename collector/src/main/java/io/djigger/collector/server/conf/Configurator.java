@@ -44,6 +44,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.xstream.XStream;
 
 import io.djigger.client.JMXClientFacade;
+import io.djigger.collector.server.conf.mixin.InstrumentSubscriptionMixin;
+import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 
 public class Configurator {
 
@@ -200,6 +202,7 @@ public class Configurator {
 		ConnectionsConfig cc = new ConnectionsConfig();
 
 		ObjectMapper mapper = new ObjectMapper();
+		mapper.addMixIn(InstrumentSubscription.class, InstrumentSubscriptionMixin.class);
 		
 		JavaType type = mapper.getTypeFactory().constructCollectionType(List.class, Connection.class);
 		

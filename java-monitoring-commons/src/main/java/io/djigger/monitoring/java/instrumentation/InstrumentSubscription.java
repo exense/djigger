@@ -39,6 +39,10 @@ public abstract class InstrumentSubscription implements Serializable, Transformi
 	
 	public abstract boolean retransformClass(Class<?> clazz);
 
+	public InstrumentSubscription() {
+		super();
+	}
+
 	public InstrumentSubscription(boolean tagEvent) {
 		super();
 		this.tagEvent = tagEvent;

@@ -33,6 +33,10 @@ public class CapturingSubscription extends RegexSubscription {
 	
 	protected Integer maxCaptureSize;
 	
+	public CapturingSubscription() {
+		super();
+	}
+
 	public String getCapture() {
 		return capture;
 	}

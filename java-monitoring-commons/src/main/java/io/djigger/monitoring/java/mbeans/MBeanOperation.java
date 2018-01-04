@@ -8,7 +8,9 @@ public class MBeanOperation implements Serializable {
 	
 	String objectName;
 	String operationName;
+	String[] operationArgumentTypes;
 	String[] operationArguments;
+	
 	public String getObjectName() {
 		return objectName;
 	}
@@ -20,6 +22,12 @@ public class MBeanOperation implements Serializable {
 	}
 	public void setOperationName(String operationName) {
 		this.operationName = operationName;
+	}
+	public String[] getOperationArgumentTypes() {
+		return operationArgumentTypes;
+	}
+	public void setOperationArgumentTypes(String[] operationArgumentTypes) {
+		this.operationArgumentTypes = operationArgumentTypes;
 	}
 	public String[] getOperationArguments() {
 		return operationArguments;

@@ -29,13 +29,33 @@ public class SimpleSubscription extends InstrumentSubscription implements Transf
 
 	private static final long serialVersionUID = -1137052413341333149L;
 
-	private final String classname;
+	private String classname;
 	
-	private final String methodname;
+	private String methodname;
+
+	public SimpleSubscription() {
+		super();
+	}
 
 	public SimpleSubscription(String classname, String methodname, boolean tagEvent) {
 		super(tagEvent);
 		this.classname = classname;
+		this.methodname = methodname;
+	}
+
+	public String getClassname() {
+		return classname;
+	}
+
+	public void setClassname(String classname) {
+		this.classname = classname;
+	}
+
+	public String getMethodname() {
+		return methodname;
+	}
+
+	public void setMethodname(String methodname) {
 		this.methodname = methodname;
 	}
 
