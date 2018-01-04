@@ -182,21 +182,36 @@ public class Agent extends Thread {
 
 
 	private void startServerSocket() {
+		ServerSocket serverSocket = null;
 		try {
 			System.out.println("Agent: starting server socket on port "+ port);
-			ServerSocket serverSocket = new ServerSocket(port);
+			serverSocket = new ServerSocket(port);
 			while(true) {
 				Socket socket = serverSocket.accept();
-				AgentSession session = createSession(socket);
-				if(this.session == null || (this.session!=null && !this.session.isAlive())) {
-					this.session = session;
-				} else {
-					session.getMessageRouter().send(new Message(JavaAgentMessageType.MAX_AGENT_SESSIONS_REACHED,null));
-					session.close();
+				try {
+					System.out.println("Agent: accepted new client socket "+socket.toString());
+					AgentSession session = createSession(socket);
+					if(this.session == null || !this.session.isAlive()) {
+						this.session = session;
+					} else {
+						session.getMessageRouter().send(new Message(JavaAgentMessageType.MAX_AGENT_SESSIONS_REACHED,null));
+						session.close();
+					}					
+				} catch (Exception e) {
+					System.err.println("Agent: error while creating session for client socket "+socket.toString());
+					e.printStackTrace();
 				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
+		} finally {
+			if(serverSocket!=null) {
+				try {
+					serverSocket.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}				
+			}
 		}
 	}
 
