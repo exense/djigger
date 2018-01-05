@@ -1,6 +1,6 @@
 [
 {
- "attributes":{"server":"MyServer2"},
+ "attributes":{"server":"MyServer1"},
  "connectionClass":"io.djigger.client.JMXClientFacade",
  "connectionProperties":{"host":"localhost", "port":1098},
  "samplingParameters":{"samplingRate":10000},
