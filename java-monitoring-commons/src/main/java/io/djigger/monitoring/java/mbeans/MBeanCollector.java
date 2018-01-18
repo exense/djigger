@@ -45,7 +45,7 @@ import io.djigger.monitoring.java.model.Metric;
 
 public class MBeanCollector {
 
-	private static final Logger logger = Logger.getLogger(EventQueue.class.getName());
+	private static final Logger logger = Logger.getLogger(MBeanCollector.class.getName());
 
 	private MBeanServerConnection mBeanServerConnection;
 
@@ -168,17 +168,21 @@ public class MBeanCollector {
 				for(int i=0;i<parameterInfos.length;i++) {
 					mBeanParameterTypes[i] = parameterInfos[i].getType();
 				}
+				
+				if(logger.isLoggable(Level.FINE)) {
+					logger.log(Level.FINE, "Found MBean Operation "+operationName+" with signature "+Arrays.toString(mBeanParameterTypes));
+				}
 				if(Arrays.equals(mBeanParameterTypes, argTypes)) {
 					matchingOperationFound = true;
 					
 					Object[] operationArgumentsCast = new Object[operationArguments.length];
 					for(int i=0;i<operationArguments.length;i++) {
 						String type = argTypes[i];
-						if(type.equals("long")) {
+						if(type.equals("long")||type.equals(Long.class.getName())) {
 							operationArgumentsCast[i] = Long.parseLong(operationArguments[i]);							
-						} else if(type.equals("int")) {
+						} else if(type.equals("int")||type.equals(Integer.class.getName())) {
 							operationArgumentsCast[i] = Integer.parseInt(operationArguments[i]);							
-						} else if(type.equals("String")) {
+						} else if(type.equals("String")||type.equals(String.class.getName())) {
 							operationArgumentsCast[i] = operationArguments[i];							
 						} else {
 							throw new RuntimeException("Unsupported argument type "+operationArguments[i]);
