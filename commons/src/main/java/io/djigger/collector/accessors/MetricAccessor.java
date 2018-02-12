@@ -150,15 +150,25 @@ public class MetricAccessor extends AbstractAccessor {
 		}
 		return doc;
 	}
+
+	// replacing "." and "$" by their unicodes as they are invalid keys in BSON
+	private String encodeKey(String key) {
+	    return key.replace("\\\\", "\\\\\\\\").replace("\\$", "\\\\u0024").replace(".", "\\\\u002e");
+	}
+
+	private String decodeKey(String key) {
+	    return key.replace("\\\\u002e", ".").replace("\\\\u0024", "\\$").replace("\\\\\\\\", "\\\\");
+	}
 	
 	private Document genericObjectToDocument(GenericObject object) {
 		Document doc = new Document();
 		for(String key:object.keySet()) {
+			String escapedKey = encodeKey(key);
 			Object value = object.get(key);
 			if(value instanceof GenericObject) {
-				doc.append(key, genericObjectToDocument((GenericObject)value));
+				doc.append(escapedKey, genericObjectToDocument((GenericObject)value));
 			} else {
-				doc.append(key, value);
+				doc.append(escapedKey, value);
 			}
 		}
 		return doc;
@@ -166,8 +176,9 @@ public class MetricAccessor extends AbstractAccessor {
 	
 	private GenericObject documentToGenericObject(Document document) {
 		GenericObject object = new GenericObject();
-		for(String key: document.keySet()) {
-			Object value = document.get(key);
+		for(String escapedKey: document.keySet()) {
+			String key = decodeKey(escapedKey);
+			Object value = document.get(escapedKey);
 			if(value instanceof Document) {
 				object.put(key, documentToGenericObject((Document)value));
 			} else {
