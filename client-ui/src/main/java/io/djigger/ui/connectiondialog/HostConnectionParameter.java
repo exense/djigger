@@ -20,10 +20,9 @@
 package io.djigger.ui.connectiondialog;
 
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
 
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
+import javax.swing.*;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 
@@ -44,7 +43,7 @@ public class HostConnectionParameter implements CaretListener, ConnectionParamet
 	
 	private final JTextField username;
 
-	private final JTextField password;
+	private final JPasswordField password;
 	
 	private ConnectionType connectionType;
 
@@ -78,9 +77,23 @@ public class HostConnectionParameter implements CaretListener, ConnectionParamet
 		username = new JTextField(20);
 		hostParametersPane.add(username);
 		hostParametersPane.add(new JLabel("Password"));
-		password = new JTextField(20);
+		password = new JPasswordField(20);
 		hostParametersPane.add(password);
-		
+
+
+		JPopupMenu passwordMenu = new JPopupMenu();
+		password.setComponentPopupMenu(passwordMenu);
+		password.setEchoChar('*');
+
+		passwordMenu.add(new JMenuItem(new AbstractAction("Show/hide") {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				char echo = password.getEchoChar();
+				echo = (echo == 0) ? '*' : 0;
+				password.setEchoChar(echo);
+			}
+		}));
+
 		host.requestFocusInWindow();
 		
 		
