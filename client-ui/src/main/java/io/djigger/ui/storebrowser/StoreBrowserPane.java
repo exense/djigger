@@ -19,33 +19,6 @@
  *******************************************************************************/
 package io.djigger.ui.storebrowser;
 
-import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.text.ParseException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.Iterator;
-
-import javax.swing.BoxLayout;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JSpinner;
-import javax.swing.ListCellRenderer;
-import javax.swing.SpinnerDateModel;
-
-import org.bson.conversions.Bson;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.model.ThreadInfo;
@@ -54,6 +27,16 @@ import io.djigger.ui.Session;
 import io.djigger.ui.common.EnhancedTextField;
 import io.djigger.ui.common.MonitoredExecution;
 import io.djigger.ui.common.MonitoredExecutionRunnable;
+import org.bson.conversions.Bson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import javax.swing.text.DefaultEditorKit;
+import java.awt.*;
+import java.awt.event.*;
+import java.text.ParseException;
+import java.util.*;
 
 @SuppressWarnings("serial")
 public class StoreBrowserPane extends JPanel implements ActionListener {
@@ -84,14 +67,42 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
 		
 		int toOffset;
 
-		private DatePresets(String label, int fromOffset, int toOffset) {
+		DatePresets(String label, int fromOffset, int toOffset) {
 			this.label = label;
 			this.fromOffset = fromOffset;
 			this.toOffset = toOffset;
 		}
 	}
+
+	private static class SpinnerHighlight {
+		final int start;
+		final int end;
+
+		private SpinnerHighlight(int start, int end) {
+			this.start = start;
+			this.end = end;
+		}
+	}
 	
 	private static final String LABEL = "Store filter (and, or, not operators allowed)";
+
+	private static final String SPINNER_PATTERN = "dd.MM.yyyy HH:mm";
+
+	// keep this in sync with the SPINNER_PATTERN
+	private static final SpinnerHighlight[] SPINNER_HIGHLIGHTS = new SpinnerHighlight[] {
+			new SpinnerHighlight(0,2), // dd
+			new SpinnerHighlight(3,5), // MM
+			new SpinnerHighlight(6,10), // yyyy
+			new SpinnerHighlight(11,13), // HH
+			new SpinnerHighlight(14,16), // mm
+	};
+
+	private static final Action NO_ACTION = new AbstractAction() {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			// do nothing
+		}
+	};
 	
 	public StoreBrowserPane(final Session parent) {
 		super();
@@ -132,41 +143,81 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
 		onDatePresetSelection();
 	}
 
+	private SpinnerHighlight findSpinnerHighlight(int caretPosition) {
+		for (SpinnerHighlight candidate: SPINNER_HIGHLIGHTS) {
+			if (candidate.start <= caretPosition && candidate.end >= caretPosition) {
+				return candidate;
+			}
+		}
+		return null;
+	}
+
 	private JSpinner initSpinner() {
 		final JSpinner spinner = new JSpinner();
 		
 		spinner.setModel(new SpinnerDateModel());
 		
-		final JSpinner.DateEditor editor = new JSpinner.DateEditor(spinner, "dd.MM.yyyy HH:mm");
+		final JSpinner.DateEditor editor = new JSpinner.DateEditor(spinner, SPINNER_PATTERN);
 		spinner.setEditor(editor);
-		
-		editor.getTextField().addKeyListener(
-				new KeyListener() {
-					
-					@Override
-					public void keyTyped(KeyEvent e) {}
-					
-					@Override
-					public void keyReleased(KeyEvent e) {}
-					
+
+		final JFormattedTextField textField = editor.getTextField();
+
+		// overwrite default behavior for left/right arrows with no-op actions
+		// we handle them below, and the default actions would ruin our changes
+		ActionMap am = textField.getActionMap();
+		am.put(DefaultEditorKit.forwardAction, NO_ACTION);
+		am.put(DefaultEditorKit.selectionForwardAction, NO_ACTION);
+		am.put(DefaultEditorKit.backwardAction, NO_ACTION);
+		am.put(DefaultEditorKit.selectionBackwardAction, NO_ACTION);
+
+		textField.addKeyListener(
+				new KeyAdapter() {
 					@Override
 					public void keyPressed(KeyEvent e) {
-						if(e.getKeyCode()==KeyEvent.VK_ENTER) {
+						int keyCode = e.getKeyCode();
+
+						if(keyCode==KeyEvent.VK_ENTER) {
 							try {
 								editor.commitEdit();
 							} catch (ParseException e1) {
-								logger.error("Error while parsing expression: "+editor.getTextField().getText(), e);
+								logger.error("Error while parsing expression: "+textField.getText(), e);
 							}
 							search();							
+						}
+						if (keyCode == KeyEvent.VK_LEFT || keyCode == KeyEvent.VK_RIGHT) {
+							SpinnerHighlight currentHighlight = findSpinnerHighlight(textField.getCaretPosition());
+							if (currentHighlight != null) {
+								int nextPosition = keyCode == KeyEvent.VK_LEFT ? currentHighlight.start - 1 : currentHighlight.end + 1;
+								SpinnerHighlight nextHighlight = findSpinnerHighlight(nextPosition);
+								if (nextHighlight == null) {
+									nextHighlight = currentHighlight;
+								}
+								textField.select(nextHighlight.start, nextHighlight.end);
+							}
 						}
 					}
 				}
 		);
-	    add(spinner);
+
+		textField.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 1 && SwingUtilities.isLeftMouseButton(e)) {
+					int caret = textField.viewToModel(e.getPoint());
+					SpinnerHighlight highlight = findSpinnerHighlight(caret);
+					if (highlight != null) {
+						textField.select(highlight.start, highlight.end);
+					}
+				}
+			}
+		});
+
+
+		add(spinner);
 	    
 	    return spinner;
 	}
-	
+
 	private void onDatePresetSelection() {
 		DatePresets preset = (DatePresets) datePresets.getSelectedItem();
 		if(preset!=DatePresets.CUSTOM) {

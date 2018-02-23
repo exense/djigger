@@ -172,9 +172,8 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
     		logger.error("Error while refreshing blocks ",e);
     		throw new RuntimeException(e);
     	}
-    	scrollPane.repaint();
+    	revalidate();
     	repaint();
-    	//axis.repaint();
     }
 
     private void buildBlocks() {
@@ -282,6 +281,7 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 	    	}
 
 	    	blocksPane.setPreferredSize(new Dimension(0,numberOfThreads*(blockHeight+margin)));
+            blocksPane.invalidate();
     	}
     }
 
