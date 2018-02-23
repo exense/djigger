@@ -10,11 +10,11 @@
 			<pattern>%msg%n</pattern>
 		</encoder>
 	</appender>
-	<logger name="org.lightcouch" level="error" />
+	<logger name="org.lightcouch" level="error"/>
 	<!-- <logger name="io.djigger...." level="debug" /> -->
-	
+
 	<root level="info">
-		<appender-ref ref="STDOUT" />
-		<appender-ref ref="FILE" />
+		<appender-ref ref="STDOUT"/>
+		<appender-ref ref="FILE"/>
 	</root>
 </configuration>

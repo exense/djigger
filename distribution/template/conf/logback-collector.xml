@@ -1,25 +1,25 @@
 <configuration scan="true">
-  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <file>log/collectorlog/collector.log</file>
-    <encoder>
-      <pattern>%date %level [%thread] %logger{10} [%file:%line] %msg%n</pattern>
-    </encoder>
-    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>log/collectorlog/collector.%d{yyyy-MM-dd}.log</fileNamePattern>
-      <maxHistory>30</maxHistory>
-    </rollingPolicy>
-  </appender>
-  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-    <encoder>
-      <pattern>%msg%n</pattern>
-    </encoder>
-  </appender>
-  <logger name="org.lightcouch" level="error"/>
-  <!-- <logger name="io.djigger...." level="debug" /> -->
-  <!-- This logger prints the collected InstrumentationEvent as JSON out -->
-  <!-- <logger name="InstrumentationEventWriter" level="trace" /> -->
-  <root level="info">
-    <appender-ref ref="STDOUT"/>
-    <appender-ref ref="FILE"/>
-  </root>
+	<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>log/collectorlog/collector.log</file>
+		<encoder>
+			<pattern>%date %level [%thread] %logger{10} [%file:%line] %msg%n</pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>log/collectorlog/collector.%d{yyyy-MM-dd}.log</fileNamePattern>
+			<maxHistory>30</maxHistory>
+		</rollingPolicy>
+	</appender>
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%msg%n</pattern>
+		</encoder>
+	</appender>
+	<logger name="org.lightcouch" level="error"/>
+	<!-- <logger name="io.djigger...." level="debug" /> -->
+	<!-- This logger prints the collected InstrumentationEvent as JSON out -->
+	<!-- <logger name="InstrumentationEventWriter" level="trace" /> -->
+	<root level="info">
+		<appender-ref ref="STDOUT"/>
+		<appender-ref ref="FILE"/>
+	</root>
 </configuration>

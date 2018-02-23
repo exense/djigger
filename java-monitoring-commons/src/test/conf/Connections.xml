@@ -1,18 +1,21 @@
 <Group>
-	<attributes />
+	<attributes/>
 	<groups>
 		<!-- JMXClientFacade Test -->
 		<Connection connectionClass="io.djigger.client.JMXClientFacade">
 			<attributes>
-				<entry><string>server</string><string>MyServer1</string></entry>
+				<entry>
+					<string>server</string>
+					<string>MyServer1</string>
+				</entry>
 			</attributes>
 			<connectionProperties>
-				<property name="host" value="localhost" />
-				<property name="port" value="1098" />
-				<property name="username" value="" />
-				<property name="password" value="" />
+				<property name="host" value="localhost"/>
+				<property name="port" value="1098"/>
+				<property name="username" value=""/>
+				<property name="password" value=""/>
 			</connectionProperties>
-			<samplingParameters samplingRate="10000" />
+			<samplingParameters samplingRate="10000"/>
 			<metrics>
 				<mBeans>
 					<mBeanAttributes>
@@ -21,15 +24,15 @@
 				</mBeans>
 			</metrics>
 		</Connection>
-		
+
 		<!-- CustomSubscription Test -->
 		<Connection connectionClass="io.djigger.client.AgentFacade">
-			<samplingParameters samplingRate="1000" />
+			<samplingParameters samplingRate="1000"/>
 			<connectionProperties>
-				<property name="host" value="localhost" />
-				<property name="port" value="12121" />
-				<property name="username" value="" />
-				<property name="password" value="" />
+				<property name="host" value="localhost"/>
+				<property name="port" value="12121"/>
+				<property name="username" value=""/>
+				<property name="password" value=""/>
 			</connectionProperties>
 			<attributes>
 			</attributes>
@@ -47,7 +50,7 @@
 					</methodNamePattern>
 					<captureThreadInfos>false</captureThreadInfos>
 					<measureDuration>true</measureDuration>
-				</io.djigger.monitoring.java.instrumentation.subscription.CustomSubscription>				
+				</io.djigger.monitoring.java.instrumentation.subscription.CustomSubscription>
 				<io.djigger.monitoring.java.instrumentation.subscription.CustomSubscription>
 					<id>2</id>
 					<tagEvent>true</tagEvent>
@@ -60,45 +63,59 @@
 						<flags>0</flags>
 					</methodNamePattern>
 					<captureThreadInfos>false</captureThreadInfos>
-					<afterMethod>io.djigger.agent.InstrumentationEventCollector.addDataToCurrentTransaction(new	io.djigger.monitoring.java.instrumentation.StringInstrumentationEventData(&quot;Refreshing&quot;));</afterMethod>
+					<afterMethod>io.djigger.agent.InstrumentationEventCollector.addDataToCurrentTransaction(new
+						io.djigger.monitoring.java.instrumentation.StringInstrumentationEventData(&quot;Refreshing&quot;));
+					</afterMethod>
 					<measureDuration>false</measureDuration>
-				</io.djigger.monitoring.java.instrumentation.subscription.CustomSubscription>		
+				</io.djigger.monitoring.java.instrumentation.subscription.CustomSubscription>
 			</subscriptions>
 		</Connection>
-	
+
 		<!-- HttpClientTracerTest -->
 		<Connection connectionClass="io.djigger.client.AgentFacade">
-			<samplingParameters samplingRate="100" />
+			<samplingParameters samplingRate="100"/>
 			<connectionProperties>
-				<property name="host" value="localhost" />
-				<property name="port" value="12123" />
-				<property name="username" value="" />
-				<property name="password" value="" />
+				<property name="host" value="localhost"/>
+				<property name="port" value="12123"/>
+				<property name="username" value=""/>
+				<property name="password" value=""/>
 			</connectionProperties>
 			<subscriptions>
 				<io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
-					<classNamePattern><pattern>.*HttpClientTracerTest</pattern><flags>0</flags></classNamePattern>
-					<methodNamePattern><pattern>.*</pattern><flags>0</flags></methodNamePattern>
+					<classNamePattern>
+						<pattern>.*HttpClientTracerTest</pattern>
+						<flags>0</flags>
+					</classNamePattern>
+					<methodNamePattern>
+						<pattern>.*</pattern>
+						<flags>0</flags>
+					</methodNamePattern>
 					<tagEvent>true</tagEvent>
 				</io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
 				<io.djigger.monitoring.java.instrumentation.subscription.HttpClientTracer/>
 			</subscriptions>
 			<attributes/>
 		</Connection>
-		
+
 		<!-- ServletTracerTest -->
 		<Connection connectionClass="io.djigger.client.AgentFacade">
-			<samplingParameters samplingRate="100" />
+			<samplingParameters samplingRate="100"/>
 			<connectionProperties>
-				<property name="host" value="localhost" />
-				<property name="port" value="12124" />
-				<property name="username" value="" />
-				<property name="password" value="" />
+				<property name="host" value="localhost"/>
+				<property name="port" value="12124"/>
+				<property name="username" value=""/>
+				<property name="password" value=""/>
 			</connectionProperties>
 			<subscriptions>
 				<io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
-					<classNamePattern><pattern>.*ServletTracerTest</pattern><flags>0</flags></classNamePattern>
-					<methodNamePattern><pattern>.*</pattern><flags>0</flags></methodNamePattern>
+					<classNamePattern>
+						<pattern>.*ServletTracerTest</pattern>
+						<flags>0</flags>
+					</classNamePattern>
+					<methodNamePattern>
+						<pattern>.*</pattern>
+						<flags>0</flags>
+					</methodNamePattern>
 					<tagEvent>true</tagEvent>
 				</io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
 				<io.djigger.monitoring.java.instrumentation.subscription.HttpClientTracer/>
@@ -106,28 +123,34 @@
 			</subscriptions>
 			<attributes/>
 		</Connection>
-		
+
 		<!-- SQLTracerTest -->
 		<Connection connectionClass="io.djigger.client.AgentFacade">
-			<samplingParameters samplingRate="100" />
+			<samplingParameters samplingRate="100"/>
 			<connectionProperties>
-				<property name="host" value="localhost" />
-				<property name="port" value="12125" />
-				<property name="username" value="" />
-				<property name="password" value="" />
+				<property name="host" value="localhost"/>
+				<property name="port" value="12125"/>
+				<property name="username" value=""/>
+				<property name="password" value=""/>
 			</connectionProperties>
 			<subscriptions>
 				<io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
-					<classNamePattern><pattern>.*SQLTracerTest</pattern><flags>0</flags></classNamePattern>
-					<methodNamePattern><pattern>.*</pattern><flags>0</flags></methodNamePattern>
+					<classNamePattern>
+						<pattern>.*SQLTracerTest</pattern>
+						<flags>0</flags>
+					</classNamePattern>
+					<methodNamePattern>
+						<pattern>.*</pattern>
+						<flags>0</flags>
+					</methodNamePattern>
 					<tagEvent>true</tagEvent>
 				</io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
-				<io.djigger.monitoring.java.instrumentation.subscription.SQLConnectionTracer />
-				<io.djigger.monitoring.java.instrumentation.subscription.SQLStatementTracer />
-				<io.djigger.monitoring.java.instrumentation.subscription.SQLPreparedStatementTracer />
+				<io.djigger.monitoring.java.instrumentation.subscription.SQLConnectionTracer/>
+				<io.djigger.monitoring.java.instrumentation.subscription.SQLStatementTracer/>
+				<io.djigger.monitoring.java.instrumentation.subscription.SQLPreparedStatementTracer/>
 			</subscriptions>
 			<attributes/>
 		</Connection>
-		
+
 	</groups>
 </Group>

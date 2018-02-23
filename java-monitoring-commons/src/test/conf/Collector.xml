@@ -1,7 +1,7 @@
 <Collector>
 	<servicePort>8080</servicePort>
 	<dataTTL>3600</dataTTL>
-	<db host="localhost" />
+	<db host="localhost"/>
 	<connectionFiles>
 		<!-- <string>../java-monitoring-commons/src/test/conf/Connections.xml</string> -->
 		<string>../java-monitoring-commons/src/test/conf/Connections.json</string>

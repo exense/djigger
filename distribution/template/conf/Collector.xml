@@ -1,12 +1,12 @@
 <Collector>
-  <servicePort>8080</servicePort>
-  <dataTTL>86400</dataTTL>
-  <db host="localhost"/>
-  <connectionFiles>
-    <string>conf/Connections.json</string>
-  <!-- Uncomment the following if you wan't to use the CSV configuration format -->
-  <!-- <connectionFiles><string>conf/Connections.csv</string></connectionFiles> -->
-  <!-- Uncomment the following if you wan't to use the XML configuration format -->
-  <!-- <string>conf/Connections.xml</string> -->
-  </connectionFiles>
+	<servicePort>8080</servicePort>
+	<dataTTL>86400</dataTTL>
+	<db host="localhost"/>
+	<connectionFiles>
+		<string>conf/Connections.json</string>
+		<!-- Uncomment the following if you wan't to use the CSV configuration format -->
+		<!-- <connectionFiles><string>conf/Connections.csv</string></connectionFiles> -->
+		<!-- Uncomment the following if you wan't to use the XML configuration format -->
+		<!-- <string>conf/Connections.xml</string> -->
+	</connectionFiles>
 </Collector>

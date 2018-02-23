@@ -4,8 +4,8 @@ import io.djigger.monitoring.java.instrumentation.InstrumentationEventWithThread
 
 public class PseudoInstrumentationEvent extends InstrumentationEventWithThreadInfo {
 
-	public PseudoInstrumentationEvent(String classname, String methodname) {
-		super(classname, methodname);
-	}
+    public PseudoInstrumentationEvent(String classname, String methodname) {
+        super(classname, methodname);
+    }
 
 }
