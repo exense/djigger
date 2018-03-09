@@ -5,27 +5,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MBeanCollectorConfiguration implements Serializable {
-	
-	private static final long serialVersionUID = -7905632277382912658L;
 
-	private List<String> mBeanAttributes = new ArrayList<String>();
-	
-	private List<MBeanOperation> mBeanOperations = new ArrayList<MBeanOperation>();
+    private static final long serialVersionUID = -7905632277382912658L;
 
-	public void addMBeanAttribute(String mBeanAttribute) {
-		mBeanAttributes.add(mBeanAttribute);
-	}
-	
-	public void addMBeanOperation(MBeanOperation mBeanOperation) {
-		mBeanOperations.add(mBeanOperation);
-	}
+    private List<String> mBeanAttributes = new ArrayList<String>();
 
-	public List<String> getmBeanAttributes() {
-		return mBeanAttributes;
-	}
+    private List<MBeanOperation> mBeanOperations = new ArrayList<MBeanOperation>();
 
-	public List<MBeanOperation> getmBeanOperations() {
-		return mBeanOperations;
-	}
+    public void addMBeanAttribute(String mBeanAttribute) {
+        mBeanAttributes.add(mBeanAttribute);
+    }
+
+    public void addMBeanOperation(MBeanOperation mBeanOperation) {
+        mBeanOperations.add(mBeanOperation);
+    }
+
+    public List<String> getmBeanAttributes() {
+        return mBeanAttributes;
+    }
+
+    public List<MBeanOperation> getmBeanOperations() {
+        return mBeanOperations;
+    }
 
 }

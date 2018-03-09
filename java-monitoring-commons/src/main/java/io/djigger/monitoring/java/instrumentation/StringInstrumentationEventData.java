@@ -1,34 +1,34 @@
 package io.djigger.monitoring.java.instrumentation;
 
 public class StringInstrumentationEventData extends InstrumentationEventData {
-		
-	String payload;
 
-	public StringInstrumentationEventData (String payload) {
-		super();
-		this.payload = payload;
-	}
-	
-	public StringInstrumentationEventData (String payload, Integer maxSize) {
-		super();
-		this.payload = truncate(payload, maxSize);
-	}
+    String payload;
 
-	public String getPayload() {
-		return payload;
-	}
+    public StringInstrumentationEventData(String payload) {
+        super();
+        this.payload = payload;
+    }
 
-	public void setPayload(String payload) {
-		this.payload = payload;
-	}
+    public StringInstrumentationEventData(String payload, Integer maxSize) {
+        super();
+        this.payload = truncate(payload, maxSize);
+    }
 
-	private String truncate(String payload, Integer maxSize) {
-		return payload.substring(0, Math.min(maxSize, payload.length()));
-	}
+    public String getPayload() {
+        return payload;
+    }
 
-	@Override
-	public String toString() {
-		return payload;
-	}
-	
+    public void setPayload(String payload) {
+        this.payload = payload;
+    }
+
+    private String truncate(String payload, Integer maxSize) {
+        return payload.substring(0, Math.min(maxSize, payload.length()));
+    }
+
+    @Override
+    public String toString() {
+        return payload;
+    }
+
 }

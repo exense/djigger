@@ -1,18 +1,18 @@
 /*******************************************************************************
  * (C) Copyright 2016 Jérôme Comte and Dorian Cransac
- *  
+ *
  *  This file is part of djigger
- *  
+ *
  *  djigger is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  djigger is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU Affero General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU Affero General Public License
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -25,86 +25,86 @@ import java.util.UUID;
 
 public class ThreadInfo implements Serializable {
 
-	private long timestamp;
-	
-	private long id;
-	
-	private String name;
-	
-	private Thread.State state;
-	
-	private Map<String, String> attributes;
-	
-	private StackTraceElement[] stackTrace;
-	
-	private UUID transactionID;
+    private long timestamp;
 
-	public ThreadInfo(StackTraceElement[] stackTrace) {
-		super();
+    private long id;
 
-		this.stackTrace = stackTrace;
-	}
-	
-	public ThreadInfo(StackTraceElement[] stackTrace, long id, long timestamp) {
-		super();
-		this.id = id;
-		this.stackTrace = stackTrace;
-		this.timestamp = timestamp;
-	}
+    private String name;
 
-	public StackTraceElement[] getStackTrace() {
-		return stackTrace;
-	}
+    private Thread.State state;
 
-	public long getTimestamp() {
-		return timestamp;
-	}
+    private Map<String, String> attributes;
 
-	public void setTimestamp(long timestamp) {
-		this.timestamp = timestamp;
-	}
+    private StackTraceElement[] stackTrace;
 
-	public Map<String, String> getAttributes() {
-		return attributes;
-	}
+    private UUID transactionID;
 
-	public void setAttributes(Map<String, String> attributes) {
-		this.attributes = attributes;
-	}
+    public ThreadInfo(StackTraceElement[] stackTrace) {
+        super();
 
-	public long getId() {
-		return id;
-	}
+        this.stackTrace = stackTrace;
+    }
 
-	public void setId(long id) {
-		this.id = id;
-	}
+    public ThreadInfo(StackTraceElement[] stackTrace, long id, long timestamp) {
+        super();
+        this.id = id;
+        this.stackTrace = stackTrace;
+        this.timestamp = timestamp;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public StackTraceElement[] getStackTrace() {
+        return stackTrace;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public long getTimestamp() {
+        return timestamp;
+    }
 
-	public Thread.State getState() {
-		return state;
-	}
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
 
-	public void setState(Thread.State state) {
-		this.state = state;
-	}
+    public Map<String, String> getAttributes() {
+        return attributes;
+    }
 
-	public void setStackTrace(StackTraceElement[] stackTrace) {
-		this.stackTrace = stackTrace;
-	}
+    public void setAttributes(Map<String, String> attributes) {
+        this.attributes = attributes;
+    }
 
-	public UUID getTransactionID() {
-		return transactionID;
-	}
+    public long getId() {
+        return id;
+    }
 
-	public void setTransactionID(UUID transactionID) {
-		this.transactionID = transactionID;
-	}
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Thread.State getState() {
+        return state;
+    }
+
+    public void setState(Thread.State state) {
+        this.state = state;
+    }
+
+    public void setStackTrace(StackTraceElement[] stackTrace) {
+        this.stackTrace = stackTrace;
+    }
+
+    public UUID getTransactionID() {
+        return transactionID;
+    }
+
+    public void setTransactionID(UUID transactionID) {
+        this.transactionID = transactionID;
+    }
 }

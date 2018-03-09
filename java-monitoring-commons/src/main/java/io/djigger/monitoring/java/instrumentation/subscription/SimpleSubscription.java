@@ -1,18 +1,18 @@
 /*******************************************************************************
  * (C) Copyright 2016 Jérôme Comte and Dorian Cransac
- *  
+ *
  *  This file is part of djigger
- *  
+ *
  *  djigger is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  djigger is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU Affero General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU Affero General Public License
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -27,64 +27,64 @@ import javassist.CtMethod;
 
 public class SimpleSubscription extends InstrumentSubscription implements TransformingSubscription {
 
-	private static final long serialVersionUID = -1137052413341333149L;
+    private static final long serialVersionUID = -1137052413341333149L;
 
-	private String classname;
-	
-	private String methodname;
+    private String classname;
 
-	public SimpleSubscription() {
-		super();
-	}
+    private String methodname;
 
-	public SimpleSubscription(String classname, String methodname, boolean tagEvent) {
-		super(tagEvent);
-		this.classname = classname;
-		this.methodname = methodname;
-	}
+    public SimpleSubscription() {
+        super();
+    }
 
-	public String getClassname() {
-		return classname;
-	}
+    public SimpleSubscription(String classname, String methodname, boolean tagEvent) {
+        super(tagEvent);
+        this.classname = classname;
+        this.methodname = methodname;
+    }
 
-	public void setClassname(String classname) {
-		this.classname = classname;
-	}
+    public String getClassname() {
+        return classname;
+    }
 
-	public String getMethodname() {
-		return methodname;
-	}
+    public void setClassname(String classname) {
+        this.classname = classname;
+    }
 
-	public void setMethodname(String methodname) {
-		this.methodname = methodname;
-	}
+    public String getMethodname() {
+        return methodname;
+    }
 
-	@Override
-	public boolean isRelatedToClass(CtClass classname) {
-		return isRelatedToClass(classname.getName());
-	}
+    public void setMethodname(String methodname) {
+        this.methodname = methodname;
+    }
 
-	@Override
-	public boolean retransformClass(Class<?> classname) {
-		return isRelatedToClass(classname.getName());
-	}
+    @Override
+    public boolean isRelatedToClass(CtClass classname) {
+        return isRelatedToClass(classname.getName());
+    }
 
-	private boolean isRelatedToClass(String classname) {
-		return this.classname.equals(classname);
-	}
+    @Override
+    public boolean retransformClass(Class<?> classname) {
+        return isRelatedToClass(classname.getName());
+    }
 
-	@Override
-	public boolean isRelatedToMethod(CtMethod method) {
-		return this.methodname.equals(method.getName());
-	}
+    private boolean isRelatedToClass(String classname) {
+        return this.classname.equals(classname);
+    }
 
-	@Override
-	public String toString() {
-		return classname + "." + methodname;
-	}
+    @Override
+    public boolean isRelatedToMethod(CtMethod method) {
+        return this.methodname.equals(method.getName());
+    }
 
-	@Override
-	public void transform(CtClass clazz, CtMethod method) throws CannotCompileException {
-		TimeMeasureTransformer.transform(clazz, method, this, false);
-	}
+    @Override
+    public String toString() {
+        return classname + "." + methodname;
+    }
+
+    @Override
+    public void transform(CtClass clazz, CtMethod method) throws CannotCompileException {
+        TimeMeasureTransformer.transform(clazz, method, this, false);
+    }
 }

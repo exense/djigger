@@ -1,17 +1,64 @@
 [
-{
- "attributes":{"server":"MyServer1","foo":"bar1"},
- "connectionClass":"io.djigger.client.JMXClientFacade",
- "connectionProperties":{"host":"localhost", "port":1098},
- "samplingParameters":{"samplingRate":10000},
- "metrics":{"mBeans":{"mBeanAttributes":["java.lang:*"],"mBeanOperations":[{"objectName":"java.lang:type=Threading","operationName":"getThreadCpuTime","operationArgumentTypes":["long"],"operationArguments":["1"]}]}}
-},
-{
- "attributes":{"server":"MyServer2","foo":"bar2"},
- "connectionClass":"io.djigger.client.AgentFacade",
- "connectionProperties":{"host":"localhost", "port":12121},
- "samplingParameters":{"samplingRate":10000},
- "metrics":{"mBeans":{"mBeanAttributes":["java.lang:*"]}},
- "subscriptions":[{"@class":"io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription","classNamePattern":".*djigger.*","methodNamePattern":"refreshAll","tagEvent":true}]
-}
+  {
+    "attributes": {
+      "server": "MyServer1",
+      "foo": "bar1"
+    },
+    "connectionClass": "io.djigger.client.JMXClientFacade",
+    "connectionProperties": {
+      "host": "localhost",
+      "port": 1098
+    },
+    "samplingParameters": {
+      "samplingRate": 10000
+    },
+    "metrics": {
+      "mBeans": {
+        "mBeanAttributes": [
+          "java.lang:*"
+        ],
+        "mBeanOperations": [
+          {
+            "objectName": "java.lang:type=Threading",
+            "operationName": "getThreadCpuTime",
+            "operationArgumentTypes": [
+              "long"
+            ],
+            "operationArguments": [
+              "1"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "attributes": {
+      "server": "MyServer2",
+      "foo": "bar2"
+    },
+    "connectionClass": "io.djigger.client.AgentFacade",
+    "connectionProperties": {
+      "host": "localhost",
+      "port": 12121
+    },
+    "samplingParameters": {
+      "samplingRate": 10000
+    },
+    "metrics": {
+      "mBeans": {
+        "mBeanAttributes": [
+          "java.lang:*"
+        ]
+      }
+    },
+    "subscriptions": [
+      {
+        "@class": "io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription",
+        "classNamePattern": ".*djigger.*",
+        "methodNamePattern": "refreshAll",
+        "tagEvent": true
+      }
+    ]
+  }
 ]
