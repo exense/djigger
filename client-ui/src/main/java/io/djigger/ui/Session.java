@@ -600,13 +600,11 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     @Override
     public void connectionClosed() {
         active = false;
-        main.handleSessionEvent(this, SessionEvent.CONNECTION_CLOSED);
     }
 
     @Override
     public void connectionEstablished() {
         active = true;
-        main.handleSessionEvent(this, SessionEvent.CONNECTION_ESTABLISHED);
     }
 
     public boolean isActive() {

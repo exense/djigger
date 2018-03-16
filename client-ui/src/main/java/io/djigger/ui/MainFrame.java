@@ -45,8 +45,6 @@ public class MainFrame extends JPanel {
 
     private final MainToolbarPane mainToolbar;
 
-    private final SessionSelectionPane selectionPane;
-
     private final SessionGroupPane groupPane;
 
     private final List<Session> sessions;
@@ -78,7 +76,7 @@ public class MainFrame extends JPanel {
         UIManager.put("Button.defaultButtonFollowsFocus", Boolean.TRUE);
 
         frame = new JFrame("djigger 1.8.2");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setPreferredSize(new Dimension(1300, 700));
 
         java.net.URL imgURL = getClass().getResource("logo_small.png");
@@ -87,7 +85,6 @@ public class MainFrame extends JPanel {
 
         mainToolbar = new MainToolbarPane(this);
 
-        selectionPane = new SessionSelectionPane(this);
         groupPane = new SessionGroupPane(this);
 
         add(mainToolbar, BorderLayout.PAGE_END);
@@ -123,7 +120,6 @@ public class MainFrame extends JPanel {
             session.start();
             session.configure();
             sessions.add(session);
-            selectionPane.addSession(session);
             groupPane.addSession(session);
             groupPane.selectSession(session);
             exportSessions(new File("djigger_lastsession.xml"));
@@ -174,10 +170,9 @@ public class MainFrame extends JPanel {
         removeSession(currentSession);
     }
 
-    public synchronized void removeSession(Session session) {
+    private synchronized void removeSession(Session session) {
         session.close();
         sessions.remove(session);
-        selectionPane.removeSession(session);
         groupPane.removeSession(session);
     }
 
@@ -186,7 +181,7 @@ public class MainFrame extends JPanel {
         exportSessions(file);
     }
 
-    public synchronized void exportSessions(File file) {
+    private synchronized void exportSessions(File file) {
         if (file != null) {
             XStream xstream = new XStream();
             List<SessionConfiguration> configs = new ArrayList<SessionConfiguration>();
@@ -241,21 +236,12 @@ public class MainFrame extends JPanel {
 
     public void selectSession(Session session) {
         if (session != null) {
-            selectionPane.selectSession(session);
             groupPane.selectSession(session);
         }
     }
 
-    public void handleSessionEvent(Session session, SessionEvent event) {
-        selectionPane.refresh();
-    }
-
     public JFrame getFrame() {
         return frame;
-    }
-
-    public SessionSelectionPane getSelectionPane() {
-        return selectionPane;
     }
 
     public SessionGroupPane getGroupPane() {
