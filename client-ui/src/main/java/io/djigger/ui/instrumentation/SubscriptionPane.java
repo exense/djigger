@@ -28,6 +28,7 @@ import io.djigger.ui.SessionListener;
 import io.djigger.ui.analyzer.Dashlet;
 import io.djigger.ui.common.CommandButton;
 import io.djigger.ui.common.FileChooserHelper;
+import io.djigger.ui.common.FileMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,7 +112,7 @@ public class SubscriptionPane extends Dashlet {
             @Override
             public void run() {
                 XStream xstream = new XStream();
-                File file = FileChooserHelper.selectFile("Import subscriptions", "Open");
+                File file = FileChooserHelper.loadFile(FileMetadata.SUBSCRIPTIONS);
                 if (file != null) {
                     Object o = xstream.fromXML(file);
                     if (o instanceof HashSet) {
@@ -127,7 +128,7 @@ public class SubscriptionPane extends Dashlet {
             @Override
             public void run() {
                 XStream xstream = new XStream();
-                File file = FileChooserHelper.selectFile("Export subscriptions", "Save");
+                File file = FileChooserHelper.saveFile(FileMetadata.SUBSCRIPTIONS);
                 if (file != null) {
                     try {
                         xstream.toXML(parent.getSubscriptions(), new FileWriter(file));

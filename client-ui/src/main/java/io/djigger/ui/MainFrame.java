@@ -22,6 +22,7 @@ package io.djigger.ui;
 import com.thoughtworks.xstream.XStream;
 import io.djigger.ui.Session.SessionType;
 import io.djigger.ui.common.FileChooserHelper;
+import io.djigger.ui.common.FileMetadata;
 import io.djigger.ui.common.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,6 +104,8 @@ public class MainFrame extends JPanel {
         frame.add(this);
         frame.pack();
         frame.setVisible(true);
+        // center on screen
+        frame.setLocationRelativeTo(null);
 
         if (options.hasOption("sessionFile")) {
             SwingUtilities.invokeLater(new Runnable() {
@@ -177,7 +180,7 @@ public class MainFrame extends JPanel {
     }
 
     public synchronized void exportSessions() {
-        File file = FileChooserHelper.selectFile("Export session list", "Save");
+        File file = FileChooserHelper.saveFile(FileMetadata.SESSIONLIST);
         exportSessions(file);
     }
 
@@ -191,13 +194,13 @@ public class MainFrame extends JPanel {
                 }
                 xstream.toXML(configs, new FileWriter(file));
             } catch (IOException e) {
-                logger.error("Error while exporting sessions", e);
+                logger.error("Error while saving session list", e);
             }
         }
     }
 
     public synchronized void importSessions() {
-        File file = FileChooserHelper.selectFile("Import session list", "Open");
+        File file = FileChooserHelper.loadFile(FileMetadata.SESSIONLIST);
         importSessionFile(file);
     }
 

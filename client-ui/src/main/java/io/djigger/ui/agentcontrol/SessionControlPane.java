@@ -21,11 +21,8 @@ package io.djigger.ui.agentcontrol;
 
 import io.djigger.client.Facade;
 import io.djigger.ui.Session;
-import io.djigger.ui.common.CommandButton;
+import io.djigger.ui.common.*;
 import io.djigger.ui.common.CommandButton.Command;
-import io.djigger.ui.common.FileChooserHelper;
-import io.djigger.ui.common.MonitoredExecution;
-import io.djigger.ui.common.MonitoredExecutionRunnable;
 import io.djigger.ui.model.SessionExport;
 
 import javax.swing.*;
@@ -99,10 +96,10 @@ public class SessionControlPane extends JPanel implements ActionListener {
             }));
         }
 
-        controlPanel.add(new CommandButton("saveas.png", "Save capture as", new Runnable() {
+        controlPanel.add(new CommandButton("saveas.png", "Save as session...", new Runnable() {
             @Override
             public void run() {
-                final File file = FileChooserHelper.selectFile("Save store", "Save");
+                final File file = FileChooserHelper.saveFile(FileMetadata.SESSION);
                 if (file != null) {
                     MonitoredExecution execution = new MonitoredExecution(parent.getMain().getFrame(), "Saving... Please wait.", new MonitoredExecutionRunnable() {
                         @Override
@@ -113,20 +110,20 @@ public class SessionControlPane extends JPanel implements ActionListener {
                     try {
                         execution.run();
                     } catch (Exception e) {
-                        JOptionPane.showMessageDialog(parent, "Error while saving capture: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(parent, "Error while saving session: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                         return;
                     }
                 }
             }
         }));
-        controlPanel.add(new CommandButton("clear.png", "Delete all data collected", new Runnable() {
+        controlPanel.add(new CommandButton("clear.png", "Delete all data in session", new Runnable() {
             @Override
             public void run() {
                 Object[] options = {"Yes",
                     "No"};
                 int n = JOptionPane.showOptionDialog(parent.getMain(),
-                    "This will delete all the data collected until now. Continue?",
-                    "Clear Store",
+                    "This will delete all currently collected data in this session. Continue?",
+                    "Clear Session",
                     JOptionPane.YES_NO_CANCEL_OPTION,
                     JOptionPane.QUESTION_MESSAGE,
                     null,
