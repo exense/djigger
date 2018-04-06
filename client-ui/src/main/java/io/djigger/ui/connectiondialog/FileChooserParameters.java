@@ -21,31 +21,55 @@ package io.djigger.ui.connectiondialog;
 
 import io.djigger.ui.SessionConfiguration;
 import io.djigger.ui.SessionConfiguration.SessionParameter;
+import io.djigger.ui.common.FileChooserHelper;
+import io.djigger.ui.common.FileMetadata;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
 import java.io.File;
 
 public class FileChooserParameters implements ConnectionParameterFrame {
 
-    JFileChooser chooser;
+    public static class JStack extends FileChooserParameters {
+        public JStack() {
+            super(FileMetadata.JSTACK);
+        }
+    }
 
-    JPanel panel;
+    public static class SavedSession extends FileChooserParameters {
+        public SavedSession() {
+            super(FileMetadata.SESSION);
+        }
+    }
 
-    ConnectionType type;
+    private JFileChooser chooser;
+
+    private JPanel panel;
+
+    private ConnectionType type;
 
     public FileChooserParameters() {
+        this (new FileFilter[0]);
+    }
+
+    public FileChooserParameters(FileMetadata filters) {
+        this(filters.preferredFilters);
+    }
+
+    public FileChooserParameters(FileFilter[] filters) {
         super();
 
         LookAndFeel saved = UIManager.getLookAndFeel();
-        if (System.getProperty("os.name").toLowerCase().trim().contains("mac"))
+        if (System.getProperty("os.name").toLowerCase().trim().contains("mac")) {
             try {
                 UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
             } catch (ClassNotFoundException | InstantiationException | IllegalAccessException
                 | UnsupportedLookAndFeelException e) {
                 e.printStackTrace();
             }
+        }
 
-        chooser = new JFileChooser();
+        chooser = FileChooserHelper.newChooser(null, filters);
 
         try {
             UIManager.setLookAndFeel(saved);
@@ -67,6 +91,7 @@ public class FileChooserParameters implements ConnectionParameterFrame {
     public SessionConfiguration getSessionConfiguration() {
         File file = chooser.getSelectedFile();
         if (file != null) {
+            FileChooserHelper.setLastUsedDirectory(file);
             SessionConfiguration config = new SessionConfiguration(file.getName(), type.getSessionType());
             config.getParameters().put(SessionParameter.FILE, file.getAbsolutePath());
             return config;

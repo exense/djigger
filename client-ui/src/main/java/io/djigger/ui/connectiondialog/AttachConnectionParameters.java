@@ -26,6 +26,7 @@ import io.djigger.ui.SessionConfiguration;
 import io.djigger.ui.SessionConfiguration.SessionParameter;
 import io.djigger.ui.common.CommandButton;
 import io.djigger.ui.common.FileChooserHelper;
+import io.djigger.ui.common.FileMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -121,7 +122,7 @@ public class AttachConnectionParameters implements ConnectionParameterFrame {
 
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        File file = FileChooserHelper.selectFile("Select tools.jar", "Open");
+                        File file = FileChooserHelper.loadFile(FileMetadata.TOOLS_JAR);
                         if (file != null) {
                             try {
                                 ClassPathHelper.addFile(file);

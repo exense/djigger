@@ -22,6 +22,7 @@ package io.djigger.ui;
 import com.thoughtworks.xstream.XStream;
 import io.djigger.ui.Session.SessionType;
 import io.djigger.ui.common.FileChooserHelper;
+import io.djigger.ui.common.FileMetadata;
 import io.djigger.ui.common.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,8 +45,6 @@ public class MainFrame extends JPanel {
     private final JFrame frame;
 
     private final MainToolbarPane mainToolbar;
-
-    private final SessionSelectionPane selectionPane;
 
     private final SessionGroupPane groupPane;
 
@@ -78,7 +77,7 @@ public class MainFrame extends JPanel {
         UIManager.put("Button.defaultButtonFollowsFocus", Boolean.TRUE);
 
         frame = new JFrame("djigger 1.8.2");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setPreferredSize(new Dimension(1300, 700));
 
         java.net.URL imgURL = getClass().getResource("logo_small.png");
@@ -87,7 +86,6 @@ public class MainFrame extends JPanel {
 
         mainToolbar = new MainToolbarPane(this);
 
-        selectionPane = new SessionSelectionPane(this);
         groupPane = new SessionGroupPane(this);
 
         add(mainToolbar, BorderLayout.PAGE_END);
@@ -106,6 +104,8 @@ public class MainFrame extends JPanel {
         frame.add(this);
         frame.pack();
         frame.setVisible(true);
+        // center on screen
+        frame.setLocationRelativeTo(null);
 
         if (options.hasOption("sessionFile")) {
             SwingUtilities.invokeLater(new Runnable() {
@@ -123,7 +123,6 @@ public class MainFrame extends JPanel {
             session.start();
             session.configure();
             sessions.add(session);
-            selectionPane.addSession(session);
             groupPane.addSession(session);
             groupPane.selectSession(session);
             exportSessions(new File("djigger_lastsession.xml"));
@@ -174,19 +173,18 @@ public class MainFrame extends JPanel {
         removeSession(currentSession);
     }
 
-    public synchronized void removeSession(Session session) {
+    private synchronized void removeSession(Session session) {
         session.close();
         sessions.remove(session);
-        selectionPane.removeSession(session);
         groupPane.removeSession(session);
     }
 
     public synchronized void exportSessions() {
-        File file = FileChooserHelper.selectFile("Export session list", "Save");
+        File file = FileChooserHelper.saveFile(FileMetadata.SESSIONLIST);
         exportSessions(file);
     }
 
-    public synchronized void exportSessions(File file) {
+    private synchronized void exportSessions(File file) {
         if (file != null) {
             XStream xstream = new XStream();
             List<SessionConfiguration> configs = new ArrayList<SessionConfiguration>();
@@ -196,13 +194,13 @@ public class MainFrame extends JPanel {
                 }
                 xstream.toXML(configs, new FileWriter(file));
             } catch (IOException e) {
-                logger.error("Error while exporting sessions", e);
+                logger.error("Error while saving session list", e);
             }
         }
     }
 
     public synchronized void importSessions() {
-        File file = FileChooserHelper.selectFile("Import session list", "Open");
+        File file = FileChooserHelper.loadFile(FileMetadata.SESSIONLIST);
         importSessionFile(file);
     }
 
@@ -241,21 +239,12 @@ public class MainFrame extends JPanel {
 
     public void selectSession(Session session) {
         if (session != null) {
-            selectionPane.selectSession(session);
             groupPane.selectSession(session);
         }
     }
 
-    public void handleSessionEvent(Session session, SessionEvent event) {
-        selectionPane.refresh();
-    }
-
     public JFrame getFrame() {
         return frame;
-    }
-
-    public SessionSelectionPane getSelectionPane() {
-        return selectionPane;
     }
 
     public SessionGroupPane getGroupPane() {
