@@ -34,6 +34,18 @@ import java.util.Map.Entry;
 
 class ThreadBlock {
 
+    static Color getColorForThreadState(State state) {
+        if (state == Thread.State.RUNNABLE) {
+            return Color.GREEN;
+        } else if (state == Thread.State.BLOCKED) {
+            return  Color.RED;
+        } else if (state == Thread.State.WAITING || state == Thread.State.TIMED_WAITING) {
+            return Color.ORANGE;
+        } else {
+            return Color.LIGHT_GRAY;
+        }
+    }
+
     private static final Logger logger = LoggerFactory.getLogger(ThreadBlock.class);
 
     private final ThreadSelectionPane threadSelectionGraphPane;
@@ -89,17 +101,7 @@ class ThreadBlock {
         int lastX = 0;
         for (int i = 0; i < rangeTable.length; i++) {
             Aggregate range = rangeTable[i];
-            Color color;
-            State averageState = range.getAverageState();
-            if (averageState == Thread.State.RUNNABLE) {
-                color = Color.GREEN;
-            } else if (averageState == Thread.State.BLOCKED) {
-                color = Color.RED;
-            } else if (averageState == Thread.State.WAITING || averageState == Thread.State.TIMED_WAITING) {
-                color = Color.ORANGE;
-            } else {
-                color = Color.LIGHT_GRAY;
-            }
+            Color color = getColorForThreadState(range.getAverageState());
 
             graph.setColor(color);
             int x1 = xOffset + lastX;
