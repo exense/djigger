@@ -35,9 +35,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.EtchedBorder;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
@@ -73,7 +76,7 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 
     private final ThreadSelectionPanePopupMenu popup;
 
-    private final JLabel label;
+    private final JLabel hintLabel;
 
     private int xOffset = 200;
 
@@ -95,10 +98,12 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
         threadSelectionType = ThreadSelectionType.ALL;
         selectionHistory.push(new Selection());
 
-        label = new JLabel();
-        label.setFont(new Font("Arial", Font.PLAIN, 10));
-        label.setOpaque(true);
-        label.setBackground(Color.WHITE);
+        hintLabel = new JLabel();
+        hintLabel.setFont(new Font("Arial", Font.PLAIN, 10));
+        hintLabel.setOpaque(true);
+
+        //subtle visual hint to indicate a dynamic (changing) value
+        hintLabel.setForeground(Color.BLUE.darker());
 
         axis = new ThreadSelectionTimeAxis(this);
         blocksPane = new BlocksPane();
@@ -127,7 +132,18 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
         scrollPane = new JScrollPane(blocksPane, ScrollPaneLayout.VERTICAL_SCROLLBAR_ALWAYS, ScrollPaneLayout.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.setBorder(new EmptyBorder(new Insets(0, 0, 0, 0)));
         threadTimelinePane.add(scrollPane, BorderLayout.CENTER);
-        threadTimelinePane.add(label, BorderLayout.PAGE_END);
+
+        JPanel hintPanel = new JPanel(new BorderLayout());
+
+        Border bo = BorderFactory.createEtchedBorder(EtchedBorder.RAISED);
+        Border bi = BorderFactory.createEmptyBorder(2, 2, 2, 2);
+        hintPanel.setBorder(BorderFactory.createCompoundBorder(bo, bi));
+
+
+        hintPanel.add(hintLabel, BorderLayout.CENTER);
+        hintPanel.add(createThreadColorLegendPanel(), BorderLayout.LINE_END);
+
+        threadTimelinePane.add(hintPanel, BorderLayout.PAGE_END);
         add(threadTimelinePane, BorderLayout.CENTER);
 
         refresh();
@@ -408,7 +424,7 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
                 }
             }
             labelStr.append(mouseOverBlock.label + " [" + currentNumberOfThreadDumps + " thread dumps" + captureInfos + "]");
-            if (!label.getText().equals(labelStr)) {
+            if (!hintLabel.getText().equals(labelStr)) {
                 repaint = true;
             }
             labelStr.append(" - ").append(formatDate(time));
@@ -417,7 +433,7 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
         }
 
 
-        label.setText(labelStr.toString());
+        hintLabel.setText(labelStr.toString());
 
         if (repaint) {
             repaint();
@@ -696,10 +712,6 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
     public void componentHidden(ComponentEvent e) {
     }
 
-    public JLabel getLabel() {
-        return label;
-    }
-
     private enum DraggingType {
         ZOOM_IN,
 
@@ -737,5 +749,45 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 
     public int getxOffset() {
         return xOffset;
+    }
+
+    private static JPanel createThreadColorLegendPanel() {
+        JPanel legend = new JPanel();
+        legend.setLayout(new BoxLayout(legend, BoxLayout.LINE_AXIS));
+
+        legend.add(new JSeparator(SwingConstants.VERTICAL));
+        legend.add(Box.createHorizontalStrut(4));
+        legend.add(new JLabel("Thread state:"));
+
+        Thread.State[] states = new Thread.State[]{Thread.State.RUNNABLE, Thread.State.BLOCKED, Thread.State.WAITING, null};
+
+        for (Thread.State state : states) {
+            legend.add(Box.createHorizontalStrut(8));
+            ImageIcon icon = createThreadLegendIcon(ThreadBlock.getColorForThreadState(state));
+            String text = "other";
+            if (state != null) {
+                text = state.toString().toLowerCase();
+            }
+            legend.add(new JLabel(text, icon, SwingConstants.LEADING));
+        }
+
+        return legend;
+    }
+
+    private static ImageIcon createThreadLegendIcon(Color color) {
+        int w = 16;
+        int h = 12;
+        int b = 1; // border
+        BufferedImage image = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = image.createGraphics();
+
+        // draw border
+        g.setColor(Color.BLACK);
+        g.fillRect(0, 0, w, h);
+
+        g.setColor(color);
+        g.fillRect(b, b, w - b * 2, h - b * 2);
+        g.dispose();
+        return new ImageIcon(image);
     }
 }
