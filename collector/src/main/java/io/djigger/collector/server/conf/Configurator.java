@@ -28,6 +28,7 @@ package io.djigger.collector.server.conf;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.xstream.XStream;
+import io.djigger.client.Facade;
 import io.djigger.client.JMXClientFacade;
 import io.djigger.collector.server.conf.mixin.InstrumentSubscriptionMixin;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
@@ -219,10 +220,10 @@ public class Configurator {
 
         // JMX Connection Properties
         Properties connectionProperties = new Properties();
-        connectionProperties.setProperty("host", splitLine[0]);
-        connectionProperties.setProperty("port", splitLine[1]);
-        connectionProperties.setProperty("username", splitLine[2]);
-        connectionProperties.setProperty("password", resolvePasswordFromPath(splitLine[3]));
+        connectionProperties.setProperty(Facade.Parameters.HOST, splitLine[0]);
+        connectionProperties.setProperty(Facade.Parameters.PORT, splitLine[1]);
+        connectionProperties.setProperty(Facade.Parameters.USERNAME, splitLine[2]);
+        connectionProperties.setProperty(Facade.Parameters.PASSWORD, resolvePasswordFromPath(splitLine[3]));
 
         //connectionProperties.setProperty(arg0, arg1)
 

@@ -127,8 +127,8 @@ public class AgentFacade extends Facade implements MessageListener {
 
     @Override
     public void connect_() throws Exception {
-        String host = properties.getProperty("host");
-        String port = properties.getProperty("port");
+        String host = properties.getProperty(Parameters.HOST);
+        String port = properties.getProperty(Parameters.PORT);
         this.client = new MessageRouter(host, Integer.parseInt(port));
 
         startClient();
