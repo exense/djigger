@@ -30,10 +30,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 @Path("/services")
 public class Services {
@@ -50,11 +47,11 @@ public class Services {
 
         Map<String, String> attributes;
 
-        Properties properties;
+        Map<String, String> properties;
 
         boolean connected;
 
-        public FacadeStatus(String facadeClass, Map<String, String> attributes, Properties properties,
+        public FacadeStatus(String facadeClass, Map<String, String> attributes, Map<String, String> properties,
                             boolean connected) {
             super();
             this.facadeClass = facadeClass;
@@ -71,13 +68,14 @@ public class Services {
             return attributes;
         }
 
-        public Properties getProperties() {
+        public Map<String, String> getProperties() {
             return properties;
         }
 
         public boolean isConnected() {
             return connected;
         }
+
     }
 
     @GET
@@ -91,13 +89,37 @@ public class Services {
 
             Properties newProperties = new Properties();
             newProperties.putAll(facade.getProperties());
-            //TODO do this in a more generic way
-            if (newProperties.get("password") != null) {
-                newProperties.put("password", "*****");
+
+            // mask password
+            if (newProperties.get(Facade.Parameters.PASSWORD) != null) {
+                newProperties.put(Facade.Parameters.PASSWORD, "*****");
             }
-            result.add(new FacadeStatus(facade.getClass().getName(), connection.getAttributes(), newProperties, facade.isConnected()));
+
+            // if sampling, show at which interval
+            if (facade.isSampling()) {
+                newProperties.put("samplingRate", facade.getSamplingInterval() + "");
+            }
+
+            result.add(new FacadeStatus(facade.getClass().getSimpleName(), sorted(connection.getAttributes()), sorted(newProperties), facade.isConnected()));
         }
         return result;
+    }
+
+    private SortedMap<String, String> sorted(Map<String, String> map) {
+        // force a simple (alphabetical) sort
+        TreeMap<String, String> sorted = new TreeMap<>((Comparator<String>) null);
+        sorted.putAll(map);
+        return sorted;
+    }
+
+    private SortedMap<String, String> sorted(Properties props) {
+        // sort according to the logic defined in Facade.Parameters
+        SortedMap<String, String> sorted = new TreeMap<>(Facade.Parameters.SORT_COMPARATOR);
+        for (String key : props.stringPropertyNames()) {
+            String value = props.getProperty(key);
+            sorted.put(key, value);
+        }
+        return sorted;
     }
 
 }
