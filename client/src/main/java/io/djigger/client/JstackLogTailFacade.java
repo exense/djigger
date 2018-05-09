@@ -37,20 +37,16 @@ public class JstackLogTailFacade extends Facade {
 
     private LogTailer logTailer;
 
-    public static final String FILE_PARAM = "file";
-
-    public static final String START_AT_FILE_BEGIN_PARAM = "startAtFileBegin";
-
     public JstackLogTailFacade(Properties properties, boolean autoReconnect) {
         super(properties, autoReconnect);
     }
 
-    private Object lock = new Object();
+    private final Object lock = new Object();
 
     @Override
     protected void connect_() throws Exception {
 
-        String fileParam = properties.getProperty(FILE_PARAM);
+        String fileParam = properties.getProperty(Parameters.FILE);
         if (fileParam != null) {
             final List<ThreadInfo> threadInfos = new ArrayList<>(1);
             final Parser parser = new Parser(Format.STANDARD_OUTPUT, new ParserEventListener() {
@@ -64,7 +60,7 @@ public class JstackLogTailFacade extends Facade {
                 }
             });
 
-            boolean startAtFileBegin = Boolean.parseBoolean(properties.getProperty(START_AT_FILE_BEGIN_PARAM, "false"));
+            boolean startAtFileBegin = Boolean.parseBoolean(properties.getProperty(Parameters.START_AT_FILE_BEGIN, "false"));
 
             File file = new File(fileParam);
             logTailer = new LogTailer(file, startAtFileBegin, new LogTailerListener() {
@@ -91,7 +87,7 @@ public class JstackLogTailFacade extends Facade {
                 }
             }
         } else {
-            throw new RuntimeException("File not specified. Please specify the file to be read by setting the parameter '" + FILE_PARAM + "'");
+            throw new RuntimeException("File not specified. Please specify the file to be read by setting the parameter '" + Parameters.FILE + "'");
         }
     }
 

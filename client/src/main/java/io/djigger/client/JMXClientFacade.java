@@ -136,10 +136,10 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 
     @Override
     protected synchronized void connect_() throws Exception {
-        String host = properties.getProperty("host");
-        String port = properties.getProperty("port");
-        String username = properties.getProperty("username");
-        String password = properties.getProperty("password");
+        String host = properties.getProperty(Parameters.HOST);
+        String port = properties.getProperty(Parameters.PORT);
+        String username = properties.getProperty(Parameters.USERNAME);
+        String password = properties.getProperty(Parameters.PASSWORD);
 
         logger.info("Creating JMX connection to " + host + ":" + port);
 

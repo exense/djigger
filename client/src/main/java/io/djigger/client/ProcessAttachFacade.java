@@ -23,12 +23,6 @@ public class ProcessAttachFacade extends AgentFacade {
 
     private static final Logger logger = LoggerFactory.getLogger(ProcessAttachFacade.class);
 
-    public static final String CONNECTION_TIMEOUT = "ConnectionTimeoutMs";
-
-    public static final String PROCESSID = "processID";
-
-    public static final String PROCESS_NAME_REGEX = "processNamePattern";
-
     private static final String DEFAULT_CONNECTION_TIMEOUT = "10000";
 
     public ProcessAttachFacade(Properties properties, boolean autoReconnect) {
@@ -65,7 +59,7 @@ public class ProcessAttachFacade extends AgentFacade {
         }).start();
 
         String processID = null;
-        Object processNamePattern = properties.get(PROCESS_NAME_REGEX);
+        Object processNamePattern = properties.get(Parameters.PROCESS_NAME_PATTERN);
         if (processNamePattern != null) {
             Pattern pattern = Pattern.compile(processNamePattern.toString());
             for (VirtualMachineDescriptor vm_ : VirtualMachine.list()) {
@@ -78,7 +72,7 @@ public class ProcessAttachFacade extends AgentFacade {
                 throw new RuntimeException("No VM found matching pattern " + processNamePattern);
             }
         } else {
-            processID = properties.get(PROCESSID).toString();
+            processID = properties.get(Parameters.PROCESS_ID).toString();
         }
         vm = VirtualMachine.attach(processID);
 
@@ -101,7 +95,7 @@ public class ProcessAttachFacade extends AgentFacade {
 
         vm.loadAgent(agentJar.getAbsolutePath(), "host:" + Inet4Address.getLocalHost().getHostName() + ",port:" + port);
 
-        long timeout = Long.parseLong(properties.getProperty(CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT));
+        long timeout = Long.parseLong(properties.getProperty(Parameters.CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT));
         synchronized (this) {
             wait(timeout);
         }
