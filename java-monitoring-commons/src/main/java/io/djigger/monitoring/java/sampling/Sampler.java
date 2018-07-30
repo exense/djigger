@@ -31,7 +31,7 @@ public class Sampler extends Thread {
     private final Runnable runnable;
 
     public Sampler(Runnable runnable) {
-        super();
+        super("djigger-SamplerThread");
         this.runnable = runnable;
     }
 
@@ -67,11 +67,14 @@ public class Sampler extends Thread {
     public void setRun(boolean run) {
         this.run = run;
         synchronized (this) {
-            notify();
+        	notifyAll();
         }
     }
 
     public void destroy() {
         destroyed = true;
+        synchronized (this) {
+            notifyAll();
+        }
     }
 }
