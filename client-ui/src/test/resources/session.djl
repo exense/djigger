@@ -1,0 +1,24 @@
+<list>
+  <io.djigger.ui.SessionConfiguration>
+    <name>localhost:12121</name>
+    <type>AGENT</type>
+    <parameters>
+      <entry>
+        <io.djigger.ui.SessionConfiguration_-SessionParameter>PASSWORD</io.djigger.ui.SessionConfiguration_-SessionParameter>
+        <string></string>
+      </entry>
+      <entry>
+        <io.djigger.ui.SessionConfiguration_-SessionParameter>PORT</io.djigger.ui.SessionConfiguration_-SessionParameter>
+        <string>12121</string>
+      </entry>
+      <entry>
+        <io.djigger.ui.SessionConfiguration_-SessionParameter>USERNAME</io.djigger.ui.SessionConfiguration_-SessionParameter>
+        <string></string>
+      </entry>
+      <entry>
+        <io.djigger.ui.SessionConfiguration_-SessionParameter>HOSTNAME</io.djigger.ui.SessionConfiguration_-SessionParameter>
+        <string>localhost</string>
+      </entry>
+    </parameters>
+  </io.djigger.ui.SessionConfiguration>
+</list>
