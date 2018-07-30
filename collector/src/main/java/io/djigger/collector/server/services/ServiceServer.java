@@ -65,17 +65,22 @@ public class ServiceServer {
         ServletContainer servletContainer = new ServletContainer(resourceConfig);
         ServletHolder sh = new ServletHolder(servletContainer);
         Server server = new Server(serverPort);
-        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-        context.setContextPath("/rest");
-        context.addServlet(sh, "/*");
 
-        WebAppContext bb = new WebAppContext();
-        bb.setServer(server);
-        bb.setContextPath("/djigger");
-        bb.setResourceBase(Resource.newClassPathResource("webapp").getURI().toString());
+        ServletContextHandler restContext = new ServletContextHandler(ServletContextHandler.SESSIONS);
+        restContext.setContextPath("/rest");
+        restContext.addServlet(sh, "/*");
+
+        WebAppContext webContext = new WebAppContext();
+        webContext.setServer(server);
+        webContext.setContextPath("/djigger");
+        webContext.setResourceBase(Resource.newClassPathResource("webapp").getURI().toString());
+
+        WebAppContext rootContext = new WebAppContext();
+        rootContext.setContextPath("/");
+        rootContext.setResourceBase(Resource.newClassPathResource("webroot").getURI().toString());
 
         ContextHandlerCollection contexts = new ContextHandlerCollection();
-        contexts.setHandlers(new Handler[]{context, bb});
+        contexts.setHandlers(new Handler[]{restContext, webContext, rootContext});
         server.setHandler(contexts);
 
         return server;

@@ -124,7 +124,7 @@ public class HostConnectionParameter implements CaretListener, ConnectionParamet
     }
 
     public String getPassword() {
-        return password.getText();
+        return ((JTextField)password).getText();
     }
 
     public SessionConfiguration getSessionConfiguration() {

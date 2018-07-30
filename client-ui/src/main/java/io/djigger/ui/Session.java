@@ -219,25 +219,25 @@ public class Session extends JPanel implements FacadeListener, Closeable {
         if (config.getType() == SessionType.AGENT) {
             final Properties prop = new Properties();
             if (config.getParameters().containsKey(SessionParameter.PROCESSID)) {
-                prop.put(ProcessAttachFacade.PROCESSID, config.getParameters().get(SessionParameter.PROCESSID));
+                prop.put(Facade.Parameters.PROCESS_ID, config.getParameters().get(SessionParameter.PROCESSID));
                 facade = new ProcessAttachFacade(prop, false);
             } else {
-                prop.put("host", config.getParameters().get(SessionParameter.HOSTNAME));
-                prop.put("port", config.getParameters().get(SessionParameter.PORT));
+                prop.put(Facade.Parameters.HOST, config.getParameters().get(SessionParameter.HOSTNAME));
+                prop.put(Facade.Parameters.PORT, config.getParameters().get(SessionParameter.PORT));
                 facade = new AgentFacade(prop, false);
             }
         } else if (config.getType() == SessionType.FILE) {
             Properties prop = new Properties();
-            prop.put(JstackLogTailFacade.FILE_PARAM, config.getParameters().get(SessionParameter.FILE));
-            prop.put(JstackLogTailFacade.START_AT_FILE_BEGIN_PARAM, "true");
+            prop.put(Facade.Parameters.FILE, config.getParameters().get(SessionParameter.FILE));
+            prop.put(Facade.Parameters.START_AT_FILE_BEGIN, "true");
 
             facade = new JstackLogTailFacade(prop, false);
         } else if (config.getType() == SessionType.JMX) {
             Properties prop = new Properties();
-            prop.put("host", config.getParameters().get(SessionParameter.HOSTNAME));
-            prop.put("port", config.getParameters().get(SessionParameter.PORT));
-            prop.put("username", config.getParameters().get(SessionParameter.USERNAME));
-            prop.put("password", config.getParameters().get(SessionParameter.PASSWORD));
+            prop.put(Facade.Parameters.HOST, config.getParameters().get(SessionParameter.HOSTNAME));
+            prop.put(Facade.Parameters.PORT, config.getParameters().get(SessionParameter.PORT));
+            prop.put(Facade.Parameters.USERNAME, config.getParameters().get(SessionParameter.USERNAME));
+            prop.put(Facade.Parameters.PASSWORD, config.getParameters().get(SessionParameter.PASSWORD));
             facade = new JMXClientFacade(prop, false);
         } else {
             facade = null;
@@ -600,13 +600,11 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     @Override
     public void connectionClosed() {
         active = false;
-        main.handleSessionEvent(this, SessionEvent.CONNECTION_CLOSED);
     }
 
     @Override
     public void connectionEstablished() {
         active = true;
-        main.handleSessionEvent(this, SessionEvent.CONNECTION_ESTABLISHED);
     }
 
     public boolean isActive() {

@@ -20,6 +20,7 @@
 package io.djigger.collector.server.conf;
 
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
+import io.djigger.client.Facade;
 import io.djigger.client.mbeans.MetricCollectionConfiguration;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 
@@ -97,7 +98,7 @@ public class Connection implements ConnectionGroupNode {
 
     public String toString() {
         Properties hiddenPassword = ((Properties) connectionProperties.clone());
-        hiddenPassword.setProperty("password", "***");
+        hiddenPassword.setProperty(Facade.Parameters.PASSWORD, "***");
         return connectionClass + ";" +
             hiddenPassword + ";" +
             samplingParameters.toString() + ";" +

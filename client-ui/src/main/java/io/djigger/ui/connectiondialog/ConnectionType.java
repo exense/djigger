@@ -31,9 +31,9 @@ public enum ConnectionType {
 
     ATTACH("Attach", SessionType.AGENT, AttachConnectionParameters.class),
 
-    FILE("jstack", SessionType.FILE, FileChooserParameters.class),
+    FILE("jstack", SessionType.FILE, FileChooserParameters.JStack.class),
 
-    SESSION("Saved session", SessionType.AGENT_CAPTURE, FileChooserParameters.class);
+    SESSION("Saved session", SessionType.AGENT_CAPTURE, FileChooserParameters.SavedSession.class);
 
     private String description;
 
@@ -41,7 +41,7 @@ public enum ConnectionType {
 
     private Class<? extends ConnectionParameterFrame> parameterDialogClass;
 
-    private ConnectionType(String description, SessionType sessionType,
+    ConnectionType(String description, SessionType sessionType,
                            Class<? extends ConnectionParameterFrame> parameterDialogClass) {
         this.description = description;
         this.sessionType = sessionType;

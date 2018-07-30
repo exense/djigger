@@ -23,6 +23,7 @@ import io.djigger.ui.analyzer.BlockColorer.Framework;
 import io.djigger.ui.common.CloseButton;
 import io.djigger.ui.common.CustomButton;
 import io.djigger.ui.common.FileChooserHelper;
+import io.djigger.ui.common.FileMetadata;
 import io.djigger.ui.model.AnalysisNode;
 import io.djigger.ui.model.AnalysisNodePath;
 import org.slf4j.Logger;
@@ -417,12 +418,12 @@ public class BlockView extends AnalyzerPane implements MouseListener, MouseMotio
         @Override
         public void actionPerformed(ActionEvent e) {
             if (e.getActionCommand().equals("export")) {
-                File file = FileChooserHelper.selectFile("Export Legend", "Save");
+                File file = FileChooserHelper.saveFile(FileMetadata.LEGEND);
                 if (file != null) {
                     blockColorer.export(file);
                 }
             } else if (e.getActionCommand().equals("import")) {
-                File file = FileChooserHelper.selectFile("Import Legend", "Open");
+                File file = FileChooserHelper.loadFile(FileMetadata.LEGEND);
                 if (file != null) {
                     blockColorer.clearFrameworks();
                     blockColorer.loadFrameworks(file);

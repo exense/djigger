@@ -37,7 +37,7 @@ public class MainToolbarPane extends JPanel {
         this.main = main;
 
         JPanel commandPanel = new JPanel();
-        commandPanel.add(new CommandButton("add.png", "Add session", new Runnable() {
+        commandPanel.add(new CommandButton("add.png", "Add Session...", new Runnable() {
             @Override
             public void run() {
                 addSession();
@@ -49,13 +49,13 @@ public class MainToolbarPane extends JPanel {
                 removeSession();
             }
         }));
-        commandPanel.add(new CommandButton("importConfig.png", "Load session configuration", new Runnable() {
+        commandPanel.add(new CommandButton("importConfig.png", "Load Session list...", new Runnable() {
             @Override
             public void run() {
                 main.importSessions();
             }
         }));
-        commandPanel.add(new CommandButton("save.png", "Save session configuration", new Runnable() {
+        commandPanel.add(new CommandButton("save.png", "Save Session list...", new Runnable() {
             @Override
             public void run() {
                 main.exportSessions();
