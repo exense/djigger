@@ -30,8 +30,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.xstream.XStream;
 import io.djigger.client.Facade;
 import io.djigger.client.JMXClientFacade;
+import io.djigger.client.mbeans.MetricCollectionConfiguration;
 import io.djigger.collector.server.conf.mixin.InstrumentSubscriptionMixin;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
+import io.djigger.monitoring.java.mbeans.MBeanCollectorConfiguration;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -247,6 +250,14 @@ public class Configurator {
         connection.setAttributes(attributes);
         connection.setConnectionClass(JMXClientFacade.class.getCanonicalName());
 
+        // Add java.lang MBeans per default. 
+        // TODO: make this configurable
+        MBeanCollectorConfiguration mBeanCollectorConf = new MBeanCollectorConfiguration();
+        mBeanCollectorConf.addMBeanAttribute("java.lang:*");
+        MetricCollectionConfiguration metricCollectionConf = new MetricCollectionConfiguration();
+        metricCollectionConf.setmBeans(mBeanCollectorConf);
+        connection.setMetrics(metricCollectionConf);
+        
         return connection;
     }
 
