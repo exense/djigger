@@ -81,8 +81,6 @@
 		</plugins>
 	</build>
 	<dependencies>
-		<!-- <dependency> <groupId>io.djigger</groupId> <artifactId>commons</artifactId> 
-			<version>${project.version}</version> </dependency> -->
 		<dependency>
 			<groupId>io.djigger</groupId>
 			<artifactId>java-monitoring-commons</artifactId>
