@@ -56,6 +56,9 @@ public class ClassTransformer implements ClassFileTransformer {
 			try {
 				return super.find(classname);
 			} catch(Throwable e) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("The following exception was ignored when searching for " + classname + ":\n" + e.getMessage());
+                }
 				return null;
 			}
 		}
