@@ -19,20 +19,18 @@
  *******************************************************************************/
 package io.djigger.agent;
 
-import java.lang.instrument.ClassFileTransformer;
-import java.lang.instrument.IllegalClassFormatException;
-import java.net.URL;
-import java.security.ProtectionDomain;
-import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.LoaderClassPath;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.instrument.ClassFileTransformer;
+import java.lang.instrument.IllegalClassFormatException;
+import java.security.ProtectionDomain;
+import java.util.Set;
 
 public class ClassTransformer implements ClassFileTransformer {
 
@@ -45,33 +43,13 @@ public class ClassTransformer implements ClassFileTransformer {
         this.service = service;
     }
 
-    class FaultTolerantLoaderClassPath extends LoaderClassPath {
-
-		public FaultTolerantLoaderClassPath(ClassLoader cl) {
-			super(cl);
-		}
-
-		@Override
-		public URL find(String classname) {
-			try {
-				return super.find(classname);
-			} catch(Throwable e) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("The following exception was ignored when searching for " + classname + ":\n" + e.getMessage());
-                }
-				return null;
-			}
-		}
-    	
-    }
-    
     @Override
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain,
                             byte[] classfileBuffer) throws IllegalClassFormatException {
 
         ClassPool pool = ClassPool.getDefault();
         if (loader != null) {
-            pool.insertClassPath(new FaultTolerantLoaderClassPath(loader));
+            pool.insertClassPath(new LoaderClassPath(loader));
         }
         CtClass currentClass = null;
         try {
