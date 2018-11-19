@@ -14,7 +14,7 @@
 	<repositories>
 		<repository>
 			<id>nexus</id>
-			<url>http://nexus.stepcloud.ch/nexus/content/repositories/releases</url>
+			<url>https://nexus.exense.ch/</url>
 		</repository>
 	</repositories>
 
