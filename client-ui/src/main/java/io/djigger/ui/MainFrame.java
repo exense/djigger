@@ -76,7 +76,7 @@ public class MainFrame extends JPanel {
         }
         UIManager.put("Button.defaultButtonFollowsFocus", Boolean.TRUE);
 
-        frame = new JFrame("djigger 1.9.0");
+        frame = new JFrame("djigger 1.9.1");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setPreferredSize(new Dimension(1300, 700));
 
