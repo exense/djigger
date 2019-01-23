@@ -92,9 +92,9 @@
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>io.denkbar.smb</groupId>
+			<groupId>ch.exense.smb</groupId>
 			<artifactId>smb-core</artifactId>
-			<version>1.2</version>
+			<version>1.8</version>
 		</dependency>
 	</dependencies>
 </project>
