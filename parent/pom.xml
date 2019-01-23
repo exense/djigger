@@ -8,14 +8,11 @@
 	<packaging>pom</packaging>
 
 	<properties>
+		<smb.version>1.8</smb.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
 	<repositories>
-		<repository>
-			<id>nexus</id>
-			<url>https://nexus.exense.ch/</url>
-		</repository>
 	</repositories>
 
 	<modules>

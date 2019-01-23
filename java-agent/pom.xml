@@ -94,7 +94,7 @@
 		<dependency>
 			<groupId>ch.exense.smb</groupId>
 			<artifactId>smb-core</artifactId>
-			<version>1.8</version>
+			<version>${smb.version}</version>
 		</dependency>
 	</dependencies>
 </project>
