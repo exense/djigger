@@ -33,11 +33,11 @@
 			</plugin>
 		</plugins>
 	</build>
-	<dependencies>
-		<dependency>
-			<groupId>io.djigger</groupId>
-			<artifactId>java-monitoring-commons</artifactId>
-			<version>${project.version}</version>
+		<dependencies>
+			<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>bson</artifactId>
+			<version>3.2.2</version>
 		</dependency>
 	</dependencies>
 </project>
