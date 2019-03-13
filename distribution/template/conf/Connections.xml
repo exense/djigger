@@ -20,6 +20,13 @@
 				<property name="username" value=""/>
 				<property name="password" value=""/>
 			</connectionProperties>
+			<metrics>
+				<mBeans>
+					<mBeanAttributes>
+						<string>java.lang:*</string>
+					</mBeanAttributes>
+				</mBeans>
+			</metrics>
 			<subscriptions>
 				<io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
 					<classNamePattern>
@@ -52,6 +59,13 @@
                     <attributes>
                         <entry><string>foo</string><string>bar</string></entry>
                     </attributes>
+                    <metrics>
+						<mBeans>
+							<mBeanAttributes>
+								<string>java.lang:*</string>
+							</mBeanAttributes>
+						</mBeans>
+					</metrics>
                     <subscriptions>
                         <io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
                             <classNamePattern><pattern>ClassName.*</pattern><flags>0</flags></classNamePattern>
