@@ -36,6 +36,13 @@
 			</connectionProperties>
 			<attributes>
 			</attributes>
+			<metrics>
+				<mBeans>
+					<mBeanAttributes>
+						<string>java.lang:*</string>
+					</mBeanAttributes>
+				</mBeans>
+			</metrics>
 			<subscriptions>
 				<io.djigger.monitoring.java.instrumentation.subscription.CustomSubscription>
 					<id>1</id>
