@@ -2,6 +2,8 @@ bin/
 target/
 .settings/
 *.class
+.classpath
+.project
 *.log
 djigger.settings
 *lastsession.xml
