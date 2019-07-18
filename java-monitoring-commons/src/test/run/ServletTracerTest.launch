@@ -8,7 +8,7 @@
 </listAttribute>
 <stringAttribute key="org.eclipse.jdt.launching.CLASSPATH_PROVIDER" value="org.eclipse.m2e.launchconfig.classpathProvider"/>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="io.djigger.monitoring.java.instrumentation.subscription.ServletTracerTest"/>
-<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="java-monitoring"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="java-monitoring-commons"/>
 <stringAttribute key="org.eclipse.jdt.launching.SOURCE_PATH_PROVIDER" value="org.eclipse.m2e.launchconfig.sourcepathProvider"/>
-<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-javaagent:D:\Git\djigger\client-ui/src/main/resources/agent.jar=port:12124"/>
+<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-javaagent:..\client-ui/src/main/resources/agent.jar=port:12124"/>
 </launchConfiguration>
