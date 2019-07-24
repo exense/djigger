@@ -25,17 +25,24 @@
 
 package io.djigger.collector.test;
 
-import javax.management.MBeanServer;
-import javax.management.remote.JMXConnectorServer;
-import javax.management.remote.JMXConnectorServerFactory;
-import javax.management.remote.JMXServiceURL;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.rmi.registry.LocateRegistry;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import javax.management.MBeanServer;
+import javax.management.remote.JMXConnectorServer;
+import javax.management.remote.JMXConnectorServerFactory;
+import javax.management.remote.JMXServiceURL;
 
 public class BasicJMXJVM {
+	
+    public static long runFor = 6000000L; // Run for X milliseconds
+    public static long sleepFor = 1000L; // Check if time limit reached every X millisecond
 
     public static void main(String... args) {
 
@@ -43,33 +50,50 @@ public class BasicJMXJVM {
 
         BasicJMXJVM brjvm_1 = new BasicJMXJVM();
 
-        // Programmatically open JMX channel
-        JMXConnectorServer srv = null;
+
+        Runnable r1 = new Runnable() {
+			
+			@Override
+			public void run() {
+		        // 50 % - CPU
+		        iWasteCPU(runFor, sleepFor);
+			}
+		};
+
+		Runnable r2 = new Runnable() {
+			
+			@Override
+			public void run() {
+		        // 50 % - CPU
+		        iAlsoWasteTime(runFor, sleepFor);
+			}
+		};
+		
+		Runnable r3 = new Runnable() {
+			
+			@Override
+			public void run() {
+		        // 50 % - CPU
+		        iWasteTime(runFor, sleepFor);
+			}
+		};
+		
+		ExecutorService executorService = Executors.newFixedThreadPool(3);
+		
+
+        System.out.println("Submitting the tasks for execution...");
+        executorService.submit(r1);
+        executorService.submit(r2);
+        executorService.submit(r3);
+
         try {
-            srv = brjvm_1.createJmxConnectorServer(1098);
-        } catch (IOException e1) {
-            e1.printStackTrace();
-        }
+			executorService.awaitTermination(1, TimeUnit.DAYS);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        executorService.shutdown();
 
-        long runFor = 600000L; // Run for X milliseconds
-        long sleepFor = 1000L; // Check if time limit reached every X millisecond
-
-        // 50 % - CPU
-        brjvm_1.iWaste50pcOfTheTimeButIUseCPU(runFor, sleepFor);
-
-        // 30 % - WAIT
-        brjvm_1.iSleep30pcOfTheTime(runFor, sleepFor);
-
-        // 20 % - WAIT
-        brjvm_1.iSleep20pcOfTheTime(runFor, sleepFor);
-
-        System.out.println("Basic jvm run complete.");
-
-        try {
-            srv.stop();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     private JMXConnectorServer createJmxConnectorServer(int portNr) throws IOException {
@@ -83,15 +107,15 @@ public class BasicJMXJVM {
     }
 
 
-    private void iSleep30pcOfTheTime(long howLong, long checkInterval) {
+    public static void iAlsoWasteTime(long howLong, long checkInterval) {
         iSleep((long) (howLong * 0.3), checkInterval);
     }
 
-    private void iSleep20pcOfTheTime(long howLong, long checkInterval) {
+    public static void iWasteTime(long howLong, long checkInterval) {
         iSleep((long) (howLong * 0.2), checkInterval);
     }
 
-    private void iWaste50pcOfTheTimeButIUseCPU(long howLong, long checkInterval) {
+    public static void iWasteCPU(long howLong, long checkInterval) {
 
         for (int i = 0; i < 5; i++)
             iSleepUsingCPU(howLong / 20, checkInterval);
@@ -101,7 +125,7 @@ public class BasicJMXJVM {
             iSleepUsingCPU(howLong / 20, checkInterval);
     }
 
-    private void iSleepUsingCPU(long howLong, long checkInterval) {
+    public static void iSleepUsingCPU(long howLong, long checkInterval) {
 
         long begin = System.currentTimeMillis();
 
@@ -128,7 +152,7 @@ public class BasicJMXJVM {
         }
     }
 
-    private void iSleep(long howLong, long checkInterval) {
+    public static void iSleep(long howLong, long checkInterval) {
 
         long begin = System.currentTimeMillis();
 
