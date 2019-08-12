@@ -93,4 +93,14 @@ public class InstrumentationService {
             }
         }
     }
+    
+    public Class<?> getFirstClassMatching(String name) {
+    	Class<?>[] allLoadedClasses = instrumentation.getAllLoadedClasses();
+    	for (Class<?> class1 : allLoadedClasses) {
+			if(name.equals(class1.getName())) {
+				return class1;
+			}
+		}
+    	return null;
+    }
 }

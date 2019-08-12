@@ -8,6 +8,14 @@
 		<relativePath>../parent</relativePath>
 	</parent>
 	<artifactId>client-ui</artifactId>
+
+	<repositories>
+		<repository>
+			<id>bin-tray</id>
+			<url>https://jcenter.bintray.com</url>
+		</repository>
+	</repositories>
+	
 	<build>
 		<plugins>
 			<plugin>
@@ -125,6 +133,18 @@
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
 			<version>1.0.13</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.jd</groupId>
+			<artifactId>jd-core</artifactId>
+			<version>1.0.7</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-text</artifactId>
+			<version>1.4</version>
 		</dependency>
 		
 		<dependency>

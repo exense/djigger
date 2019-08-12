@@ -19,10 +19,14 @@
  *******************************************************************************/
 package io.djigger.ui.analyzer;
 
-import io.djigger.ui.Session.SessionType;
-
-import javax.swing.*;
 import java.awt.event.ActionEvent;
+
+import javax.swing.AbstractAction;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.JSeparator;
+
+import io.djigger.ui.Session.SessionType;
 
 
 public class TreePopupMenu extends JPopupMenu {
@@ -91,6 +95,12 @@ public class TreePopupMenu extends JPopupMenu {
                 @Override
                 public void actionPerformed(ActionEvent arg0) {
                     analyzer.instrumentCurrentMethod();
+                }
+            }));
+            add(new JMenuItem(new AbstractAction("Decompile") {
+                @Override
+                public void actionPerformed(ActionEvent arg0) {
+                	analyzer.decompileClassOfCurrentNode();
                 }
             }));
         }

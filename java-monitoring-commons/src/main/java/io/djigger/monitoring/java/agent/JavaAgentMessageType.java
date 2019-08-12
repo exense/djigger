@@ -48,4 +48,6 @@ public class JavaAgentMessageType {
     public static String RESPONSE = "RESPONSE";
 
     public static String MAX_AGENT_SESSIONS_REACHED = "MAX_AGENT_SESSIONS_REACHED";
+    
+    public static String GET_CLASS_BYTECODE = "GET_CLASS_BYTECODE";
 }

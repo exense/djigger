@@ -196,6 +196,16 @@ public abstract class AnalyzerPane extends Dashlet implements ActionListener {
                 JOptionPane.ERROR_MESSAGE);
         }
     }
+    
+    public void decompileClassOfCurrentNode() {
+    	NodeID nodeID = getSelectedNode().getId();
+    	Object attachment = nodeID.getAttachment();
+        if (attachment != null && attachment instanceof StackTraceElement) {
+            StackTraceElement el = (StackTraceElement) attachment;
+            String className = el.getClassName();
+            DecompilerFrame decompilerFrame = new DecompilerFrame(getMain(), className);
+        }
+    }
 
     private StackTraceElement[] toStackTrace(List<NodeID> path) {
         int size = path.size();

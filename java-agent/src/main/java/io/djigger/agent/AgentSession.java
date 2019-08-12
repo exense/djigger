@@ -19,10 +19,24 @@
  *******************************************************************************/
 package io.djigger.agent;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Serializable;
+import java.lang.instrument.Instrumentation;
+import java.lang.management.ManagementFactory;
+import java.net.Socket;
+import java.util.LinkedList;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
+
+import javax.management.MBeanServer;
+
 import io.denkbar.smb.core.Message;
 import io.denkbar.smb.core.MessageListener;
 import io.denkbar.smb.core.MessageRouter;
 import io.denkbar.smb.core.MessageRouterStateListener;
+import io.denkbar.smb.core.SynchronMessageListener;
 import io.djigger.monitoring.eventqueue.EventQueue;
 import io.djigger.monitoring.eventqueue.EventQueue.EventQueueConsumer;
 import io.djigger.monitoring.eventqueue.ModuloEventSkipLogic;
@@ -35,16 +49,7 @@ import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.monitoring.java.sampling.Sampler;
 
-import javax.management.MBeanServer;
-import java.io.IOException;
-import java.lang.instrument.Instrumentation;
-import java.lang.management.ManagementFactory;
-import java.net.Socket;
-import java.util.LinkedList;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
-
-public class AgentSession implements MessageListener, MessageRouterStateListener {
+public class AgentSession implements MessageListener, MessageRouterStateListener, SynchronMessageListener {
 
     private static final Logger logger = Logger.getLogger(AgentSession.class.getName());
 
@@ -69,6 +74,7 @@ public class AgentSession implements MessageListener, MessageRouterStateListener
 
         this.messageRouter = new MessageRouter(this, socket);
         messageRouter.registerPermanentListenerForAllMessages(this);
+        messageRouter.registerSynchronListener(JavaAgentMessageType.GET_CLASS_BYTECODE, this);
         this.isAlive = true;
 
         EventQueueConsumer<InstrumentationEvent> queueConsumer = new InstrumentationEventQueueConsumer(this);
@@ -166,4 +172,39 @@ public class AgentSession implements MessageListener, MessageRouterStateListener
         threadInfoQueue.shutdown();
         metricsQueue.shutdown();
     }
+
+	@Override
+	public Serializable onSynchronMessage(Message msg) throws Exception {
+		if (JavaAgentMessageType.GET_CLASS_BYTECODE.equals(msg.getType())) {
+			String classname = (String) msg.getContent();
+			Class<?> firstClassMatching = instrumentationService.getFirstClassMatching(classname);
+			
+			InputStream is = firstClassMatching.getResourceAsStream("/" + firstClassMatching.getName().replaceAll("\\.", "/") + ".class");
+
+			if (is == null) {
+                return null;
+            } else {
+            	InputStream in=is;
+            	ByteArrayOutputStream out=new ByteArrayOutputStream();
+                try {
+                    byte[] buffer = new byte[1024];
+                    int read = in.read(buffer);
+
+                    while (read > 0) {
+                        out.write(buffer, 0, read);
+                        read = in.read(buffer);
+                    }
+
+                    return out.toByteArray();
+                } catch (IOException e) {
+                    throw e;
+                } finally {
+                	is.close();
+                	out.close();
+                }
+            }
+		} else {
+			throw new RuntimeException("Unsupported message type "+msg.getType());
+		}
+	}
 }

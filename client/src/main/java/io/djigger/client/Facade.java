@@ -284,4 +284,8 @@ public abstract class Facade {
     public boolean hasStartStopSupport() {
         return true;
     }
+    
+    public byte[] getClassBytecode(String classname) throws Exception {
+    	throw new RuntimeException("Unsupported operation");
+    }
 }

@@ -37,7 +37,9 @@ import java.util.Properties;
 
 public class AgentFacade extends Facade implements MessageListener {
 
-    private static final Logger logger = LoggerFactory.getLogger(AgentFacade.class);
+    private static final int DEFAULT_CALLTIMEOUT = 10000;
+
+	private static final Logger logger = LoggerFactory.getLogger(AgentFacade.class);
 
     protected MessageRouter client;
 
@@ -150,4 +152,9 @@ public class AgentFacade extends Facade implements MessageListener {
     public boolean hasInstrumentationSupport() {
         return true;
     }
+
+	@Override
+	public byte[] getClassBytecode(String classname) throws Exception {
+		return (byte[]) client.call(new Message(JavaAgentMessageType.GET_CLASS_BYTECODE, classname), DEFAULT_CALLTIMEOUT);
+	}
 }
