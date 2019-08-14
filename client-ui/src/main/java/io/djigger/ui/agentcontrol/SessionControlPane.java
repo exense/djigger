@@ -21,6 +21,7 @@ package io.djigger.ui.agentcontrol;
 
 import io.djigger.client.Facade;
 import io.djigger.ui.Session;
+import io.djigger.ui.analyzer.DecompilerFrame;
 import io.djigger.ui.common.*;
 import io.djigger.ui.common.CommandButton.Command;
 import io.djigger.ui.model.SessionExport;
@@ -47,6 +48,8 @@ public class SessionControlPane extends JPanel implements ActionListener {
 
     private CommandButton showLineNumbersButton;
     private CommandButton pseudoEventsButton;
+    
+    private CommandButton sourceCodeButton;
 
     public SessionControlPane(final Session parent) {
         super();
@@ -153,6 +156,16 @@ public class SessionControlPane extends JPanel implements ActionListener {
             }
         }, 20);
         controlPanel.add(pseudoEventsButton);
+        
+        if (facade != null && facade.hasInstrumentationSupport()) {
+        	sourceCodeButton = new CommandButton("sourcecode.png", "Decompiler", new Runnable() {
+        		@Override
+        		public void run() {
+        			new DecompilerFrame(parent, null);
+        		}
+        	}, 20);
+        	controlPanel.add(sourceCodeButton);
+        }
 
         samplerSettingPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         samplerSettingPanel.add(new JLabel("Sampler interval (ms)"));

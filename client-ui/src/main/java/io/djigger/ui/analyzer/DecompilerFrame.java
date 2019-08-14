@@ -19,7 +19,10 @@
  *******************************************************************************/
 package io.djigger.ui.analyzer;
 
+import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
@@ -40,12 +43,14 @@ import org.jd.core.v1.api.loader.LoaderException;
 import org.jd.core.v1.api.printer.Printer;
 
 import io.djigger.ui.Session;
+import io.djigger.ui.common.EnhancedTextField;
 
 @SuppressWarnings("serial")
 public class DecompilerFrame extends JPanel implements HyperlinkListener {
 
 	private Session main;
 	private JFrame frame;
+	private JScrollPane scrollpane;
 	private JEditorPane textArea;
 
 	public DecompilerFrame(Session main, String classname) {
@@ -58,19 +63,41 @@ public class DecompilerFrame extends JPanel implements HyperlinkListener {
 			System.err.println("Couldn't use system look and feel.");
 		}
 
-		frame = new JFrame("djigger - Decompiler " + classname);
+		frame = new JFrame("djigger - Decompiler");
 		frame.setPreferredSize(new Dimension(1300, 700));
 
+		JPanel panel = new JPanel(new BorderLayout());
+		
 		textArea = new JEditorPane();
 		textArea.setContentType("text/html");
 		textArea.setEditable(false);
 		textArea.addHyperlinkListener(this);
 
-		final JScrollPane scrollpane = new JScrollPane(textArea);
-		frame.add(scrollpane);
+		scrollpane = new JScrollPane(textArea);
+		EnhancedTextField classNameTextField = new EnhancedTextField("Full qualified class name");
+		classNameTextField.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				decompileClass(main, classNameTextField.getText());
+			}
+		});
+		panel.add(classNameTextField, BorderLayout.NORTH);
+		panel.add(scrollpane, BorderLayout.CENTER);
+		
+		frame.setContentPane(panel);
 		frame.pack();
 		frame.setVisible(true);
 
+		if(classname != null) {
+			classNameTextField.setText(classname);
+			decompileClass(main, classname);
+		}
+
+	}
+
+	protected void decompileClass(Session main, String classname) {
+		frame.setTitle("djigger - Decompiler " + classname);
+		
 		byte[] classBytecode;
 		try {
 			classBytecode = main.getFacade().getClassBytecode(classname);
@@ -96,7 +123,6 @@ public class DecompilerFrame extends JPanel implements HyperlinkListener {
 			e1.printStackTrace(pw);
 			textArea.setText("Error while loading/decompiling class:\n" + sw.toString());
 		}
-
 	}
 
 	protected Loader getLoader(final byte[] bytecode, final String classname) {
