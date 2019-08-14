@@ -19,8 +19,30 @@
  *******************************************************************************/
 package io.djigger.ui;
 
+import java.awt.BorderLayout;
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+
+import javax.swing.JPanel;
+import javax.swing.JSplitPane;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.djigger.agent.InstrumentationError;
 import io.djigger.aggregation.Thread.RealNodePathWrapper;
-import io.djigger.client.*;
+import io.djigger.client.AgentFacade;
+import io.djigger.client.Facade;
+import io.djigger.client.FacadeListener;
+import io.djigger.client.JMXClientFacade;
+import io.djigger.client.JstackLogTailFacade;
+import io.djigger.client.ProcessAttachFacade;
 import io.djigger.client.mbeans.MetricCollectionConfiguration;
 import io.djigger.db.client.StoreClient;
 import io.djigger.model.Capture;
@@ -53,15 +75,6 @@ import io.djigger.ui.model.PseudoInstrumentationEvent;
 import io.djigger.ui.model.SessionExport;
 import io.djigger.ui.storebrowser.StoreBrowserPane;
 import io.djigger.ui.threadselection.ThreadSelectionPane;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.*;
-import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.List;
 
 
 @SuppressWarnings("serial")
@@ -105,11 +118,13 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 
     private StoreFilter currentStoreFilter;
 
-    StoreCollection<RealNodePathWrapper> realNodePathCache;
+    private final StoreCollection<RealNodePathWrapper> realNodePathCache;
 
-    StoreCollection<RealNodePathWrapper> realNodePathCacheWithLineNumbers;
+    private final StoreCollection<RealNodePathWrapper> realNodePathCacheWithLineNumbers;
 
-    StoreCollection<InstrumentationEventWrapper> instrumentationEventWrapperCache;
+    private final StoreCollection<InstrumentationEventWrapper> instrumentationEventWrapperCache;
+    
+    private final List<InstrumentationError> instrumentationErrors = new ArrayList<>();
 
     public Session(SessionConfiguration config, MainFrame main) {
         super(new BorderLayout());
@@ -521,7 +536,7 @@ public class Session extends JPanel implements FacadeListener, Closeable {
         }
     }
 
-    Set<InstrumentSubscription> subscriptions = new HashSet<>();
+    protected final Set<InstrumentSubscription> subscriptions = new HashSet<>();
 
     public Set<InstrumentSubscription> getSubscriptions() {
         return subscriptions;
@@ -539,11 +554,12 @@ public class Session extends JPanel implements FacadeListener, Closeable {
         if (facade != null && facade.hasInstrumentationSupport()) {
             facade.removeInstrumentation(subscription);
             subscriptions.remove(subscription);
+            instrumentationErrors.removeIf(e->e.getSubscription().equals(subscription));
         }
         fireSubscriptionChangeEvent();
     }
 
-    public List<SessionListener> listeners = new ArrayList<>();
+    public final List<SessionListener> listeners = new ArrayList<>();
 
     public void addListener(SessionListener listener) {
         listeners.add(listener);
@@ -618,4 +634,17 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     public StoreFilter getStoreFilter() {
         return currentStoreFilter;
     }
+    
+	public List<InstrumentationError> getInstrumentationErrors() {
+		return instrumentationErrors;
+	}
+
+	@Override
+	public void instrumentationErrorReceived(InstrumentationError error) {
+		logger.warn("Error while applying subscription "+error.getSubscription()+" on class "+error.getClassname(), error.getException());
+		instrumentationErrors.add(error);
+		for (SessionListener sessionListener : listeners) {
+			sessionListener.instrumentationError(error);
+		}
+	}    
 }

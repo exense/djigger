@@ -19,7 +19,40 @@
  *******************************************************************************/
 package io.djigger.ui.instrumentation;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.thoughtworks.xstream.XStream;
+
+import io.djigger.agent.InstrumentationError;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.subscription.CapturingSubscription;
 import io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription;
@@ -29,21 +62,6 @@ import io.djigger.ui.analyzer.Dashlet;
 import io.djigger.ui.common.CommandButton;
 import io.djigger.ui.common.FileChooserHelper;
 import io.djigger.ui.common.FileMetadata;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
 public class SubscriptionPane extends Dashlet {
 
@@ -52,7 +70,8 @@ public class SubscriptionPane extends Dashlet {
     private final Session parent;
 
     private JTable table;
-
+    private DefaultTableModel tableModel;
+    
     public SubscriptionPane(final Session parent) {
         super(new BorderLayout());
         this.parent = parent;
@@ -77,6 +96,11 @@ public class SubscriptionPane extends Dashlet {
             public void subscriptionChange() {
                 load();
             }
+
+			@Override
+			public void instrumentationError(InstrumentationError error) {
+				load();
+			}
         });
 
 //		JPopupMenu popupMenu = new JPopupMenu();
@@ -141,6 +165,59 @@ public class SubscriptionPane extends Dashlet {
 
         add(commandPanel, BorderLayout.SOUTH);
 
+        table.addMouseListener(new MouseListener() {
+			
+			@Override
+			public void mouseReleased(MouseEvent e) {
+			}
+			
+			@Override
+			public void mousePressed(MouseEvent e) {
+			}
+			
+			@Override
+			public void mouseExited(MouseEvent e) {
+			}
+			
+			@Override
+			public void mouseEntered(MouseEvent e) {
+			}
+			
+			@Override
+			public void mouseClicked(MouseEvent evt) {
+				int rowIndex = table.rowAtPoint(evt.getPoint());
+			    int colIndex = table.columnAtPoint(evt.getPoint());
+			    
+			    if(colIndex==2) {
+			    	System.out.println(table.getModel().getValueAt(rowIndex, colIndex));			    	
+			    }
+			}
+		});
+        
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+        
+        tableModel = new DefaultTableModel(new Object[][] {}, new Object[]{"ID", "Name", "Status", "Tagged"}) {
+            public Class getColumnClass(int c) {
+                switch (c) {
+                	case 0:
+                		return int.class;
+                    case 1:
+                        return InstrumentSubscription.class;
+                    case 2:
+                        return InstrumentSubscription.class;
+                    case 3:
+                        return boolean.class;
+                    default:
+                        throw new RuntimeException();
+                }
+            }
+        };
+        
+        table.setModel(tableModel);
+        
+        table.getColumnModel().getColumn(2).setPreferredWidth(20);
+        table.getColumnModel().getColumn(2).setCellRenderer(new InstrumentationErrorRenderer());
+        
         load();
     }
 
@@ -151,35 +228,62 @@ public class SubscriptionPane extends Dashlet {
             Object[][] data = new Object[subscriptions.size()][4];
             int i = 0;
             for (InstrumentSubscription subscription : subscriptions) {
-                data[i][0] = subscription;
-                data[i][1] = subscription.isTagEvent();
+            	data[i][0] = subscription.getId();
+            	data[i][1] = subscription;
+            	data[i][2] = subscription;
+                data[i][3] = subscription.isTagEvent();
+                
                 i++;
             }
 
-
-            DefaultTableModel model = new DefaultTableModel(data, new Object[]{"Name", "Tagged"}) {
-                public Class getColumnClass(int c) {
-                    switch (c) {
-                        case 0:
-                            return InstrumentSubscription.class;
-                        case 1:
-                            return boolean.class;
-                        case 2:
-                            return boolean.class;
-                        default:
-                            throw new RuntimeException();
-                    }
-                }
-            };
-
-            table.setModel(model);
+            tableModel.setDataVector(data, new Object[]{"ID", "Name", "Status", "Tagged"});
+            
+            table.getColumnModel().getColumn(2).setPreferredWidth(20);
+            table.getColumnModel().getColumn(2).setCellRenderer(new InstrumentationErrorRenderer());
         }
     }
+    
+	public class InstrumentationErrorRenderer extends JLabel implements TableCellRenderer {
+		
+		public InstrumentationErrorRenderer() {
+			setOpaque(true);
+		}
+
+		public Component getTableCellRendererComponent(JTable table, Object error_, boolean isSelected, boolean hasFocus,
+				int row, int column) {
+
+			setPreferredSize(new Dimension(10, 10));
+			
+			InstrumentSubscription subscription = (InstrumentSubscription) error_;
+
+            boolean hasError = false;
+            InstrumentationError firstError = null;
+            for (InstrumentationError instrumentationError : parent.getInstrumentationErrors()) {
+				if(instrumentationError.getSubscription() != null && instrumentationError.getSubscription().equals(subscription)) {
+					firstError = instrumentationError;
+					hasError = true;
+					break;
+				}
+			}
+            
+			if(hasError) {
+				setBackground(Color.RED);
+				String message = firstError.getException().getMessage();
+				setText(message);
+				setToolTipText(message);
+			} else {
+				setBackground(Color.GREEN);
+				setText("");
+				setToolTipText("Successfully instrumented");
+			}
+			return this;
+		}
+	}
 
     public Set<InstrumentSubscription> getSelection() {
         Set<InstrumentSubscription> result = new HashSet<InstrumentSubscription>();
         for (int i : table.getSelectedRows()) {
-            result.add((InstrumentSubscription) table.getValueAt(i, 0));
+            result.add((InstrumentSubscription) table.getValueAt(i, 1));
         }
         return result;
     }

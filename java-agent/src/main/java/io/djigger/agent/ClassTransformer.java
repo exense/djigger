@@ -36,11 +36,13 @@ public class ClassTransformer implements ClassFileTransformer {
 
     private static final Logger logger = LoggerFactory.getLogger(ClassTransformer.class);
 
+    private final InstrumentationErrorListener errorListener;
     private final InstrumentationService service;
 
-    ClassTransformer(InstrumentationService service) {
+    ClassTransformer(InstrumentationService service, InstrumentationErrorListener errorListener) {
         super();
         this.service = service;
+        this.errorListener = errorListener;
     }
 
     @Override
@@ -65,7 +67,13 @@ public class ClassTransformer implements ClassFileTransformer {
                                 if (logger.isDebugEnabled()) {
                                     logger.debug("Transforming method " + className + "." + method.getLongName());
                                 }
-                                subscription.transform(currentClass, method);
+                                
+                                try {
+                                	subscription.transform(currentClass, method);
+                                } catch (Throwable e) {
+                                    errorListener.onInstrumentationError(new InstrumentationError(subscription, className, e));
+                                    throw e;
+                                }
                                 transformed = true;
                             }
                         }

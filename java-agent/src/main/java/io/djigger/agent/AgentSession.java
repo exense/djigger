@@ -110,7 +110,12 @@ public class AgentSession implements MessageListener, MessageRouterStateListener
         mBeanCollector = new MBeanCollector(mBeanServer);
 
         sampler = new Sampler(new SamplerRunnable(threadInfoQueue, metricsQueue, mBeanCollector));
-        instrumentationService = new InstrumentationService(instrumentation);
+        instrumentationService = new InstrumentationService(instrumentation, new InstrumentationErrorListener() {
+			@Override
+			public void onInstrumentationError(InstrumentationError error) {
+				messageRouter.send(new Message(JavaAgentMessageType.INSTRUMENTATION_ERROR, error));
+			}
+		});
 
         messageRouter.start();
         sampler.start();

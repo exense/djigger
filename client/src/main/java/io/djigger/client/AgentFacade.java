@@ -22,6 +22,7 @@ package io.djigger.client;
 import io.denkbar.smb.core.Message;
 import io.denkbar.smb.core.MessageListener;
 import io.denkbar.smb.core.MessageRouter;
+import io.djigger.agent.InstrumentationError;
 import io.djigger.monitoring.java.agent.JavaAgentMessageType;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
@@ -97,6 +98,11 @@ public class AgentFacade extends Facade implements MessageListener {
             for (FacadeListener listener : listeners) {
                 listener.metricsReceived((List<Metric<?>>) msg.getContent());
             }
+        } else if (JavaAgentMessageType.INSTRUMENTATION_ERROR.equals(msg.getType())) {
+        	InstrumentationError error = (InstrumentationError) msg.getContent();
+            for (FacadeListener listener : listeners) {
+                listener.instrumentationErrorReceived(error);
+            }
         }
     }
 
@@ -141,6 +147,7 @@ public class AgentFacade extends Facade implements MessageListener {
         client.registerPermanentListener(JavaAgentMessageType.THREAD_SAMPLE, this);
         client.registerPermanentListener(JavaAgentMessageType.INSTRUMENT_SAMPLE, this);
         client.registerPermanentListener(JavaAgentMessageType.METRICS, this);
+        client.registerPermanentListener(JavaAgentMessageType.INSTRUMENTATION_ERROR, this);
     }
 
     @Override

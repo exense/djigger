@@ -19,7 +19,11 @@
  *******************************************************************************/
 package io.djigger.ui;
 
+import io.djigger.agent.InstrumentationError;
+
 public interface SessionListener {
 
     public void subscriptionChange();
+    
+    public void instrumentationError(InstrumentationError error);
 }

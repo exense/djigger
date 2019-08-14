@@ -39,6 +39,8 @@ public class JavaAgentMessageType {
 
     public static String INSTRUMENT_BATCH_INTERVAL = "INSTRUMENT_BATCH_INTERVAL";
 
+    public static String INSTRUMENTATION_ERROR = "INSTRUMENT_ERROR";
+    
     public static String INSTRUMENT_SAMPLE = "INSTRUMENT_SAMPLE";
 
     public static String THREAD_SAMPLE = "THREAD_SAMPLE";

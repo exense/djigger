@@ -20,6 +20,8 @@
 package io.djigger.collector.server;
 
 import com.mongodb.MongoException;
+
+import io.djigger.agent.InstrumentationError;
 import io.djigger.client.Facade;
 import io.djigger.client.FacadeListener;
 import io.djigger.collector.accessors.InstrumentationEventAccessor;
@@ -200,6 +202,11 @@ public class Server {
             @Override
             public void connectionClosed() {
             }
+
+			@Override
+			public void instrumentationErrorReceived(InstrumentationError error) {
+				logger.warn("Error while applying subscription "+error.getSubscription()+" on class "+error.getClassname(), error.getException());
+			}
         });
 
         client.setSamplingInterval(connectionConfig.getSamplingParameters().getSamplingRate());

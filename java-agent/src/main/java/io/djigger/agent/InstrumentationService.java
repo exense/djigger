@@ -35,14 +35,17 @@ public class InstrumentationService {
     private final Logger logger = Logger.getLogger(InstrumentationService.class.getName());
 
     private final Instrumentation instrumentation;
+    
+    private final InstrumentationErrorListener errorListener;
 
     private final Set<InstrumentSubscription> subscriptions = new HashSet<InstrumentSubscription>();
 
-    public InstrumentationService(Instrumentation instrumentation) {
+    public InstrumentationService(Instrumentation instrumentation, InstrumentationErrorListener errorListener) {
         super();
         this.instrumentation = instrumentation;
+        this.errorListener = errorListener;
 
-        ClassFileTransformer transformer = new ClassTransformer(this);
+        ClassFileTransformer transformer = new ClassTransformer(this, errorListener);
         instrumentation.addTransformer(transformer, true);
     }
 
@@ -87,8 +90,10 @@ public class InstrumentationService {
                     instrumentation.retransformClasses(clazz);
                 }
             } catch (UnmodifiableClassException e) {
+            	errorListener.onInstrumentationError(new InstrumentationError(subscription, clazz.getName(), e));
                 logger.log(Level.WARNING, "Agent: unable to apply subscription " + subscription.toString() + ". Class '" + clazz.getName() + "' unmodifiable.");
             } catch (Throwable e) {
+            	errorListener.onInstrumentationError(new InstrumentationError(subscription, clazz.getName(), e));
                 logger.log(Level.WARNING, "Agent: unable to apply subscription " + subscription.toString(), e);
             }
         }

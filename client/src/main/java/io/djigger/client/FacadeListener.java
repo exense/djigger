@@ -19,6 +19,7 @@
  *******************************************************************************/
 package io.djigger.client;
 
+import io.djigger.agent.InstrumentationError;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.model.ThreadInfo;
@@ -30,6 +31,8 @@ public interface FacadeListener {
     public void threadInfosReceived(List<ThreadInfo> threaddumps);
 
     public void instrumentationSamplesReceived(List<InstrumentationEvent> samples);
+    
+    public void instrumentationErrorReceived(InstrumentationError error);
 
     public void metricsReceived(List<Metric<?>> metrics);
 
