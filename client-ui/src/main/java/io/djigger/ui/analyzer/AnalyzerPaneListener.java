@@ -21,8 +21,10 @@ package io.djigger.ui.analyzer;
 
 import java.util.Set;
 
+import io.djigger.monitoring.java.model.GlobalThreadId;
+
 public interface AnalyzerPaneListener {
 
-    public void onSelection(Set<Long> selectedThreadIds);
+    public void onSelection(Set<GlobalThreadId> selectedThreadIds);
 
 }

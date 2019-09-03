@@ -19,19 +19,20 @@
  *******************************************************************************/
 package io.djigger.aggregation;
 
-import io.djigger.monitoring.java.model.ThreadInfo;
-import io.djigger.ui.model.RealNodePath;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import io.djigger.monitoring.java.model.GlobalThreadId;
+import io.djigger.monitoring.java.model.ThreadInfo;
+import io.djigger.ui.model.RealNodePath;
+
 public class Thread {
 
-    long id;
+	GlobalThreadId id;
 
     List<RealNodePathWrapper> realNodePathSequence = new ArrayList<>();
 
-    public Thread(long id, List<RealNodePathWrapper> realNodePathSequence) {
+    public Thread(GlobalThreadId id, List<RealNodePathWrapper> realNodePathSequence) {
         super();
         this.realNodePathSequence = realNodePathSequence;
         this.id = id;
@@ -45,11 +46,11 @@ public class Thread {
         this.realNodePathSequence = realNodePathSequence;
     }
 
-    public long getId() {
+    public GlobalThreadId getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(GlobalThreadId id) {
         this.id = id;
     }
 

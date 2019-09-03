@@ -22,6 +22,7 @@ package io.djigger.ui.analyzer;
 import io.djigger.aggregation.AnalyzerService;
 import io.djigger.aggregation.Thread.RealNodePathWrapper;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.model.GlobalThreadId;
 import io.djigger.sequencetree.SequenceTreeView;
 import io.djigger.ui.Session;
 import io.djigger.ui.Session.SessionType;
@@ -230,7 +231,7 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
         listeners.add(listener);
     }
 
-    public void fireSelection(Set<Long> selectedThreadIds) {
+    public void fireSelection(Set<GlobalThreadId> selectedThreadIds) {
         for (AnalyzerPaneListener listener : listeners) {
             listener.onSelection(selectedThreadIds);
         }

@@ -23,12 +23,10 @@ import java.lang.management.ThreadInfo;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.djigger.monitoring.java.model.GlobalThreadId;
+
 
 public class ThreadDumpHelper {
-
-    {
-        System.out.println("init");
-    }
 
     public static List<io.djigger.monitoring.java.model.ThreadInfo> toThreadDump(ThreadInfo[] threadInfos) {
         long timestamp = System.currentTimeMillis();
@@ -45,7 +43,7 @@ public class ThreadDumpHelper {
         i.setTimestamp(timestamp);
         i.setState(info.getThreadState());
         i.setName(info.getThreadName());
-        i.setId(info.getThreadId());
+        i.setGlobalId(new GlobalThreadId(null, info.getThreadId()));
         return i;
     }
 

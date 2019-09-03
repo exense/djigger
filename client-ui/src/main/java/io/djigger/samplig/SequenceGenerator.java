@@ -2,29 +2,31 @@ package io.djigger.samplig;
 
 import io.djigger.aggregation.Thread;
 import io.djigger.aggregation.Thread.RealNodePathWrapper;
+import io.djigger.monitoring.java.model.GlobalThreadId;
+import io.djigger.monitoring.java.model.ThreadInfo;
 
 import java.util.*;
 
 public class SequenceGenerator {
 
     public List<Thread> buildThreads(List<RealNodePathWrapper> threadInfos) {
-        Map<Long, List<RealNodePathWrapper>> threadInfoMap = groupByThreadId(threadInfos);
+        Map<GlobalThreadId, List<RealNodePathWrapper>> threadInfoMap = groupByGlobalThreadId(threadInfos);
         return createThreadList(threadInfoMap);
     }
 
-    private List<Thread> createThreadList(Map<Long, List<RealNodePathWrapper>> threadInfoMap) {
+    private List<Thread> createThreadList(Map<GlobalThreadId, List<RealNodePathWrapper>> threadInfoMap) {
         List<Thread> threads = new ArrayList<>();
-        for (Long threadId : threadInfoMap.keySet()) {
-            List<RealNodePathWrapper> entry = threadInfoMap.get(threadId);
+        for (GlobalThreadId globalThreadId : threadInfoMap.keySet()) {
+            List<RealNodePathWrapper> entry = threadInfoMap.get(globalThreadId);
             sortThreadInfosByTime(entry);
-            Thread thread = transformThreadInfoListToThread(threadId, entry);
+            Thread thread = transformThreadInfoListToThread(globalThreadId, entry);
             threads.add(thread);
         }
         return threads;
     }
 
-    private Thread transformThreadInfoListToThread(long threadId, List<RealNodePathWrapper> realNodePaths) {
-        Thread thread = new Thread(threadId, realNodePaths);
+    private Thread transformThreadInfoListToThread(GlobalThreadId globalThreadId, List<RealNodePathWrapper> realNodePaths) {
+        Thread thread = new Thread(globalThreadId, realNodePaths);
         return thread;
     }
 
@@ -37,14 +39,16 @@ public class SequenceGenerator {
         });
     }
 
-    private Map<Long, List<RealNodePathWrapper>> groupByThreadId(List<RealNodePathWrapper> paths) {
-        Map<Long, List<RealNodePathWrapper>> pathMap = new HashMap<>();
+    private Map<GlobalThreadId, List<RealNodePathWrapper>> groupByGlobalThreadId(List<RealNodePathWrapper> paths) {
+        Map<GlobalThreadId, List<RealNodePathWrapper>> pathMap = new HashMap<>();
 
         for (RealNodePathWrapper path : paths) {
-            List<RealNodePathWrapper> entry = pathMap.get(path.getThreadInfo().getId());
+            ThreadInfo threadInfo = path.getThreadInfo();
+            GlobalThreadId globalThreadId = threadInfo.getGlobalId();
+			List<RealNodePathWrapper> entry = pathMap.get(globalThreadId);
             if (entry == null) {
                 entry = new ArrayList<>();
-                pathMap.put(path.getThreadInfo().getId(), entry);
+                pathMap.put(globalThreadId, entry);
             }
             entry.add(path);
         }

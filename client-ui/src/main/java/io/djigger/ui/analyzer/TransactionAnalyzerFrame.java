@@ -19,6 +19,14 @@
  *******************************************************************************/
 package io.djigger.ui.analyzer;
 
+import java.awt.Dimension;
+import java.util.List;
+import java.util.UUID;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.UIManager;
+
 import io.djigger.aggregation.Thread.RealNodePathWrapper;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.ThreadInfo;
@@ -30,11 +38,6 @@ import io.djigger.ui.extensions.java.JavaBridge;
 import io.djigger.ui.instrumentation.InstrumentationStatisticsCache;
 import io.djigger.ui.model.InstrumentationEventWrapper;
 import io.djigger.ui.model.PseudoInstrumentationEvent;
-
-import javax.swing.*;
-import java.awt.*;
-import java.util.List;
-import java.util.UUID;
 
 public class TransactionAnalyzerFrame extends JPanel {
 
@@ -64,7 +67,7 @@ public class TransactionAnalyzerFrame extends JPanel {
 
                 @Override
                 public boolean isValid(ThreadInfo dump) {
-                    return (event.getThreadID() == dump.getId() &&
+                    return (event.getGlobalThreadId() == dump.getGlobalId() &&
                         event.getStart() <= dump.getTimestamp() && event.getEnd() >= dump.getTimestamp());
                 }
             }, new Filter<InstrumentationEvent>() {

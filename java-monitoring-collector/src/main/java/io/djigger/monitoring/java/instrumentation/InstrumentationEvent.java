@@ -21,6 +21,8 @@ package io.djigger.monitoring.java.instrumentation;
 
 import org.bson.types.ObjectId;
 
+import io.djigger.monitoring.java.model.GlobalThreadId;
+
 import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
@@ -46,8 +48,8 @@ public class InstrumentationEvent implements Serializable {
     private long start;
 
     private long duration;
-
-    private long threadID;
+    
+    private GlobalThreadId globalThreadId;
 
     private List<InstrumentationEventData> data;
 
@@ -103,15 +105,15 @@ public class InstrumentationEvent implements Serializable {
         return duration;
     }
 
-    public long getThreadID() {
-        return threadID;
-    }
+    public GlobalThreadId getGlobalThreadId() {
+		return globalThreadId;
+	}
 
-    public void setThreadID(long threadID) {
-        this.threadID = threadID;
-    }
+	public void setGlobalThreadId(GlobalThreadId globalThreadID) {
+		this.globalThreadId = globalThreadID;
+	}
 
-    public UUID getTransactionID() {
+	public UUID getTransactionID() {
         return transactionID;
     }
 

@@ -154,6 +154,8 @@ public class Server {
                 try {
                     for (ThreadInfo dump : threaddumps) {
                         dump.setAttributes(attributes);
+                        // enrich with the runtime ID. TODO: support agent side RuntimeID?
+                        dump.getGlobalId().setRuntimeId(client.getConnectionId());
                         threadInfoAccessor.save(dump);
                     }
                 } catch (Exception e) {
@@ -175,6 +177,8 @@ public class Server {
                             }
                         }
                     }
+                 // enrich with the runtime ID. TODO: support agent side RuntimeID?
+                    event.getGlobalThreadId().setRuntimeId(client.getConnectionId());
                     TaggedInstrumentationEvent taggedEvent;
                     if (tagEvent) {
                         taggedEvent = new TaggedInstrumentationEvent(attributes, event);

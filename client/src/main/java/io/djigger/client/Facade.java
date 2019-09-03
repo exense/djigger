@@ -87,7 +87,10 @@ public abstract class Facade {
 
     private static final Logger logger = LoggerFactory.getLogger(Facade.class);
 
-    private long runtimeID;
+    /**
+     * A unique ID of the connection
+     */
+    private final String connectionId;
 
     private boolean connected;
 
@@ -113,8 +116,7 @@ public abstract class Facade {
         super();
         this.properties = properties;
 
-        // TODO get this from a sequence to avoid collisions
-        this.runtimeID = System.currentTimeMillis();
+        this.connectionId = UUID.randomUUID().toString();
 
         this.connected = false;
         this.samplingRate = DEFAULT_RATE;
@@ -138,15 +140,11 @@ public abstract class Facade {
         }
     }
 
-    public long getRuntimeID() {
-        return runtimeID;
-    }
+    public String getConnectionId() {
+		return connectionId;
+	}
 
-    public void setRuntimeID(long runtimeID) {
-        this.runtimeID = runtimeID;
-    }
-
-    public Properties getProperties() {
+	public Properties getProperties() {
         return properties;
     }
 

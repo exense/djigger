@@ -426,7 +426,8 @@ public class Session extends JPanel implements FacadeListener, Closeable {
     }
 
     private void generatePseudoInstrumentationEvents() {
-        List<RealNodePathWrapper> realNodePaths = queryRealNodePaths();
+    	// Query all paths. Ignore the current filter here as the filter will be applied on the pseudo events
+        List<RealNodePathWrapper> realNodePaths = realNodePathCache.query(null);
 
         SequenceGenerator sequenceGenerator = new SequenceGenerator();
         List<io.djigger.aggregation.Thread> threads = sequenceGenerator.buildThreads(realNodePaths);
@@ -600,6 +601,8 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 
     @Override
     public void threadInfosReceived(List<ThreadInfo> threads) {
+    	// Update the global thread id with the runtime id of the facade
+    	threads.forEach(t->t.getGlobalId().setRuntimeId(getFacade().getConnectionId()));
         store.getThreadInfos().addAll(threads);
     }
 

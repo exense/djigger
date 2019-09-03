@@ -19,9 +19,17 @@
  *******************************************************************************/
 package io.djigger.sampling;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.Assert;
+import org.junit.Test;
+
 import io.djigger.aggregation.Thread;
 import io.djigger.aggregation.Thread.RealNodePathWrapper;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.model.GlobalThreadId;
 import io.djigger.monitoring.java.model.StackTraceElement;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.samplig.PseudoInstrumentationEventsGenerator;
@@ -29,12 +37,6 @@ import io.djigger.samplig.PseudoInstrumentationEventsGenerator.Listener;
 import io.djigger.ui.model.NodeID;
 import io.djigger.ui.model.PseudoInstrumentationEvent;
 import io.djigger.ui.model.RealNodePath;
-import org.junit.Assert;
-import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class InstrumentationEventsApproximatorTest {
 
@@ -91,7 +93,7 @@ public class InstrumentationEventsApproximatorTest {
 
     @Test
     public void test4() {
-        List<Thread> threads = threads(thread(new Object[][]{{"m1", "m2"}}, 1), thread(new Object[][]{{"m1", "m2"}}, 2));
+        List<Thread> threads = threads(thread(new Object[][]{{"m1", "m2"}}, new GlobalThreadId(null, 1)), thread(new Object[][]{{"m1", "m2"}}, new GlobalThreadId(null, 2)));
 
         final List<InstrumentationEvent> events = new ArrayList<>();
         PseudoInstrumentationEventsGenerator a = new PseudoInstrumentationEventsGenerator(new Listener() {
@@ -159,7 +161,7 @@ public class InstrumentationEventsApproximatorTest {
 
     private List<Thread> threads(Object[][] o) {
         List<Thread> threads = new ArrayList<>();
-        threads.add(thread(o, 0));
+        threads.add(thread(o, new GlobalThreadId(null, 0)));
         return threads;
     }
 
@@ -169,7 +171,7 @@ public class InstrumentationEventsApproximatorTest {
         return threads;
     }
 
-    private Thread thread(Object[][] o, long id) {
+    private Thread thread(Object[][] o, GlobalThreadId id) {
         List<RealNodePathWrapper> paths = new ArrayList<>();
         long t = 0;
         for (Object[] objects : o) {

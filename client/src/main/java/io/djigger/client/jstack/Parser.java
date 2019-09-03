@@ -19,11 +19,6 @@
  *******************************************************************************/
 package io.djigger.client.jstack;
 
-import io.djigger.monitoring.java.model.StackTraceElement;
-import io.djigger.monitoring.java.model.ThreadInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -35,6 +30,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.djigger.monitoring.java.model.GlobalThreadId;
+import io.djigger.monitoring.java.model.StackTraceElement;
+import io.djigger.monitoring.java.model.ThreadInfo;
 
 
 public class Parser {
@@ -154,7 +156,7 @@ public class Parser {
         }
 
         ThreadInfo thread = new ThreadInfo((StackTraceElement[]) stackTrace.toArray(new StackTraceElement[stackTrace.size()]));
-        thread.setId(id);
+        thread.setGlobalId(new GlobalThreadId(null, id));
         thread.setName(name);
         thread.setState(state);
         thread.setTimestamp(timestamp.getTime());

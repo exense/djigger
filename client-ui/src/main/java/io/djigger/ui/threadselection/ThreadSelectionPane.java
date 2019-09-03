@@ -19,8 +19,56 @@
  *******************************************************************************/
 package io.djigger.ui.threadselection;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.image.BufferedImage;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.Stack;
+
+import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.ScrollPaneLayout;
+import javax.swing.SwingConstants;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.EtchedBorder;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.djigger.model.Capture;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.model.GlobalThreadId;
 import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.ql.Filter;
@@ -31,19 +79,6 @@ import io.djigger.store.filter.StoreFilter;
 import io.djigger.ui.Session;
 import io.djigger.ui.analyzer.AnalyzerPaneListener;
 import io.djigger.ui.common.EnhancedTextField;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.EtchedBorder;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.BufferedImage;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.List;
 
 
 public class ThreadSelectionPane extends JPanel implements MouseMotionListener, MouseListener, KeyListener, ComponentListener, AnalyzerPaneListener {
@@ -204,9 +239,9 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
                 }
             });
 
-            Set<Long> selectedIds = getSelectedIds();
+            Set<GlobalThreadId> selectedIds = getSelectedIds();
 
-            HashMap<Long, ThreadBlock> blockMap = new HashMap<Long, ThreadBlock>();
+            HashMap<GlobalThreadId, ThreadBlock> blockMap = new HashMap<>();
 
             AggregateDefinition rangeDefinition;
             if (dumps.size() < 1000) {
@@ -220,7 +255,7 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
             int c = 0;
             for (ThreadInfo thread : dumps) {
                 c++;
-                Long threadId = thread.getId();
+                GlobalThreadId threadId = thread.getGlobalId();
                 ThreadBlock block = blockMap.get(threadId);
                 if (block == null) {
                     block = new ThreadBlock(this, threadId, thread.getName(), rangeDefinition);
@@ -242,11 +277,11 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 
             if (numberOfThreads > 0) {
                 int currentY = 0;
-                ArrayList<Long> sortedIds = new ArrayList<Long>(blockMap.size());
+                ArrayList<GlobalThreadId> sortedIds = new ArrayList<>(blockMap.size());
                 sortedIds.addAll(blockMap.keySet());
-                Collections.sort(sortedIds);
+                Collections.sort(sortedIds, Comparator.comparing(GlobalThreadId::getRuntimeId).thenComparing(GlobalThreadId::getThreadId));
 
-                for (Long id : sortedIds) {
+                for (GlobalThreadId id : sortedIds) {
                     ThreadBlock block = blockMap.get(id);
                     block.height = blockHeight;
                     block.width = wWidth;
@@ -525,8 +560,8 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 
     }
 
-    private Set<Long> getSelectedIds() {
-        Set<Long> selectedIds = new HashSet<Long>();
+    private Set<GlobalThreadId> getSelectedIds() {
+        Set<GlobalThreadId> selectedIds = new HashSet<>();
         for (ThreadBlock block : blocks) {
             if (block.selected) {
                 selectedIds.add(block.id);
@@ -539,7 +574,7 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
         StoreFilter filter;
         Selection currentSelection = selectionHistory.peek();
 
-        Set<Long> threadIdsFilter;
+        Set<GlobalThreadId> threadIdsFilter;
         if (filterThreads) {
             if (threadSelectionType == ThreadSelectionType.ALL) {
                 threadIdsFilter = null;
@@ -559,14 +594,14 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
         return filter;
     }
 
-    private StoreFilter timeStoreFilter(final Filter<ThreadInfo> threadnameFilter, final Set<Long> threadIds, final Long startDate, final Long endDate) {
+    private StoreFilter timeStoreFilter(final Filter<ThreadInfo> threadnameFilter, final Set<GlobalThreadId> threadIds, final Long startDate, final Long endDate) {
         return new StoreFilter(new Filter<ThreadInfo>() {
 
             @Override
             public boolean isValid(ThreadInfo thread) {
                 if ((startDate == null || thread.getTimestamp() > startDate)
                     && (endDate == null || thread.getTimestamp() < endDate)) {
-                    return ((threadIds == null || threadIds.contains(thread.getId())) &&
+                    return ((threadIds == null || threadIds.contains(thread.getGlobalId())) &&
                         (threadnameFilter == null || threadnameFilter.isValid(thread)));
                 } else {
                     return false;
@@ -576,7 +611,7 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 
             @Override
             public boolean isValid(InstrumentationEvent sample) {
-                return (threadIds == null || threadIds.contains(sample.getThreadID()))
+                return (threadIds == null || threadIds.contains(sample.getGlobalThreadId()))
                     && (startDate == null || sample.getStart() >= startDate)
                     && (endDate == null || sample.getEnd() <= endDate);
             }
@@ -729,7 +764,7 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
     }
 
     @Override
-    public void onSelection(Set<Long> selectedThreadIds) {
+    public void onSelection(Set<GlobalThreadId> selectedThreadIds) {
         for (ThreadBlock block : blocks) {
             block.selectedInAnalyzerPane = false;
         }

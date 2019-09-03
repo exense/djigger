@@ -22,6 +22,7 @@ package io.djigger.ui.instrumentation;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEventData;
 import io.djigger.monitoring.java.instrumentation.StringInstrumentationEventData;
+import io.djigger.monitoring.java.model.GlobalThreadId;
 import io.djigger.ql.Filter;
 import io.djigger.ql.FilterFactory;
 import io.djigger.ql.OQLFilterBuilder;
@@ -166,7 +167,7 @@ public class InstrumentationEventPane extends Dashlet {
                             return new Filter<InstrumentationEvent>() {
                                 @Override
                                 public boolean isValid(InstrumentationEvent input) {
-                                    return threadid == input.getThreadID();
+                                    return threadid == input.getGlobalThreadId().getThreadId();
                                 }
                             };
                         } else {
@@ -270,8 +271,8 @@ public class InstrumentationEventPane extends Dashlet {
             public void valueChanged(ListSelectionEvent e) {
                 if (sampleList.getSelectedRow() != -1) {
                     InstrumentationEvent event = samples.get(sampleList.convertRowIndexToModel(sampleList.getSelectedRow()));
-                    Set<Long> selectedThreadIds = new HashSet<>();
-                    selectedThreadIds.add(event.getThreadID());
+                    Set<GlobalThreadId> selectedThreadIds = new HashSet<>();
+                    selectedThreadIds.add(event.getGlobalThreadId());
                     parent.fireSelection(selectedThreadIds);
                 }
             }

@@ -19,17 +19,23 @@
  *******************************************************************************/
 package io.djigger.ui.instrumentation;
 
-import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.model.GlobalThreadId;
 
 
 public class InstrumentationStatistics implements Serializable {
@@ -46,8 +52,6 @@ public class InstrumentationStatistics implements Serializable {
 
     private final ArrayList<Sample> samples;
 
-    private final HashSet<Long> threadIds;
-
     private long totalTimeSpent;
 
     private int realCount;
@@ -60,7 +64,6 @@ public class InstrumentationStatistics implements Serializable {
         super();
         start = Long.MAX_VALUE;
         samples = new ArrayList<Sample>();
-        threadIds = new HashSet<Long>();
     }
 
     public InstrumentationStatistics(List<Sample> samples) {
@@ -85,10 +88,8 @@ public class InstrumentationStatistics implements Serializable {
         long duration = sample.getDuration();
         totalTimeSpent += duration;
         synchronized (samples) {
-            samples.add(new Sample(sample.getThreadID(), sample.getStart(), duration));
+            samples.add(new Sample(sample.getGlobalThreadId(), sample.getStart(), duration));
         }
-
-        threadIds.add(sample.getThreadID());
 
         averageResponseTime = null;
         throughput = null;
@@ -129,13 +130,13 @@ public class InstrumentationStatistics implements Serializable {
         private static final long serialVersionUID = 9177464584885284437L;
 
 
-        private final long threadId;
+        private final GlobalThreadId threadId;
 
         private final long time;
 
         private final long elapsed;
 
-        public Sample(long threadId, long start, long duration) {
+        public Sample(GlobalThreadId threadId, long start, long duration) {
             super();
             this.threadId = threadId;
             this.time = start;
@@ -150,7 +151,7 @@ public class InstrumentationStatistics implements Serializable {
             return elapsed;
         }
 
-        public long getThreadId() {
+        public GlobalThreadId getThreadId() {
             return threadId;
         }
 
@@ -180,10 +181,6 @@ public class InstrumentationStatistics implements Serializable {
         } finally {
             writer.close();
         }
-    }
-
-    public HashSet<Long> getThreadIds() {
-        return threadIds;
     }
 
 }

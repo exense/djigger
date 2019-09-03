@@ -21,6 +21,7 @@ package io.djigger.agent;
 
 import io.djigger.monitoring.eventqueue.EventQueue;
 import io.djigger.monitoring.java.instrumentation.*;
+import io.djigger.monitoring.java.model.GlobalThreadId;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.monitoring.java.sampling.ThreadDumpHelper;
 import org.bson.types.ObjectId;
@@ -115,7 +116,9 @@ public class InstrumentationEventCollector {
             event.setParentID(currentEvent.getId());
         }
 
-        event.setThreadID(Thread.currentThread().getId());
+        // TODO set the runtime ID on the collector side?
+        GlobalThreadId globalThreadId = new GlobalThreadId(null, Thread.currentThread().getId());
+        event.setGlobalThreadId(globalThreadId);
 
         transaction.pushEvent(event);
 

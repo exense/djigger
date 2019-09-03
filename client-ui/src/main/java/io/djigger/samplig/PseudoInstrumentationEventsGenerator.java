@@ -80,7 +80,7 @@ public class PseudoInstrumentationEventsGenerator {
                     PseudoInstrumentationEvent event = new PseudoInstrumentationEvent(element.getClassName(), element.getMethodName());
                     event.setId(new ObjectId());
                     event.setStart(threadInfo.getTimestamp());
-                    event.setThreadID(threadInfo.getId());
+                    event.setGlobalThreadId(threadInfo.getGlobalId());
 
                     if (event.getTransactionID() == null && subscriptions != null) {
                         for (InstrumentSubscription subscription : subscriptions) {
@@ -105,7 +105,7 @@ public class PseudoInstrumentationEventsGenerator {
                         }
                     }
 
-                    ThreadInfo clone = new ThreadInfo(Arrays.copyOfRange(threadInfo.getStackTrace(), threadInfo.getStackTrace().length - i - 1, threadInfo.getStackTrace().length), threadInfo.getId(),
+                    ThreadInfo clone = new ThreadInfo(Arrays.copyOfRange(threadInfo.getStackTrace(), threadInfo.getStackTrace().length - i - 1, threadInfo.getStackTrace().length), threadInfo.getGlobalId(),
                         threadInfo.getTimestamp());
 
                     event.setThreadInfo(clone);

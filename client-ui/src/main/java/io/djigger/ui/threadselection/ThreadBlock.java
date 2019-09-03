@@ -19,17 +19,20 @@
  *******************************************************************************/
 package io.djigger.ui.threadselection;
 
-import io.djigger.monitoring.java.model.ThreadInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.lang.Thread.State;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.djigger.monitoring.java.model.GlobalThreadId;
+import io.djigger.monitoring.java.model.ThreadInfo;
 
 
 class ThreadBlock {
@@ -50,7 +53,7 @@ class ThreadBlock {
 
     private final ThreadSelectionPane threadSelectionGraphPane;
 
-    final Long id;
+    final GlobalThreadId id;
 
     private final String name;
 
@@ -80,7 +83,7 @@ class ThreadBlock {
 
     private int sampleCount = 0;
 
-    ThreadBlock(ThreadSelectionPane threadSelectionGraphPane, Long id, String name, AggregateDefinition rangeDefinition) {
+    ThreadBlock(ThreadSelectionPane threadSelectionGraphPane, GlobalThreadId id, String name, AggregateDefinition rangeDefinition) {
         super();
         this.threadSelectionGraphPane = threadSelectionGraphPane;
         this.id = id;

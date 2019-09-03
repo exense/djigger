@@ -59,7 +59,7 @@ public class SequenceTreeService {
 
             @Override
             public boolean isValid(InstrumentationEvent input) {
-                return pseudoEvent.getThreadID() == input.getThreadID() && pseudoEvent.getStart() <= input.getStart() && pseudoEvent.getEnd() >= input.getEnd();
+                return pseudoEvent.getGlobalThreadId() == input.getGlobalThreadId() && pseudoEvent.getStart() <= input.getStart() && pseudoEvent.getEnd() >= input.getEnd();
             }
         });
     }

@@ -64,7 +64,8 @@ public class InstrumentationEventDetailsPane extends JDialog {
         data.add(addEntry("Event ID:", event.getId().toString()));
         data.add(addEntry("Transaction ID:", event.getTransactionID() != null ? event.getTransactionID().toString() : ""));
 
-        data.add(addEntry("Thread ID:", Long.toString(event.getThreadID())));
+        data.add(addEntry("Runtime ID:", event.getGlobalThreadId().getRuntimeId()));
+        data.add(addEntry("Thread ID:", Long.toString(event.getGlobalThreadId().getThreadId())));
         data.add(addEntry("Start:", format.format(new Date(event.getStart()))));
         data.add(addEntry("Duration (ms):", Double.toString(event.getDuration() / 1000000.0)));
         data.add(addEntry("Classname: ", event.getClassname()));

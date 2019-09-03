@@ -27,7 +27,7 @@ public class ThreadInfo implements Serializable {
 
     private long timestamp;
 
-    private long id;
+    private GlobalThreadId globalId;
 
     private String name;
 
@@ -45,9 +45,9 @@ public class ThreadInfo implements Serializable {
         this.stackTrace = stackTrace;
     }
 
-    public ThreadInfo(StackTraceElement[] stackTrace, long id, long timestamp) {
+    public ThreadInfo(StackTraceElement[] stackTrace, GlobalThreadId globalId, long timestamp) {
         super();
-        this.id = id;
+        this.globalId = globalId;
         this.stackTrace = stackTrace;
         this.timestamp = timestamp;
     }
@@ -72,15 +72,15 @@ public class ThreadInfo implements Serializable {
         this.attributes = attributes;
     }
 
-    public long getId() {
-        return id;
-    }
+	public GlobalThreadId getGlobalId() {
+		return globalId;
+	}
 
-    public void setId(long id) {
-        this.id = id;
-    }
+	public void setGlobalId(GlobalThreadId globalId) {
+		this.globalId = globalId;
+	}
 
-    public String getName() {
+	public String getName() {
         return name;
     }
 

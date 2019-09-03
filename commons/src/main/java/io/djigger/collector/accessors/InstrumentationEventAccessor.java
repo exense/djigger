@@ -19,17 +19,17 @@
  *******************************************************************************/
 package io.djigger.collector.accessors;
 
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
-import com.mongodb.client.MongoDatabase;
-import io.djigger.collector.accessors.stackref.AbstractAccessor;
-import io.djigger.model.TaggedInstrumentationEvent;
-import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
-import io.djigger.monitoring.java.instrumentation.InstrumentationEventData;
-import io.djigger.monitoring.java.instrumentation.InstrumentationEventWithThreadInfo;
-import io.djigger.monitoring.java.instrumentation.StringInstrumentationEventData;
-import io.djigger.monitoring.java.model.StackTraceElement;
-import io.djigger.monitoring.java.model.ThreadInfo;
+import static com.mongodb.client.model.Filters.and;
+import static com.mongodb.client.model.Filters.gt;
+import static com.mongodb.client.model.Filters.lt;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
+
 import org.bson.BsonArray;
 import org.bson.BsonString;
 import org.bson.Document;
@@ -38,9 +38,19 @@ import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
 
-import static com.mongodb.client.model.Filters.*;
+import io.djigger.collector.accessors.stackref.AbstractAccessor;
+import io.djigger.model.TaggedInstrumentationEvent;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEventData;
+import io.djigger.monitoring.java.instrumentation.InstrumentationEventWithThreadInfo;
+import io.djigger.monitoring.java.instrumentation.StringInstrumentationEventData;
+import io.djigger.monitoring.java.model.GlobalThreadId;
+import io.djigger.monitoring.java.model.StackTraceElement;
+import io.djigger.monitoring.java.model.ThreadInfo;
 
 public class InstrumentationEventAccessor extends AbstractAccessor {
 
@@ -126,7 +136,8 @@ public class InstrumentationEventAccessor extends AbstractAccessor {
                 event.setStart(doc.getDate("start").getTime());
                 event.setDuration(doc.getLong("duration"));
                 event.setId(doc.getObjectId("_id"));
-                event.setThreadID(doc.getLong("threadid"));
+                GlobalThreadId globalThreadId = new GlobalThreadId(doc.getString("rid"), doc.getLong("threadid"));
+                event.setGlobalThreadId(globalThreadId);
                 event.setParentID(doc.getObjectId("parentid"));
 //				event.setTransactionID((UUID) doc.get("trid"));
                 event.setTransactionID(UUID.fromString(doc.getString("trid")));
@@ -194,7 +205,8 @@ public class InstrumentationEventAccessor extends AbstractAccessor {
         doc.append("method", event.getMethodname());
         doc.append("start", new Date(event.getStart()));
         doc.append("duration", event.getDuration());
-        doc.append("threadid", event.getThreadID());
+        doc.append("threadid", event.getGlobalThreadId().getThreadId());
+        doc.append("rid", event.getGlobalThreadId().getRuntimeId());
         doc.append("trid", event.getTransactionID().toString());
         doc.append("_id", event.getId());
         doc.append("parentid", event.getParentID());

@@ -26,6 +26,7 @@ import com.mongodb.client.model.CountOptions;
 import io.djigger.collector.accessors.ThreadInfoAccessor;
 import io.djigger.collector.accessors.stackref.dbmodel.StackTraceElementEntry;
 import io.djigger.collector.accessors.stackref.dbmodel.StackTraceEntry;
+import io.djigger.monitoring.java.model.GlobalThreadId;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -117,7 +118,8 @@ public class ThreadInfoAccessorImpl extends AbstractAccessor implements ThreadIn
                         ThreadInfo info = new ThreadInfo(StackTraceElementEntry.fromEntries(s.getElements()));
                         info.setTimestamp(dbo.getDate("timestamp").getTime());
                         info.setName(dbo.getString("name"));
-                        info.setId(dbo.getLong("id"));
+                        GlobalThreadId globalThreadId = new GlobalThreadId(dbo.getString("rid"), dbo.getLong("id"));
+                        info.setGlobalId(globalThreadId);
                         info.setState(State.valueOf(dbo.getString("state")));
 
                         if (dbo.containsKey("trid")) {
@@ -164,7 +166,8 @@ public class ThreadInfoAccessorImpl extends AbstractAccessor implements ThreadIn
         Document o = new Document();
         o.putAll(threadInfo.getAttributes());
         o.put("stackTraceID", id);
-        o.put("id", threadInfo.getId());
+        o.put("id", threadInfo.getGlobalId().getThreadId());
+        o.put("rid", threadInfo.getGlobalId().getRuntimeId());
         o.put("name", threadInfo.getName());
         o.put("state", threadInfo.getState());
         o.put("timestamp", new Date(threadInfo.getTimestamp()));

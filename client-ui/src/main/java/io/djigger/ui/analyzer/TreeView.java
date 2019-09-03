@@ -19,22 +19,29 @@
  *******************************************************************************/
 package io.djigger.ui.analyzer;
 
-import io.djigger.aggregation.Thread.RealNodePathWrapper;
-import io.djigger.ui.model.AnalysisNode;
-import io.djigger.ui.model.RealNodeAggregation;
-
-import javax.swing.*;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
-import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.TreePath;
-import java.awt.*;
+import java.awt.Component;
+import java.awt.GridLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.swing.InputMap;
+import javax.swing.JScrollPane;
+import javax.swing.JTree;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.TreePath;
+
+import io.djigger.aggregation.Thread.RealNodePathWrapper;
+import io.djigger.monitoring.java.model.GlobalThreadId;
+import io.djigger.ui.model.AnalysisNode;
+import io.djigger.ui.model.RealNodeAggregation;
 
 
 @SuppressWarnings("serial")
@@ -127,14 +134,14 @@ public class TreeView extends AnalyzerPane implements TreeSelectionListener {
         }
     }
 
-    private Set<Long> getSelectedThreadsIds() {
-        HashSet<Long> result = new HashSet<Long>();
+    private Set<GlobalThreadId> getSelectedThreadsIds() {
+        HashSet<GlobalThreadId> result = new HashSet<>();
 
         AnalysisNode selectedNode = getSelectedNode();
         if (selectedNode != null) {
             for (RealNodeAggregation aggregation : selectedNode.getAggregations()) {
                 for (RealNodePathWrapper sample : aggregation.getAggregation().getSamples()) {
-                    result.add(sample.getThreadInfo().getId());
+                    result.add(sample.getThreadInfo().getGlobalId());
                 }
             }
         }
