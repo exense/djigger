@@ -34,7 +34,6 @@
 				<include>io.djigger:java-agent</include>
 			</includes>
 			<binaries>
-				<attachmentClassifier>jar-with-dependencies</attachmentClassifier>
 				<outputDirectory>agent</outputDirectory>
 				<outputFileNameMapping>javaagent.jar</outputFileNameMapping>
 				<unpack>false</unpack>

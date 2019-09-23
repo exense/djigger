@@ -51,30 +51,35 @@
 			</plugin>
 
 			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<version>2.6</version>
-				<configuration>
-					<archive>
-						<manifestEntries>
-							<Agent-Class>io.djigger.agent.Agent</Agent-Class>
-							<Premain-Class>io.djigger.agent.Agent</Premain-Class>
-							<Can-Retransform-Classes>true</Can-Retransform-Classes>
-							See
-							http://www.ibm.com/developerworks/forums/thread.jspa?messageID=14798074
-						</manifestEntries>
-					</archive>
-					<appendAssemblyId>true</appendAssemblyId>
-					<descriptorRefs>
-						<descriptorRef>jar-with-dependencies</descriptorRef>
-					</descriptorRefs>
-				</configuration>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.2.1</version>
 				<executions>
 					<execution>
-						<id>make-assembly</id>
 						<phase>package</phase>
 						<goals>
-							<goal>single</goal>
+							<goal>shade</goal>
 						</goals>
+						<configuration>
+							<transformers>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<manifestEntries>
+										<Agent-Class>io.djigger.agent.Agent</Agent-Class>
+										<Premain-Class>io.djigger.agent.Agent</Premain-Class>
+										<!-- See http://www.ibm.com/developerworks/forums/thread.jspa?messageID=14798074 -->
+										<Can-Retransform-Classes>true</Can-Retransform-Classes>
+									</manifestEntries>
+								</transformer>
+							</transformers>
+							<relocations>
+								<!-- Relocating javassist to avoid conflicts with the instrumented application that might also depend on javassist -->
+								<relocation>
+									<pattern>javassist</pattern>
+									<shadedPattern>shaded.javassist</shadedPattern>
+								</relocation>
+							</relocations>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
