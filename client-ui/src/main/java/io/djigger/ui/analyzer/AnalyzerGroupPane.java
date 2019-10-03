@@ -206,8 +206,8 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
         addTab(blockPane, "Block view", true);
         BlockView testPane = new BlockView(this, TreeType.REVERSE);
         addTab(testPane, "Reverse block view", true);
-        if (parent.getSessionType() != SessionType.JMX && parent.getSessionType() != SessionType.FILE) {
-            addInstrumentationEventPane();
+        addInstrumentationEventPane();
+        if (parent.getSessionType() == SessionType.AGENT) {
             addSubscriptionPane();
         }
         addMetricsPane();
