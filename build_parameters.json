@@ -30,7 +30,7 @@
 		],
 		"DESTINATION_NAME":[
 			"djigger-${VERSION}.zip",
-			"djigger-${VERSION}.zip"
+			"djigger:${VERSION}"
 		],
 		
 		"URL_STAGING":[
