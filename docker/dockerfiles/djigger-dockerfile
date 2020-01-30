@@ -1,0 +1,5 @@
+FROM exense/step:k8s-base-latest
+MAINTAINER jonathan.rubiero@exense.ch
+COPY . /home/djigger/
+WORKDIR /home/djigger/bin/
+CMD ./startCollector.sh
