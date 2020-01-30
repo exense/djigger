@@ -1,0 +1,35 @@
+{
+	"NAME": "Djigger",
+	"OS": "LINUX",
+	
+	"SUBPROJECTS":
+	{
+		"TYPE":		["POM"],
+		"FOLDER":	["parent/"],
+		
+		"URL_STAGING":	[
+			"nexus-staging::https://nexus-enterprise.exense.ch/repository/staging-maven/"
+		],
+		"URL_QA":		[ 
+			"nexus-staging::https://nexus-enterprise.exense.ch/repository/staging-maven/"
+		],
+		"URL_PROD":		[ 
+			"nexus-staging::https://nexus-enterprise.exense.ch/repository/staging-maven/"
+		],
+		
+		"CONFIG_STAGING": [ "DefaultBuild"],
+		"CONFIG_QA": [ "DefaultBuild"], 
+		"CONFIG_PROD": [ "DefaultBuild"]
+	},
+	"DISTRIBUTIONS": { 
+		"TYPE":["FTP"],
+		"ORIGIN_FILE":["distribution/target/djigger-${VERSION}.zip"],
+		"DESTINATION_NAME":["djigger-${VERSION}.zip"],
+		
+		"URL_STAGING":["build@ftps.exense.ch"],
+		"URL_QA":["build@ftps.exense.ch"],
+		"URL_PROD":["build@ftps.exense.ch"],
+		
+		"OS":["NOT_USED"],
+		"CONFIG":["public"] }
+}
