@@ -45,7 +45,6 @@
 			"build@ftps.exense.ch",
 			"docker-dev.exense.ch"
 		],
-		
 		"OS":["NOT_USED","LINUX"],
 		"CONFIG":["public","djigger-dockerfile"] 
 	}
