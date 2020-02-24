@@ -34,6 +34,11 @@
 			<url>http://exense.ch/</url>
 		</developer>
 	</developers>
+	<scm>
+		<connection>scm:git:https://github.com/exense/djigger/</connection>
+		<developerConnection>scm:git:https://github.com/exense/djigger.git</developerConnection>
+		<url>https://github.com/exense/djigger/</url>
+	</scm>
 	
 	<properties>
 		<smb.version>1.8</smb.version>
