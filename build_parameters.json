@@ -7,18 +7,10 @@
 		"TYPE":		["POM"],
 		"FOLDER":	["parent/"],
 		
-		"URL_STAGING":	[
-			"nexus-staging::https://nexus-enterprise.exense.ch/repository/staging-maven/"
-		],
-		"URL_QA":		[ 
-			"nexus-staging::https://nexus-enterprise.exense.ch/repository/staging-maven/"
-		],
-		"URL_PROD":		[ 
-			"nexus-staging::https://nexus-enterprise.exense.ch/repository/staging-maven/"
-		],
+		"URL_STAGING":	["nexus-staging::https://nexus-enterprise.exense.ch/repository/staging-maven/"],
+		"URL_PROD":		  ["sonatype::https://oss.sonatype.org/service/local/staging/deploy/maven2"],
 		
 		"CONFIG_STAGING": [ "DefaultBuild"],
-		"CONFIG_QA": [ "DefaultBuild"], 
 		"CONFIG_PROD": [ "DefaultBuild"]
 	},
 	"DISTRIBUTIONS": { 
@@ -34,10 +26,6 @@
 		],
 		
 		"URL_STAGING":[
-			"build@ftps.exense.ch",
-			"docker-dev.exense.ch"
-		],
-		"URL_QA":[
 			"build@ftps.exense.ch",
 			"docker-dev.exense.ch"
 		],
