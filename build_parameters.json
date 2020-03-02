@@ -14,26 +14,30 @@
 		"CONFIG_PROD": [ "DefaultBuild"]
 	},
 	"DISTRIBUTIONS": { 
-		"TYPE":["FTP", "DOCKER"],
+		"TYPE":["FTP", "GITHUB", "DOCKER"],
 		
 		"ORIGIN_FILE":[
+			"distribution/target/djigger-${VERSION}.zip",
 			"distribution/target/djigger-${VERSION}.zip",
 			"distribution/target/djigger-${VERSION}.zip"
 		],
 		"DESTINATION_NAME":[
+			"djigger-${VERSION}.zip",
 			"djigger-${VERSION}.zip",
 			"djigger:${VERSION}"
 		],
 		
 		"URL_STAGING":[
 			"build@ftps.exense.ch",
+      "NOT_USED",
 			"docker-dev.exense.ch"
 		],
 		"URL_PROD":[
 			"build@ftps.exense.ch",
-			"docker-dev.exense.ch"
+      "exense/djigger",
+			"docker.exense.ch"
 		],
-		"OS":["NOT_USED","LINUX"],
-		"CONFIG":["public","djigger-dockerfile"] 
+		"OS":["NOT_USED","NOT_USED","LINUX"],
+		"CONFIG":["public","NOT_USED","djigger-dockerfile"] 
 	}
 }
