@@ -8,7 +8,7 @@
 		"FOLDER":	["parent/"],
 		
 		"URL_STAGING":	["nexus-staging::https://nexus-enterprise.exense.ch/repository/staging-maven/"],
-		"URL_PROD":		  ["sonatype::https://oss.sonatype.org/service/local/staging/deploy/maven2"],
+		"URL_PROD":		  ["nexus-exense::https://nexus-enterprise.exense.ch/repository/exense/"],
 		
 		"CONFIG_STAGING": [ "DefaultBuild"],
 		"CONFIG_PROD": [ "DefaultBuild"]
