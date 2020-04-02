@@ -22,7 +22,7 @@
 			"distribution/target/djigger-${VERSION}.zip"
 		],
 		"DESTINATION_NAME":[
-			"djigger-${VERSION}.zip",
+			"djigger/${VERSION}/djigger-${VERSION}.zip",
 			"djigger-${VERSION}.zip",
 			"djigger:${VERSION}"
 		],
