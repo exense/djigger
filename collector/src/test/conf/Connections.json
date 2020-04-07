@@ -1,0 +1,86 @@
+[
+  {
+    "attributes": {
+      "server": "MyServer1",
+      "foo": "bar1"
+    },
+    "connectionClass": "io.djigger.client.AgentFacade",
+    "connectionProperties": {
+      "host": "localhost",
+      "port": 12121
+    },
+    "samplingParameters": {
+      "samplingRate": 10000
+    },
+    "metrics": {
+      "mBeans": {
+        "mBeanAttributes": [
+          "java.lang:*"
+        ]
+      }
+    },
+    "subscriptions": [
+      {
+        "@class": "io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription",
+        "classNamePattern": ".*djigger.*",
+        "methodNamePattern": "refreshAll",
+        "tagEvent": true
+      },
+      {"@class": "io.djigger.monitoring.java.instrumentation.subscription.SQLConnectionTracer"},
+      {"@class": "io.djigger.monitoring.java.instrumentation.subscription.SQLStatementTracer"},
+      {"@class": "io.djigger.monitoring.java.instrumentation.subscription.SQLPreparedStatementTracer"}
+    ]
+  },
+   {
+    "attributes": {
+      "server": "MyServer2",
+      "foo": "bar2"
+    },
+    "connectionClass": "io.djigger.client.AgentFacade",
+    "connectionProperties": {
+      "host": "localhost",
+      "port": 12122
+    },
+    "samplingParameters": {
+      "samplingRate": 10000
+    },
+    "metrics": {
+      "mBeans": {
+        "mBeanAttributes": [
+          "java.lang:*"
+        ]
+      }
+    },
+    "subscriptionFiles": [
+    	"./src/test/conf/Subscriptions.json"
+    ],
+    "subscriptions": [
+      {"@class": "io.djigger.monitoring.java.instrumentation.subscription.SQLStatementTracer"},
+      {"@class": "io.djigger.monitoring.java.instrumentation.subscription.SQLPreparedStatementTracer"}
+    ]
+  },
+   {
+    "attributes": {
+      "server": "MyServer3",
+      "foo": "bar3"
+    },
+    "connectionClass": "io.djigger.client.AgentFacade",
+    "connectionProperties": {
+      "host": "localhost",
+      "port": 12123
+    },
+    "samplingParameters": {
+      "samplingRate": 10000
+    },
+    "metrics": {
+      "mBeans": {
+        "mBeanAttributes": [
+          "java.lang:*"
+        ]
+      }
+    },
+    "subscriptionFiles": [
+    	"./src/test/conf/SubscriptionsAll.json"
+    ]
+  }
+]

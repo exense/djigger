@@ -1,0 +1,11 @@
+[
+  {
+    "@class": "io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription",
+    "classNamePattern": ".*djigger.*",
+    "methodNamePattern": "refreshAll",
+    "tagEvent": true
+  },
+  {"@class": "io.djigger.monitoring.java.instrumentation.subscription.SQLConnectionTracer"},
+  {"@class": "io.djigger.monitoring.java.instrumentation.subscription.SQLStatementTracer"},
+  {"@class": "io.djigger.monitoring.java.instrumentation.subscription.SQLPreparedStatementTracer"}
+]

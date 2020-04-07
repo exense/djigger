@@ -74,8 +74,9 @@ public class Configurator {
                 throw new Exception("Invalid connections config file : " + connectionsConfigFiles + ". Check your -DconnectionsConfig option.");
 
 
-            if (connectionsFile.trim().toLowerCase().endsWith(".xml"))
+            if (connectionsFile.trim().toLowerCase().endsWith(".xml")) {
                 ccList.add(parseConnectionsXML(connectionsFile));
+            }
             else if (connectionsFile.trim().toLowerCase().endsWith(".json"))
                 ccList.add(parseConnectionsJson(connectionsFile));
             else {
@@ -188,6 +189,49 @@ public class Configurator {
             throw new RuntimeException("Unable to load " + connectionsConfigFilename, e);
         }
     }
+    
+    public static List<InstrumentSubscription> parseSubscriptionsFiles(List<String> subscriptionsFiles) throws Exception {
+    	if (subscriptionsFiles == null || subscriptionsFiles.size() < 1)
+    		return null;
+    	List<InstrumentSubscription> isList = new ArrayList<InstrumentSubscription>();
+    	for (String subscriptionsFile : subscriptionsFiles) {
+    		if (subscriptionsFile == null || subscriptionsFile.trim().isEmpty())
+    			throw new Exception("Invalid subscriptions config file : " + subscriptionsFile);
+
+
+    		if (subscriptionsFile.trim().toLowerCase().endsWith(".xml"))
+    			isList.addAll(parseSubscriptionsXML(subscriptionsFile));
+    		else if (subscriptionsFile.trim().toLowerCase().endsWith(".json"))
+    			isList.addAll(parseSubscriptionsJson(subscriptionsFile));
+    		else {
+    			throw new Exception("Invalid subscriptions file extension (only xml and json are supported): " + subscriptionsFile);
+    		}
+    	}
+
+    	logger.info("Parsed the following files:" + subscriptionsFiles);
+    	logger.info("Which loaded the following subscriptions definitions:" + isList);
+
+    	return isList;
+    }
+    
+    private static List<InstrumentSubscription> parseSubscriptionsXML(String subscriptionsConfigFilename) {
+        try {
+            XStream xstream = new XStream();
+            // [dcransac] Only Connections / Groups
+            //xstream.alias("Group", ConnectionGroup.class);
+            xstream.alias("subscriptions", List.class);
+            //xstream.processAnnotations(Connection.class);
+            //xstream.processAnnotations(SamplingParameters.class);*/
+
+            List<InstrumentSubscription> is = (List<InstrumentSubscription>) xstream.fromXML(new File(subscriptionsConfigFilename));
+
+            return is;
+
+        } catch (Exception e) {
+            logger.error("Unable to load " + subscriptionsConfigFilename, e);
+            throw new RuntimeException("Unable to load " + subscriptionsConfigFilename, e);
+        }
+    }
 
     private static ConnectionsConfig parseConnectionsJson(String connectionsConfigFilename) {
 
@@ -207,6 +251,27 @@ public class Configurator {
             return cc;
         } catch (IOException e) {
             String errorMsg = "Error while reading connection file: " + connectionsConfigFilename;
+            logger.error(errorMsg, e);
+            throw new RuntimeException(errorMsg, e);
+        }
+
+    }
+    
+    private static List<InstrumentSubscription> parseSubscriptionsJson(String subscriptionsConfigFilename) {
+
+        ConnectionsConfig cc = new ConnectionsConfig();
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.addMixIn(InstrumentSubscription.class, InstrumentSubscriptionMixin.class);
+
+        JavaType type = mapper.getTypeFactory().constructCollectionType(List.class, InstrumentSubscription.class);
+
+        List<InstrumentSubscription> subscriptions;
+        try {
+            subscriptions = mapper.readValue(new File(subscriptionsConfigFilename), type);
+            return subscriptions;
+        } catch (IOException e) {
+            String errorMsg = "Error while reading subscription file: " + subscriptionsConfigFilename;
             logger.error(errorMsg, e);
             throw new RuntimeException(errorMsg, e);
         }

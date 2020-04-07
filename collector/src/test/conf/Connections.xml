@@ -1,0 +1,67 @@
+<Group>
+	<attributes/>
+	<groups>
+		<!-- All subsciptions inline -->
+		<Connection connectionClass="io.djigger.client.AgentFacade">
+			<samplingParameters samplingRate="100"/>
+			<connectionProperties>
+				<property name="host" value="localhost"/>
+				<property name="port" value="12121"/>
+				<property name="username" value=""/>
+				<property name="password" value=""/>
+			</connectionProperties>
+			<subscriptions>
+				<io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
+					<classNamePattern>
+						<pattern>.*SQLTracerTest</pattern>
+						<flags>0</flags>
+					</classNamePattern>
+					<methodNamePattern>
+						<pattern>.*</pattern>
+						<flags>0</flags>
+					</methodNamePattern>
+					<tagEvent>true</tagEvent>
+				</io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
+				<io.djigger.monitoring.java.instrumentation.subscription.SQLConnectionTracer/>
+				<io.djigger.monitoring.java.instrumentation.subscription.SQLStatementTracer/>
+				<io.djigger.monitoring.java.instrumentation.subscription.SQLPreparedStatementTracer/>
+			</subscriptions>
+			<attributes/>
+		</Connection>
+		
+		<!-- Partial subscription in SubscriptionsFiles -->
+		<Connection connectionClass="io.djigger.client.AgentFacade">
+			<samplingParameters samplingRate="100"/>
+			<connectionProperties>
+				<property name="host" value="localhost"/>
+				<property name="port" value="12122"/>
+				<property name="username" value=""/>
+				<property name="password" value=""/>
+			</connectionProperties>
+			<subscriptionFiles>
+				<string>./src/test/conf/Subscriptions.xml</string>
+			</subscriptionFiles>
+			<subscriptions>
+				<io.djigger.monitoring.java.instrumentation.subscription.SQLStatementTracer/>
+				<io.djigger.monitoring.java.instrumentation.subscription.SQLPreparedStatementTracer/>
+			</subscriptions>
+			<attributes/>
+		</Connection>
+		
+		<!-- All subscription in SubscriptionsFiles -->
+		<Connection connectionClass="io.djigger.client.AgentFacade">
+			<samplingParameters samplingRate="100"/>
+			<connectionProperties>
+				<property name="host" value="localhost"/>
+				<property name="port" value="12123"/>
+				<property name="username" value=""/>
+				<property name="password" value=""/>
+			</connectionProperties>
+			<subscriptionFiles>
+				<string>./src/test/conf/SubscriptionsAll.xml</string>
+			</subscriptionFiles>
+			<attributes/>
+		</Connection>
+
+	</groups>
+</Group>

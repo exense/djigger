@@ -84,7 +84,7 @@ public class Server {
         }
     }
 
-    private void processGroup(Map<String, String> attributeStack, ConnectionGroupNode groupNode) {
+    protected void processGroup(Map<String, String> attributeStack, ConnectionGroupNode groupNode) {
         HashMap<String, String> attributes = new HashMap<>();
         if (attributeStack != null) {
             attributes.putAll(attributeStack);
@@ -102,6 +102,7 @@ public class Server {
         if (groupNode instanceof Connection) {
             Connection connectionParam = (Connection) groupNode;
             try {
+            	mergeSubscriptions(connectionParam);
                 Facade client = createClient(attributes, connectionParam);
                 synchronized (clients) {
                     clients.add(new ClientConnection(client, attributes));
@@ -110,6 +111,17 @@ public class Server {
                 logger.error("An error occurred while creating client " + connectionParam.toString(), e);
             }
         }
+    }
+    
+    private void mergeSubscriptions(Connection connectionParam) throws Exception {
+    	List<InstrumentSubscription> subsFromFile = Configurator.parseSubscriptionsFiles(connectionParam.getSubscriptionFiles());
+    	if (subsFromFile != null) {
+	    	if (connectionParam.getSubscriptions() != null) {
+	    		connectionParam.getSubscriptions().addAll(subsFromFile);
+	    	} else {
+	    		connectionParam.setSubscriptions(subsFromFile);
+	    	}
+    	}
     }
 
     private void initAccessors(CollectorConfig config) throws Exception {

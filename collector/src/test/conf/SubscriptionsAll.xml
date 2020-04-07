@@ -1,0 +1,16 @@
+<subscriptions>
+	<io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
+		<classNamePattern>
+			<pattern>.*SQLTracerTest</pattern>
+			<flags>0</flags>
+		</classNamePattern>
+		<methodNamePattern>
+			<pattern>.*</pattern>
+			<flags>0</flags>
+		</methodNamePattern>
+		<tagEvent>true</tagEvent>
+	</io.djigger.monitoring.java.instrumentation.subscription.RegexSubscription>
+	<io.djigger.monitoring.java.instrumentation.subscription.SQLConnectionTracer />
+	<io.djigger.monitoring.java.instrumentation.subscription.SQLStatementTracer />
+	<io.djigger.monitoring.java.instrumentation.subscription.SQLPreparedStatementTracer />
+</subscriptions>

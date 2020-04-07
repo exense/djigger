@@ -40,6 +40,8 @@ public class Connection implements ConnectionGroupNode {
     private MetricCollectionConfiguration metrics;
 
     private List<InstrumentSubscription> subscriptions;
+    
+    List<String> subscriptionFiles;
 
     private Map<String, String> attributes;
 
@@ -73,6 +75,14 @@ public class Connection implements ConnectionGroupNode {
 
     public void setSubscriptions(List<InstrumentSubscription> subscriptions) {
         this.subscriptions = subscriptions;
+    }
+    
+    public List<String> getSubscriptionFiles() {
+        return subscriptionFiles;
+    }
+
+    public void setSubscriptionFiles(List<String> subscriptionFiles) {
+        this.subscriptionFiles = subscriptionFiles;
     }
 
     public MetricCollectionConfiguration getMetrics() {
