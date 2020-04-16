@@ -258,7 +258,7 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
                 GlobalThreadId threadId = thread.getGlobalId();
                 ThreadBlock block = blockMap.get(threadId);
                 if (block == null) {
-                    block = new ThreadBlock(this, threadId, thread.getName(), rangeDefinition);
+                    block = new ThreadBlock(this, threadId, thread.getName(), thread.getAttributes(), rangeDefinition);
                     blockMap.put(threadId, block);
                 }
                 block.add(thread.getTimestamp(), thread);
@@ -457,6 +457,9 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
                 if (capture != null) {
                     captureInfos = ", Sampling interval (ms): " + capture.getSamplingInterval();
                 }
+            }
+            if(mouseOverBlock.getAttributes() != null) {
+            	labelStr.append(mouseOverBlock.getAttributes().toString());
             }
             labelStr.append(mouseOverBlock.label + " [" + currentNumberOfThreadDumps + " thread dumps" + captureInfos + "]");
             if (!hintLabel.getText().equals(labelStr)) {

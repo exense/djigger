@@ -56,8 +56,10 @@ class ThreadBlock {
     final GlobalThreadId id;
 
     private final String name;
+    
+    private Map<String, String> attributes;
 
-    String label;
+	String label;
 
     int x;
 
@@ -83,11 +85,12 @@ class ThreadBlock {
 
     private int sampleCount = 0;
 
-    ThreadBlock(ThreadSelectionPane threadSelectionGraphPane, GlobalThreadId id, String name, AggregateDefinition rangeDefinition) {
+    ThreadBlock(ThreadSelectionPane threadSelectionGraphPane, GlobalThreadId id, String name, Map<String, String> attributes, AggregateDefinition rangeDefinition) {
         super();
         this.threadSelectionGraphPane = threadSelectionGraphPane;
         this.id = id;
         this.name = name;
+        this.attributes = attributes;
         this.label = name;
 
         this.rangeDefinition = rangeDefinition;
@@ -208,4 +211,13 @@ class ThreadBlock {
     private ThreadSelectionPane getOuterType() {
         return this.threadSelectionGraphPane;
     }
+    
+
+    public Map<String, String> getAttributes() {
+		return attributes;
+	}
+
+	public void setAttributes(Map<String, String> attributes) {
+		this.attributes = attributes;
+	}
 }
