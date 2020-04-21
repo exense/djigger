@@ -16,7 +16,10 @@
       "mBeans": {
         "mBeanAttributes": [
           "java.lang:*"
-        ]
+        ],
+        "mBeanExclusionAttributes": [
+			"java.lang:type=Runtime"
+		]
       }
     },
     "subscriptions": [

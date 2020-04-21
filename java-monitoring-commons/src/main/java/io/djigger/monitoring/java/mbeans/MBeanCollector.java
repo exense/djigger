@@ -60,6 +60,11 @@ public class MBeanCollector {
                 registerMBeanAttribute(mBeanAttribute);
             }
         }
+        if (configuration.getmBeanExclusionAttributes() != null) {
+            for (String mBeanAttributeExclusion : configuration.getmBeanExclusionAttributes()) {
+                registerMBeanAttributeExclusion(mBeanAttributeExclusion);
+            }
+        }
         if (configuration.getmBeanOperations() != null) {
             for (MBeanOperation mBeanOperation : configuration.getmBeanOperations()) {
                 registerMBeanOperation(mBeanOperation);

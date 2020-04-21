@@ -44,6 +44,9 @@ import java.util.*;
 public class Configurator {
 
     private static final Logger logger = LoggerFactory.getLogger(Configurator.class);
+    
+    private static String mBeansAttributesKey = "mBeanAttributes";
+    private static String mBeansExclusionAttributesKey = "mBeanExclusionAttributes";
 
     public static CollectorConfig parseCollectorConfiguration(String collConfigFilename) throws Exception {
 
@@ -312,16 +315,26 @@ public class Configurator {
 
         connection.setConnectionProperties(connectionProperties);
         connection.setSamplingParameters(sp);
-        connection.setAttributes(attributes);
+        
         connection.setConnectionClass(JMXClientFacade.class.getCanonicalName());
 
         // Add java.lang MBeans per default. 
-        // TODO: make this configurable
+        String[] mBeansAttributes = {"java.lang:*"};
+        String[] mBeansExclusionAttributes = {};
+        mBeansAttributes = (attributes.containsKey(Configurator.mBeansAttributesKey)) ?
+        		attributes.remove(Configurator.mBeansAttributesKey).split(",") : mBeansAttributes; 
+        mBeansExclusionAttributes = (attributes.containsKey(Configurator.mBeansExclusionAttributesKey)) ?
+        		attributes.remove(Configurator.mBeansExclusionAttributesKey).split(",") : mBeansExclusionAttributes;
+        		
         MBeanCollectorConfiguration mBeanCollectorConf = new MBeanCollectorConfiguration();
-        mBeanCollectorConf.addMBeanAttribute("java.lang:*");
+        mBeanCollectorConf.addMBeanAttributes(mBeansAttributes);
+        mBeanCollectorConf.addMBeanExclusionAttributes(mBeansExclusionAttributes);
+        
         MetricCollectionConfiguration metricCollectionConf = new MetricCollectionConfiguration();
         metricCollectionConf.setmBeans(mBeanCollectorConf);
         connection.setMetrics(metricCollectionConf);
+        
+        connection.setAttributes(attributes);
         
         return connection;
     }
