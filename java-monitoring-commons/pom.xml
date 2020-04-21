@@ -32,12 +32,6 @@
 			<artifactId>javassist</artifactId>
 			<version>3.20.0-GA</version>
 		</dependency>
-		<dependency>
-			<groupId>org.mongodb</groupId>
-			<artifactId>bson</artifactId>
-			<version>3.2.2</version>
-		</dependency>
-
 		<!-- TEST Dependencies -->
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>

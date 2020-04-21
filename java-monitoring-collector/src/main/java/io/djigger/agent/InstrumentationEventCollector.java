@@ -59,7 +59,7 @@ public class InstrumentationEventCollector {
             ObjectId parentId = new ObjectId(tracer);
             Transaction tr = getCurrentTransaction();
             if (tr != null) {
-                tr.setParentId(parentId);
+                tr.setParentId(parentId.toHexString());
             } else {
                 // TODO warning
             }
@@ -106,7 +106,7 @@ public class InstrumentationEventCollector {
         }
 
         event.setSubscriptionID(subscriptionId);
-        event.setId(new ObjectId());
+        event.setId(new ObjectId().toHexString());
 
         Transaction transaction = getCurrentTransaction();
         if (transaction == null) {

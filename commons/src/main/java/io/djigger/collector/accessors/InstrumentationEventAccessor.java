@@ -135,10 +135,11 @@ public class InstrumentationEventAccessor extends AbstractAccessor {
 
                 event.setStart(doc.getDate("start").getTime());
                 event.setDuration(doc.getLong("duration"));
-                event.setId(doc.getObjectId("_id"));
+                event.setId(doc.getObjectId("_id").toHexString());
                 GlobalThreadId globalThreadId = new GlobalThreadId(doc.getString("rid"), doc.getLong("threadid"));
                 event.setGlobalThreadId(globalThreadId);
-                event.setParentID(doc.getObjectId("parentid"));
+                ObjectId parentId = doc.getObjectId("parentid"); 
+                event.setParentID((parentId != null) ? parentId.toHexString() : null);
 //				event.setTransactionID((UUID) doc.get("trid"));
                 event.setTransactionID(UUID.fromString(doc.getString("trid")));
 
@@ -208,8 +209,8 @@ public class InstrumentationEventAccessor extends AbstractAccessor {
         doc.append("threadid", event.getGlobalThreadId().getThreadId());
         doc.append("rid", event.getGlobalThreadId().getRuntimeId());
         doc.append("trid", event.getTransactionID().toString());
-        doc.append("_id", event.getId());
-        doc.append("parentid", event.getParentID());
+        doc.append("_id", new ObjectId(event.getId()));
+        doc.append("parentid", (event.getParentID() != null) ? new ObjectId(event.getParentID()) : null);
         if (taggedEvent.getTags() != null) {
             doc.append("tagged", true);
             doc.putAll(taggedEvent.getTags());

@@ -78,7 +78,7 @@ public class PseudoInstrumentationEventsGenerator {
                 if (attachment instanceof StackTraceElement) {
                     StackTraceElement element = (StackTraceElement) attachment;
                     PseudoInstrumentationEvent event = new PseudoInstrumentationEvent(element.getClassName(), element.getMethodName());
-                    event.setId(new ObjectId());
+                    event.setId((new ObjectId()).toHexString());
                     event.setStart(threadInfo.getTimestamp());
                     event.setGlobalThreadId(threadInfo.getGlobalId());
 

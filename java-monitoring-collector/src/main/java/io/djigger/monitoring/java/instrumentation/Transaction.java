@@ -30,7 +30,7 @@ public class Transaction {
 
     private UUID id;
 
-    private ObjectId parentId;
+    private String parentId;
 
     private Stack<InstrumentationEvent> eventStack = new Stack<InstrumentationEvent>();
 
@@ -56,11 +56,11 @@ public class Transaction {
         return id;
     }
 
-    public ObjectId getParentId() {
+    public String getParentId() {
         return parentId;
     }
 
-    public void setParentId(ObjectId parentId) {
+    public void setParentId(String parentId) {
         this.parentId = parentId;
     }
 

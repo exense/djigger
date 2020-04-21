@@ -32,6 +32,9 @@ import io.djigger.ui.common.NodePresentationHelper;
 import io.djigger.ui.model.PseudoInstrumentationEvent;
 
 import javax.swing.*;
+
+import org.bson.types.ObjectId;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -145,7 +148,7 @@ public abstract class SequenceTreePane extends JPanel implements ActionListener 
     public void drillDown() {
         SequenceTreeNode node = getSelectedNode();
         if (node != null) {
-            parent.addDrilldownPane(node.getEvent().getId());
+            parent.addDrilldownPane(new ObjectId(node.getEvent().getId()));
         }
     }
 

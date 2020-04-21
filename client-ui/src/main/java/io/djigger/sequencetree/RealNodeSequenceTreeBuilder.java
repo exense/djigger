@@ -33,13 +33,13 @@ public class RealNodeSequenceTreeBuilder {
         Map<ObjectId, InstrumentationEventNode> nodeIndex = new HashMap<>();
 
         for (InstrumentationEvent event : events) {
-            nodeIndex.put(event.getId(), new InstrumentationEventNode(event));
+            nodeIndex.put(new ObjectId(event.getId()), new InstrumentationEventNode(event));
         }
 
         InstrumentationEventNode lastNode = null;
         for (InstrumentationEventNode node : nodeIndex.values()) {
             InstrumentationEvent event = node.getEvent();
-            InstrumentationEventNode parent = nodeIndex.get(event.getParentID());
+            InstrumentationEventNode parent = nodeIndex.get(new ObjectId(event.getParentID()));
             if (parent != null && parent != node) {
                 node.setParent(parent);
                 parent.add(node);

@@ -33,9 +33,9 @@ public class InstrumentationEvent implements Serializable {
 
     private static final long serialVersionUID = 347226760314494168L;
 
-    private ObjectId id;
+    private String id;
 
-    private ObjectId parentID;
+    private String parentID;
 
     private int subscriptionID;
 
@@ -121,19 +121,19 @@ public class InstrumentationEvent implements Serializable {
         this.transactionID = transactionID;
     }
 
-    public ObjectId getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(ObjectId id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    public ObjectId getParentID() {
+    public String getParentID() {
         return parentID;
     }
 
-    public void setParentID(ObjectId parentID) {
+    public void setParentID(String parentID) {
         this.parentID = parentID;
     }
 

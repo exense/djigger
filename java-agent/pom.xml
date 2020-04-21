@@ -38,6 +38,7 @@
 									<artifactId>java-monitoring-collector</artifactId>
 									<version>${project.version}</version>
 									<type>jar</type>
+									<classifier>shaded</classifier>
 									<overWrite>false</overWrite>
 									<outputDirectory>${project.basedir}/src/main/resources</outputDirectory>
 									<destFileName>collector.jar</destFileName>
@@ -73,10 +74,18 @@
 								</transformer>
 							</transformers>
 							<relocations>
-								<!-- Relocating javassist to avoid conflicts with the instrumented application that might also depend on javassist -->
+								<!-- Relocating external libs to avoid conflicts with the instrumented application that might also depend on them -->
 								<relocation>
 									<pattern>javassist</pattern>
 									<shadedPattern>shaded.javassist</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>org.bson</pattern>
+									<shadedPattern>shaded.org.bson</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>org.slf4j</pattern>
+									<shadedPattern>shaded.org.slf4j</shadedPattern>
 								</relocation>
 							</relocations>
 						</configuration>
@@ -89,11 +98,6 @@
 		<dependency>
 			<groupId>io.djigger</groupId>
 			<artifactId>java-monitoring-commons</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.djigger</groupId>
-			<artifactId>java-monitoring-collector</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>

@@ -21,13 +21,33 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>2.3</version>
+				<version>3.2.1</version>
 				<executions>
 					<execution>
 						<phase>package</phase>
 						<goals>
 							<goal>shade</goal>
 						</goals>
+						<configuration>
+							<shadedClassifierName>shaded</shadedClassifierName>
+						 	<shadedArtifactAttached>true</shadedArtifactAttached>
+							<transformers>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<manifestEntries>
+										<!-- See http://www.ibm.com/developerworks/forums/thread.jspa?messageID=14798074 -->
+										<Can-Retransform-Classes>true</Can-Retransform-Classes>
+									</manifestEntries>
+								</transformer>
+							</transformers>
+							<relocations>
+								<!-- Relocating external libs to avoid conflicts with the instrumented application that might also depend on them -->
+								<relocation>
+									<pattern>org.bson</pattern>
+									<shadedPattern>shaded.org.bson</shadedPattern>
+								</relocation>
+							</relocations>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
