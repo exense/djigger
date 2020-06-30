@@ -132,7 +132,7 @@ public abstract class Facade {
                             restoreSession();
                         }
                     } catch (Exception e) {
-                        logger.debug("Unable to reconnect facade " + properties.toString(), e);
+                        logger.warn("Unable to reconnect facade " + properties.toString(), e);
                     }
                 }
 

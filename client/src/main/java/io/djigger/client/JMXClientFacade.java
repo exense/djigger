@@ -141,7 +141,7 @@ public class JMXClientFacade extends Facade implements NotificationListener {
         String username = properties.getProperty(Parameters.USERNAME);
         String password = properties.getProperty(Parameters.PASSWORD);
 
-        logger.info("Creating JMX connection to " + host + ":" + port);
+        logger.info("Attempting to create JMX connection to " + host + ":" + port);
 
         String urlPath = "/jndi/rmi://" + host + ":" + port + "/jmxrmi";
         JMXServiceURL url = new JMXServiceURL("rmi", "", 0, urlPath);
@@ -162,6 +162,8 @@ public class JMXClientFacade extends Facade implements NotificationListener {
         if (metricCollectionConfiguration != null) {
             mBeanCollector.configure(metricCollectionConfiguration.getmBeans());
         }
+        
+        logger.info("JMX connection to " + host + ":" + port + " created");
     }
 
     @Override
