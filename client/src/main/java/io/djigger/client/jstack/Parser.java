@@ -28,6 +28,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -107,7 +108,8 @@ public class Parser {
             }
         } else {
             if (matcher.find()) {
-                stackTrace.add(new StackTraceElement(matcher.group(1), matcher.group(2), "", 0));
+                final int lineNumber = Optional.ofNullable(matcher.group(3)).map(Integer::parseInt).orElse(0);
+                stackTrace.add(new StackTraceElement(matcher.group(1), matcher.group(2), "", lineNumber));
             } else if (separatorMatcher.find()) {
                 if (stackTrace.size() > 0) {
                     listener.onThreadParsed(toThread(startMatcher, threadStateFound, stateMatcher, stackTrace, date));
@@ -195,7 +197,7 @@ public class Parser {
             Pattern.compile("JNI global ref"),
             Pattern.compile("\"(.+?)\".+prio=[0-9]+.* tid=(.+?) nid=.+"),
             Pattern.compile("java\\.lang\\.Thread\\.State: (.+?) "),
-            Pattern.compile("at (.*)\\.(.+?)\\(.*\\)"), //(((.*):([0-9]*))*
+            Pattern.compile("at (.*)\\.(.+?)\\(.*?(?::(\\d+))?\\)"),
             Pattern.compile("^[ \t]*$")),
 
 		/* JSTACK(
@@ -210,7 +212,7 @@ public class Parser {
             Pattern.compile("Current thread stacks for server"),
             Pattern.compile("\"((.+?))\""),
             Pattern.compile("\".+?\".* ([A-Z_]+)$"),
-            Pattern.compile("^[\t ]*(.*)\\.(.+?)\\(.+\\)$"),
+            Pattern.compile("^[\t ]*(.*)\\.(.+?)\\(.*?(?::(\\d+))?\\)$"),
             Pattern.compile("\".+?\""));
 
         private final Pattern threadDumpStartPattern;
