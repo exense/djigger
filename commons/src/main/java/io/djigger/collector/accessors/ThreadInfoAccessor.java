@@ -17,7 +17,7 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package ch.exense.djigger.collector.accessors;
+package io.djigger.collector.accessors;
 
 import io.djigger.monitoring.java.model.ThreadInfo;
 import org.bson.conversions.Bson;

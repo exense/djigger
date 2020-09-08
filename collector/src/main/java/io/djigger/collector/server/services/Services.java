@@ -17,7 +17,7 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package ch.exense.djigger.collector.server.services;
+package io.djigger.collector.server.services;
 
 import ch.exense.commons.core.server.Registrable;
 import ch.exense.commons.core.web.container.ServerContext;

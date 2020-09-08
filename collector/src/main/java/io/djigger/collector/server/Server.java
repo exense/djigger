@@ -21,10 +21,10 @@ package io.djigger.collector.server;
 
 import ch.exense.commons.core.web.container.ServerContext;
 
-import ch.exense.djigger.collector.accessors.*;
 import io.djigger.agent.InstrumentationError;
 import io.djigger.client.Facade;
 import io.djigger.client.FacadeListener;
+import io.djigger.collector.accessors.*;
 import io.djigger.collector.accessors.stackref.ThreadInfoAccessorImpl;
 import io.djigger.collector.accessors.stackref.dbmodel.StackTraceEntry;
 import io.djigger.collector.accessors.stackref.dbmodel.ThreadInfoEntry;

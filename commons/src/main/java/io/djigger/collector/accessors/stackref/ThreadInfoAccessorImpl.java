@@ -21,9 +21,9 @@ package io.djigger.collector.accessors.stackref;
 
 import com.mongodb.MongoExecutionTimeoutException;
 import com.mongodb.client.model.CountOptions;
-import ch.exense.djigger.collector.accessors.StackTraceAccessor;
-import ch.exense.djigger.collector.accessors.ThreadDumpAccessor;
-import ch.exense.djigger.collector.accessors.ThreadInfoAccessor;
+import io.djigger.collector.accessors.StackTraceAccessor;
+import io.djigger.collector.accessors.ThreadDumpAccessor;
+import io.djigger.collector.accessors.ThreadInfoAccessor;
 import io.djigger.collector.accessors.stackref.dbmodel.StackTraceElementEntry;
 import io.djigger.collector.accessors.stackref.dbmodel.StackTraceEntry;
 import io.djigger.collector.accessors.stackref.dbmodel.ThreadInfoEntry;

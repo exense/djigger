@@ -17,7 +17,7 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package ch.exense.djigger.collector.accessors;
+package io.djigger.collector.accessors;
 
 import ch.exense.commons.core.mongo.MongoClientSession;
 import ch.exense.commons.core.mongo.accessors.generic.AbstractCRUDAccessor;

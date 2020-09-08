@@ -17,7 +17,7 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package ch.exense.djigger.collector.accessors;
+package io.djigger.collector.accessors;
 
 import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.gt;
@@ -30,14 +30,10 @@ import ch.exense.commons.core.mongo.accessors.generic.AbstractCRUDAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.bson.BsonDocument;
-import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 
 import io.djigger.model.TaggedInstrumentationEvent;
 

@@ -1,8 +1,7 @@
-package ch.exense.djigger.collector.server;
+package io.djigger.collector.server;
 
 import ch.exense.commons.core.server.AbstractStandardServer;
 import ch.exense.commons.core.web.container.ServerContext;
-import io.djigger.collector.server.Server;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
