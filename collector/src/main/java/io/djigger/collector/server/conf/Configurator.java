@@ -51,12 +51,11 @@ public class Configurator {
     public static CollectorConfig parseCollectorConfiguration(String collConfigFilename) throws Exception {
 
         if (collConfigFilename == null || collConfigFilename.trim().isEmpty())
-            throw new Exception("Invalid collector config file : " + collConfigFilename + ". Check your -DcollectorConfig option.");
+            throw new Exception("Invalid collector config file : " + collConfigFilename + ". Check your property 'io.djigger.collector.configFile' in your config properties file.");
 
         try {
             XStream xstream = new XStream();
             xstream.alias("Collector", CollectorConfig.class);
-            xstream.processAnnotations(MongoDBParameters.class);
             return (CollectorConfig) xstream.fromXML(new File(collConfigFilename));
         } catch (Exception e) {
             String errorMessage = "XStream could not load the collector's config file located at " + collConfigFilename + ". Exception message was : " + e.getMessage();

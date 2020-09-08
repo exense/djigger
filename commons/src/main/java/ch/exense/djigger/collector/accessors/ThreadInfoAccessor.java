@@ -17,7 +17,7 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.collector.accessors;
+package ch.exense.djigger.collector.accessors;
 
 import io.djigger.monitoring.java.model.ThreadInfo;
 import org.bson.conversions.Bson;
@@ -27,8 +27,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public interface ThreadInfoAccessor {
-
-    public void createIndexesIfNeeded(Long ttl);
 
     public Iterable<ThreadInfo> query(Bson mongoQuery, Date from, Date to);
 

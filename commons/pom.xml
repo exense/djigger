@@ -15,9 +15,14 @@
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.mongodb</groupId>
-			<artifactId>mongo-java-driver</artifactId>
-			<version>3.2.2</version>
+			<groupId>ch.exense.commons</groupId>
+			<artifactId>exense-core-mongo</artifactId>
+			<version>${commons.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>ch.exense.commons</groupId>
+			<artifactId>exense-core-server</artifactId>
+			<version>${commons.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>

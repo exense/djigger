@@ -622,8 +622,8 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
 
             @Override
             public boolean isValid(Metric<?> sample) {
-                return (startDate == null || sample.getTime() >= startDate)
-                    && (endDate == null || sample.getTime() <= endDate);
+                return (startDate == null || sample.getTime().getTime() >= startDate)
+                    && (endDate == null || sample.getTime().getTime() <= endDate);
             }
         });
     }

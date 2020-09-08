@@ -19,10 +19,8 @@
  *******************************************************************************/
 package io.djigger.db.client;
 
-import io.djigger.collector.accessors.InstrumentationEventAccessor;
-import io.djigger.collector.accessors.MetricAccessor;
-import io.djigger.collector.accessors.MongoConnection;
-import io.djigger.collector.accessors.ThreadInfoAccessor;
+import ch.exense.commons.core.mongo.MongoClientSession;
+import ch.exense.djigger.collector.accessors.*;
 import io.djigger.collector.accessors.stackref.ThreadInfoAccessorImpl;
 
 public class StoreClient {
@@ -33,12 +31,17 @@ public class StoreClient {
 
     MetricAccessor metricAccessor;
 
-    public void connect(String host, int port, String user, String password) throws Exception {
-        MongoConnection connection = new MongoConnection();
-        connection.connect(host, port, user, password);
-        threadInfoAccessor = new ThreadInfoAccessorImpl(connection.getDb());
-        instrumentationAccessor = new InstrumentationEventAccessor(connection.getDb());
-        metricAccessor = new MetricAccessor(connection);
+    public void connect(String host, int port, String user, String password, String dbName) throws Exception {
+        //Make sure we don't try to connect with credentials when user is ""
+        if (user!=null && user.equals("")) {
+            user=null;
+        }
+        MongoClientSession mongoClientSession = new MongoClientSession(host, port, user, password, 20, dbName);
+        ThreadDumpAccessor threadDumpAccessor = new ThreadDumpAccessor(mongoClientSession);
+        StackTraceAccessor stackTraceAccessor = new StackTraceAccessor(mongoClientSession);
+        threadInfoAccessor = new ThreadInfoAccessorImpl(threadDumpAccessor, stackTraceAccessor);
+        instrumentationAccessor = new InstrumentationEventAccessor(mongoClientSession);
+        metricAccessor = new MetricAccessor(mongoClientSession);
     }
 
     public ThreadInfoAccessor getThreadInfoAccessor() {

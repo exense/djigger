@@ -19,18 +19,16 @@
  *******************************************************************************/
 package io.djigger.collector.server;
 
-import com.mongodb.MongoException;
+import ch.exense.commons.core.web.container.ServerContext;
 
+import ch.exense.djigger.collector.accessors.*;
 import io.djigger.agent.InstrumentationError;
 import io.djigger.client.Facade;
 import io.djigger.client.FacadeListener;
-import io.djigger.collector.accessors.InstrumentationEventAccessor;
-import io.djigger.collector.accessors.MetricAccessor;
-import io.djigger.collector.accessors.MongoConnection;
-import io.djigger.collector.accessors.ThreadInfoAccessor;
 import io.djigger.collector.accessors.stackref.ThreadInfoAccessorImpl;
+import io.djigger.collector.accessors.stackref.dbmodel.StackTraceEntry;
+import io.djigger.collector.accessors.stackref.dbmodel.ThreadInfoEntry;
 import io.djigger.collector.server.conf.*;
-import io.djigger.collector.server.services.ServiceServer;
 import io.djigger.model.TaggedInstrumentationEvent;
 import io.djigger.model.TaggedMetric;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
@@ -47,14 +45,9 @@ public class Server {
 
     private static final Logger logger = LoggerFactory.getLogger(Server.class);
 
-    public static void main(String[] args) throws Exception {
-        Server server = new Server();
-        server.start();
-    }
+    private ThreadDumpAccessor threadDumpAccessor;
 
-    private MongoConnection mongodbConnection;
-
-    private ThreadInfoAccessor threadInfoAccessor;
+    private StackTraceAccessor stackTraceAccessor;
 
     private InstrumentationEventAccessor instrumentationEventsAccessor;
 
@@ -62,22 +55,35 @@ public class Server {
 
     private List<ClientConnection> clients = new ArrayList<>();
 
-    private ServiceServer serviceServer;
+    private ServerContext context;
 
-    public void start() throws Exception {
+    public void start(ServerContext context) throws Exception {
         try {
-
-            String collConfigFilename = System.getProperty("collectorConfig");
+            this.context = context;
+            String collConfigFilename = context.getConfiguration().getProperty("io.djigger.collector.configFile","conf/Collector.xml");
 
             CollectorConfig config = Configurator.parseCollectorConfiguration(collConfigFilename);
             ConnectionsConfig cc = Configurator.parseConnectionsConfiguration(config.getConnectionFiles());
 
-            initAccessors(config);
+            //initAccessors(config);
+            Long ttl = config.getDataTTL();
+
+            threadDumpAccessor = (ThreadDumpAccessor) context.get(ThreadInfoEntry.class.getName());
+            threadDumpAccessor.createIndexesIfNeeded(ttl);
+
+            stackTraceAccessor = (StackTraceAccessor) context.get(StackTraceEntry.class.getName());
+            stackTraceAccessor.createIndexesIfNeeded(ttl);
+
+            ThreadInfoAccessorImpl threadInfoAccessor = new ThreadInfoAccessorImpl(threadDumpAccessor, stackTraceAccessor);
+            context.put(ThreadInfoAccessor.class, threadInfoAccessor);
+
+            instrumentationEventsAccessor = (InstrumentationEventAccessor) context.get(TaggedInstrumentationEvent.class.getName());
+            instrumentationEventsAccessor.createIndexesIfNeeded(ttl);
+
+            metricAccessor = (MetricAccessor) context.get(TaggedMetric.class.getName());
+            metricAccessor.createIndexesIfNeeded(ttl);
 
             processGroup(null, cc.getConnectionGroup());
-
-            serviceServer = new ServiceServer(this);
-            serviceServer.start(config.getServicePort() != null ? Integer.parseInt(config.getServicePort()) : 80);
         } catch (Exception e) {
             logger.error("A fatal error occurred while starting collector.", e);
             throw e;
@@ -124,40 +130,11 @@ public class Server {
     	}
     }
 
-    private void initAccessors(CollectorConfig config) throws Exception {
-        mongodbConnection = new MongoConnection();
-
-        try {
-            MongoDBParameters connectionParams = config.getDb();
-
-            int port = 27017;
-
-            if (connectionParams.getPort() != null) {
-                port = Integer.parseInt(connectionParams.getPort());
-            }
-
-            mongodbConnection.connect(connectionParams.getHost(), port, connectionParams.getUser(), connectionParams.getPassword());
-
-
-            Long ttl = config.getDataTTL();
-
-            threadInfoAccessor = new ThreadInfoAccessorImpl(mongodbConnection.getDb());
-            threadInfoAccessor.createIndexesIfNeeded(ttl);
-
-            instrumentationEventsAccessor = new InstrumentationEventAccessor(mongodbConnection.getDb());
-            instrumentationEventsAccessor.createIndexesIfNeeded(ttl);
-
-            metricAccessor = new MetricAccessor(mongodbConnection);
-            metricAccessor.createIndexesIfNeeded(ttl);
-        } catch (MongoException e) {
-            logger.error("An error occurred while connection to DB", e);
-            throw e;
-        }
-    }
 
     private Facade createClient(final Map<String, String> attributes, Connection connectionConfig) throws Exception {
         Constructor<?> c = Class.forName(connectionConfig.getConnectionClass()).getDeclaredConstructor(Properties.class, boolean.class);
         final Facade client = (Facade) c.newInstance(connectionConfig.getConnectionProperties(), true);
+        final ThreadInfoAccessor threadInfoAccessor = context.get(ThreadInfoAccessor.class);
 
         client.addListener(new FacadeListener() {
 
@@ -208,7 +185,9 @@ public class Server {
                 for (Metric<?> metric : metrics) {
                     taggedMetrics.add(new TaggedMetric(attributes, metric));
                 }
-                metricAccessor.save(taggedMetrics);
+                if (taggedMetrics.size()>0) {
+                    metricAccessor.save(taggedMetrics);
+                }
             }
 
             @Override

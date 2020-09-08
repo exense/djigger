@@ -19,6 +19,7 @@
  *******************************************************************************/
 package io.djigger.collector.accessors;
 
+import ch.exense.djigger.collector.accessors.ThreadInfoAccessor;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import org.bson.Document;
 

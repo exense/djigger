@@ -32,13 +32,13 @@ public class HostConnectionParameter implements CaretListener, ConnectionParamet
 
     private boolean defaultName;
 
-    private final JPanel hostParametersPane;
+    protected final JPanel hostParametersPane;
 
     private final JTextField name;
 
-    private final JTextField host;
+    protected final JTextField host;
 
-    private final JTextField port;
+    protected final JTextField port;
 
     private final JTextField username;
 
@@ -66,6 +66,7 @@ public class HostConnectionParameter implements CaretListener, ConnectionParamet
         hostParametersPane = new JPanel(new GridLayout(0, 2));
         hostParametersPane.add(new JLabel("Host"));
         host = new JTextField(20);
+        host.setText("localhost");
         host.addCaretListener(this);
         hostParametersPane.add(host);
         hostParametersPane.add(new JLabel("Port"));
@@ -78,7 +79,6 @@ public class HostConnectionParameter implements CaretListener, ConnectionParamet
         hostParametersPane.add(new JLabel("Password"));
         password = new JPasswordField(20);
         hostParametersPane.add(password);
-
 
         JPopupMenu passwordMenu = new JPopupMenu();
         password.setComponentPopupMenu(passwordMenu);

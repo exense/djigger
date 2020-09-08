@@ -19,18 +19,22 @@
  *******************************************************************************/
 package io.djigger.collector.accessors.stackref.dbmodel;
 
+import ch.exense.commons.core.model.accessors.AbstractIdentifiableObject;
+import io.djigger.monitoring.java.model.ThreadInfo;
 import org.bson.types.ObjectId;
 
 import java.util.Date;
 import java.util.Map;
 
-public class ThreadInfoEntry {
-
-    private ObjectId _id;
+public class ThreadInfoEntry extends AbstractIdentifiableObject {
 
     private Date timestamp;
 
-    private long id;
+    private String rid;
+
+    private long tid;//named id previously
+
+    private String trid;
 
     private String name;
 
@@ -40,30 +44,47 @@ public class ThreadInfoEntry {
 
     private ObjectId stackTraceID;
 
-    public ObjectId get_id() {
-        return _id;
-    }
-
-    public void set_id(ObjectId _id) {
-        this._id = _id;
-    }
-
     public ThreadInfoEntry() {
         super();
     }
 
-    public ThreadInfoEntry(ObjectId stackTraceID) {
+    public ThreadInfoEntry(ThreadInfo threadInfo, ObjectId stackTraceID) {
         super();
+        this.timestamp = new Date(threadInfo.getTimestamp());
+        this.tid = threadInfo.getGlobalId().getThreadId();
+        this.rid = threadInfo.getGlobalId().getRuntimeId();
+        if (threadInfo.getTransactionID() != null) {
+            this.trid = threadInfo.getTransactionID().toString();
+        }
+        this.name = threadInfo.getName();
+        this.state = threadInfo.getState();
+        this.attributes = threadInfo.getAttributes();
         this.stackTraceID = stackTraceID;
     }
 
-    public long getId() {
-        return id;
+    public String getRid() {
+        return rid;
     }
 
-    public void setId(long id) {
-        this.id = id;
+    public void setRid(String rid) {
+        this.rid = rid;
     }
+
+    public long getTid() {
+        return tid;
+    }
+
+    public void setTid(long tid) {
+        this.tid = tid;
+    }
+    public String getTrid() {
+        return trid;
+    }
+
+    public void setTrid(String trid) {
+       this.trid = trid;
+    }
+
 
     public String getName() {
         return name;

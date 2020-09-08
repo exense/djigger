@@ -19,6 +19,7 @@
  *******************************************************************************/
 package io.djigger.ui;
 
+import ch.exense.commons.core.web.container.ServerContext;
 import com.thoughtworks.xstream.XStream;
 import io.djigger.ui.Session.SessionType;
 import io.djigger.ui.common.FileChooserHelper;
@@ -56,9 +57,16 @@ public class MainFrame extends JPanel {
 
     private final OutOfMemoryPreventionPane outOfMemoryPreventionPane;
 
-    public MainFrame(final ArgumentParser options) {
+    private ServerContext djiggerContext;
+
+    public MainFrame(ServerContext context) {
+        this(context, new ArgumentParser(new String[0]));
+    }
+
+    public MainFrame(ServerContext context, final ArgumentParser options) {
         super(new BorderLayout());
 
+        this.djiggerContext = context;
         this.options = options;
 
         this.sessions = new ArrayList<Session>();
@@ -259,8 +267,12 @@ public class MainFrame extends JPanel {
         return mainToolbar;
     }
 
+    public ServerContext getDjiggerContext() {
+        return djiggerContext;
+    }
+
     public static void main(String[] args) {
         ArgumentParser options = new ArgumentParser(args);
-        new MainFrame(options);
+        new MainFrame(null, options);
     }
 }

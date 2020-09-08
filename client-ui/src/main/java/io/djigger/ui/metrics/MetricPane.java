@@ -136,7 +136,7 @@ public class MetricPane extends Dashlet {
                                 if (currentValue != null) {
                                     if (currentValue instanceof Number) {
                                         Number numberValue = (Number) currentValue;
-                                        series1.addOrUpdate(new Second(new Date(m.getTime())), numberValue);
+                                        series1.addOrUpdate(new Second(m.getTime()), numberValue);
                                     }
                                 }
                             }

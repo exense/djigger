@@ -24,10 +24,6 @@ import java.util.List;
 
 public class CollectorConfig {
 
-    String servicePort;
-
-    MongoDBParameters db;
-
     Long dataTTL;
 
     List<String> connectionFiles;
@@ -38,22 +34,6 @@ public class CollectorConfig {
 
     public void setConnectionFiles(List<String> connectionFiles) {
         this.connectionFiles = connectionFiles;
-    }
-
-    public MongoDBParameters getDb() {
-        return db;
-    }
-
-    public void setDb(MongoDBParameters db) {
-        this.db = db;
-    }
-
-    public String getServicePort() {
-        return servicePort;
-    }
-
-    public void setServicePort(String servicePort) {
-        this.servicePort = servicePort;
     }
 
     public Long getDataTTL() {

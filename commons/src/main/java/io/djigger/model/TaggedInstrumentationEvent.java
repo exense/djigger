@@ -19,11 +19,12 @@
  *******************************************************************************/
 package io.djigger.model;
 
+import ch.exense.commons.core.model.accessors.AbstractOrganizableObject;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 
 import java.util.Map;
 
-public class TaggedInstrumentationEvent {
+public class TaggedInstrumentationEvent extends AbstractOrganizableObject {
 
     private Map<String, String> tags;
 

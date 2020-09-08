@@ -17,31 +17,39 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.collector.server.services;
+package ch.exense.djigger.collector.server.services;
 
+import ch.exense.commons.core.server.Registrable;
+import ch.exense.commons.core.web.container.ServerContext;
 import io.djigger.client.Facade;
 import io.djigger.collector.server.ClientConnection;
 import io.djigger.collector.server.Server;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import javax.servlet.ServletContext;
+import javax.inject.Singleton;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.util.*;
 
+@Singleton
 @Path("/services")
-public class Services {
+public class Services implements Registrable {
+
+    Server server;//serverContext
 
     @Inject
-    Server server;
+    ServerContext context;
 
-    @Context
-    ServletContext context;
+    @PostConstruct
+    public void init() {
+        server= (Server) context.get(Server.class);
+    }
 
-    public class FacadeStatus {
+    public class FacadeStatus  {
 
         String facadeClass;
 

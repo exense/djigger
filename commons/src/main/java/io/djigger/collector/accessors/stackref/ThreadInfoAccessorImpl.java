@@ -20,195 +20,146 @@
 package io.djigger.collector.accessors.stackref;
 
 import com.mongodb.MongoExecutionTimeoutException;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.CountOptions;
-import io.djigger.collector.accessors.ThreadInfoAccessor;
+import ch.exense.djigger.collector.accessors.StackTraceAccessor;
+import ch.exense.djigger.collector.accessors.ThreadDumpAccessor;
+import ch.exense.djigger.collector.accessors.ThreadInfoAccessor;
 import io.djigger.collector.accessors.stackref.dbmodel.StackTraceElementEntry;
 import io.djigger.collector.accessors.stackref.dbmodel.StackTraceEntry;
+import io.djigger.collector.accessors.stackref.dbmodel.ThreadInfoEntry;
 import io.djigger.monitoring.java.model.GlobalThreadId;
 import io.djigger.monitoring.java.model.ThreadInfo;
-import org.bson.Document;
+import org.bson.BsonDocument;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
-import java.lang.Thread.State;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.mongodb.client.model.Filters.*;
 
 
-public class ThreadInfoAccessorImpl extends AbstractAccessor implements ThreadInfoAccessor {
+public class ThreadInfoAccessorImpl implements ThreadInfoAccessor {
 
-    MongoDatabase db;
-
-    MongoCollection<Document> threadInfoCollection;
-
-    MongoCollection<Document> stackTracesCollection;
+    ThreadDumpAccessor threadDumpAccessor;
+    StackTraceAccessor stackTraceAccessor;
 
     LRUCache<ObjectId, StackTraceEntry> stackTracesCache = new LRUCache<>(1000);
 
-    public ThreadInfoAccessorImpl(MongoDatabase db) {
+    public ThreadInfoAccessorImpl(ThreadDumpAccessor threadDumpAccessor, StackTraceAccessor stackTraceAccessor) {
         super();
-        this.db = db;
-        threadInfoCollection = db.getCollection("threaddumps");
-        stackTracesCollection = db.getCollection("stacktraces");
+        this.threadDumpAccessor = threadDumpAccessor;
+        this.stackTraceAccessor = stackTraceAccessor;
+
     }
 
-    public void createIndexesIfNeeded(Long ttl) {
-        createOrUpdateIndex(stackTracesCollection, "hashcode");
-        createOrUpdateTTLIndex(threadInfoCollection, "timestamp", ttl);
-    }
-
-    private Bson buildQuery(Bson mongoQuery, Date from, Date to) {
+    private String buildQuery(Bson mongoQuery, Date from, Date to) {
         Bson result = and(gt("timestamp", from), lt("timestamp", to));
         if (mongoQuery != null) {
             result = and(mongoQuery, result);
         }
-        return result;
+        BsonDocument bsonDocument = result.toBsonDocument(BsonDocument.class,threadDumpAccessor.getMongoClientSession().getMongoDatabase().getCodecRegistry());
+        return bsonDocument.toJson();
     }
 
     public long count(Bson mongoQuery, Date from, Date to, long timeout, TimeUnit timeUnit) throws TimeoutException {
-        mongoQuery = buildQuery(mongoQuery, from, to);
+        String query = buildQuery(mongoQuery, from, to);
 
         CountOptions options = new CountOptions();
         options.maxTime(timeout, timeUnit);
 
         try {
-            return threadInfoCollection.count(mongoQuery, options);
+            return threadDumpAccessor.count(query, options);
         } catch (MongoExecutionTimeoutException e) {
             throw new TimeoutException("Count exceeded time limit");
         }
     }
 
     public Iterable<ThreadInfo> query(Bson mongoQuery, Date from, Date to) {
-        final Bson query = buildQuery(mongoQuery, from, to);
-
-        return new Iterable<ThreadInfo>() {
-
-            @Override
-            public Iterator<ThreadInfo> iterator() {
-                final Iterator<Document> it = threadInfoCollection.find(query).iterator();
-                return new Iterator<ThreadInfo>() {
-
-                    @Override
-                    public void remove() {
-                    }
-
-                    @Override
-                    public ThreadInfo next() {
-                        Document dbo = it.next();
-
-                        StackTraceEntry s;
-                        synchronized (stackTracesCache) {
-                            ObjectId stackTraceID = (ObjectId) dbo.get("stackTraceID");
-                            s = stackTracesCache.get(stackTraceID);
-                            if (s == null) {
-                                Document o = stackTracesCollection.find(eq("_id", stackTraceID)).first();
-                                StackTraceElementEntry[] stacktrace = fromDBObject(o.get("stacktrace"));
-                                s = new StackTraceEntry((ObjectId) o.get("_id"), stacktrace);
-                                s.setHashcode((int) o.get("hashcode"));
-                                stackTracesCache.put(stackTraceID, s);
-                            }
-                        }
-
-
-                        ThreadInfo info = new ThreadInfo(StackTraceElementEntry.fromEntries(s.getElements()));
-                        info.setTimestamp(dbo.getDate("timestamp").getTime());
-                        info.setName(dbo.getString("name"));
-                        GlobalThreadId globalThreadId = new GlobalThreadId(dbo.getString("rid"), dbo.getLong("id"));
-                        info.setGlobalId(globalThreadId);
-                        info.setState(State.valueOf(dbo.getString("state")));
-
-                        if (dbo.containsKey("trid")) {
-                            info.setTransactionID(UUID.fromString(dbo.getString("trid")));
-                        }
-
-                        Map<String, String> attributes = new HashMap<String, String>();
-                        for (String key : dbo.keySet()) {
-                            Object o = dbo.get(key);
-                            if (o instanceof String)
-                                attributes.put(key, (String) o);
-                        }
-                        info.setAttributes(attributes);
-                        return info;
-                    }
-
-                    @Override
-                    public boolean hasNext() {
-                        return it.hasNext();
-                    }
-                };
-            }
-        };
+        return new ThreadInfoIterable(buildQuery(mongoQuery, from, to));
     }
+    
+
+    public class ThreadInfoIterable implements Iterable<ThreadInfo> {
+
+       final String query;
+
+        public ThreadInfoIterable(String query) {
+            super();
+            this.query = query;
+        }
+
+        @Override
+        public Iterator<ThreadInfo> iterator() {
+            final Iterator<ThreadInfoEntry> it = threadDumpAccessor.getJongoCollection().find(query).as(ThreadInfoEntry.class).iterator();
+            return new Iterator<ThreadInfo>() {
+
+                @Override
+                public void remove() {
+                }
+
+                @Override
+                public ThreadInfo next() {
+                    ThreadInfoEntry tInfo = it.next();
+                    StackTraceEntry stackTraceEntry;
+                    synchronized (stackTracesCache) {
+                        ObjectId stackTraceID = tInfo.getStackTraceID();
+                        stackTraceEntry = stackTracesCache.get(stackTraceID);
+                        if (stackTraceEntry == null) {
+                            stackTraceEntry = stackTraceAccessor.get(stackTraceID);
+                            stackTracesCache.put(stackTraceEntry.getId(), stackTraceEntry);
+                        }
+                    }
+
+                    ThreadInfo info = new ThreadInfo(StackTraceElementEntry.fromEntries(stackTraceEntry.getElements()));
+                    info.setTimestamp(tInfo.getTimestamp().getTime());
+                    info.setName(tInfo.getName());
+                    GlobalThreadId globalThreadId = new GlobalThreadId(tInfo.getRid(), tInfo.getTid());
+                    info.setGlobalId(globalThreadId);
+                    info.setState(tInfo.getState());
+
+                    if (tInfo.getTrid() != null && !tInfo.getTrid().equals("")) {
+                        info.setTransactionID(UUID.fromString(tInfo.getTrid()));
+                    }
+
+                    info.setAttributes(tInfo.getAttributes());
+                    return info;
+                }
+
+                @Override
+                public boolean hasNext() {
+                    return it.hasNext();
+                }
+            };
+        }
+    };
 
     public void save(ThreadInfo threadInfo) {
+
         StackTraceElementEntry[] entries = StackTraceElementEntry.toEntries(threadInfo.getStackTrace());
         int hashcode = Arrays.hashCode(entries);
 
-        ObjectId id = null;
-        for (Document entry : stackTracesCollection.find(new Document("hashcode", hashcode))) {
-            if (Arrays.equals(fromDBObject(entry.get("stacktrace")), entries)) {
-                id = (ObjectId) entry.get("_id");
+        AtomicReference<ObjectId> lambdaId = new AtomicReference<ObjectId>();
+        stackTraceAccessor.findManyByHashcode(hashcode).forEachRemaining(entry -> {
+
+            if (Arrays.equals(entry.getElements(), entries)) {
+                lambdaId.set((ObjectId) entry.getId());
             }
-        }
-        if (id == null) {
+        });
+        ObjectId id;
+        if (lambdaId.get() == null) {
             id = new ObjectId();
             StackTraceEntry newStackTraceEntry = new StackTraceEntry(id, entries);
             newStackTraceEntry.setHashcode(hashcode);
 
-            insertStackTraceEntry(newStackTraceEntry);
+            stackTraceAccessor.save(newStackTraceEntry);
+        } else {
+            id = lambdaId.get();
         }
 
-        Document o = new Document();
-        o.putAll(threadInfo.getAttributes());
-        o.put("stackTraceID", id);
-        o.put("id", threadInfo.getGlobalId().getThreadId());
-        o.put("rid", threadInfo.getGlobalId().getRuntimeId());
-        o.put("name", threadInfo.getName());
-        o.put("state", threadInfo.getState());
-        o.put("timestamp", new Date(threadInfo.getTimestamp()));
-        o.put("state", threadInfo.getState().toString());
-
-        if (threadInfo.getTransactionID() != null) {
-            o.put("trid", threadInfo.getTransactionID().toString());
-        }
-
-        threadInfoCollection.insertOne(o);
-    }
-
-    private static StackTraceElementEntry[] fromDBObject(Object o) {
-        @SuppressWarnings("unchecked")
-        List<List<Object>> l = (List<List<Object>>) o;
-        StackTraceElementEntry[] s = new StackTraceElementEntry[l.size()];
-        for (int i = 0; i < l.size(); i++) {
-            List<Object> e = (List<Object>) l.get(i);
-            s[i] = new StackTraceElementEntry((String) e.get(0), (String) e.get(1), (String) e.get(2), (int) e.get(3));
-        }
-        return s;
-    }
-
-    private void insertStackTraceEntry(StackTraceEntry entry) {
-        Document o = new Document();
-
-        ArrayList<Object> table = new ArrayList<>(entry.getElements().length);
-
-        for (int i = 0; i < entry.getElements().length; i++) {
-            StackTraceElementEntry e = entry.getElements()[i];
-            ArrayList<Object> node = new ArrayList<Object>();
-            node.add(e.getDeclaringClass());
-            node.add(e.getMethodName());
-            node.add(e.getFileName());
-            node.add(e.getLineNumber());
-            table.add(node);
-        }
-        o.put("_id", entry.get_id());
-        o.put("stacktrace", table);
-        o.put("hashcode", entry.getHashcode());
-
-        stackTracesCollection.insertOne(o);
+        ThreadInfoEntry threadEntry = new ThreadInfoEntry(threadInfo, id);
+        threadDumpAccessor.save(threadEntry);
     }
 }

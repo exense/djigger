@@ -102,7 +102,7 @@ public class AgentSession implements MessageListener, MessageRouterStateListener
         }, new ModuloEventSkipLogic<Metric<?>>() {
             @Override
             protected long getSkipAttribute(Metric<?> object) {
-                return object.getTime();
+                return object.getTime().getTime();
             }
         });
 

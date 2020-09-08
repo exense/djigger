@@ -17,47 +17,39 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.collector.accessors.stackref.dbmodel;
+package io.djigger.ui.connectiondialog;
 
-import ch.exense.commons.core.model.accessors.AbstractIdentifiableObject;
-import io.djigger.monitoring.java.model.ThreadInfo;
-import org.bson.types.ObjectId;
+import io.djigger.ui.SessionConfiguration;
+import io.djigger.ui.SessionConfiguration.SessionParameter;
 
-public class StackTraceEntry extends AbstractIdentifiableObject {
+import javax.swing.*;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
+import java.awt.*;
+import java.awt.event.ActionEvent;
 
-    private int hashcode;
+public class DBConnectionParameter extends HostConnectionParameter {
 
-    private StackTraceElementEntry[] elements;
 
-    public StackTraceEntry() {
+    private final JTextField db;
+
+    public DBConnectionParameter() {
         super();
+        port.setText("27017");
+        hostParametersPane.add(new JLabel("DB"));
+        db = new JTextField(20);
+        db.setText("djigger");
+        hostParametersPane.add(db);
     }
 
-    public StackTraceEntry(ObjectId _id, StackTraceElementEntry[] elements) {
-        super();
-        this._id = _id;
-
-        this.elements = elements;
+    public String getDb() {
+        return db.getText();
     }
 
-    public StackTraceEntry(ThreadInfo threadInfo){
-        super();
+    @Override
+    public SessionConfiguration getSessionConfiguration() {
+        SessionConfiguration config = super.getSessionConfiguration();
+        config.getParameters().put(SessionParameter.DB, getDb());
+        return config;
     }
-
-    public StackTraceElementEntry[] getElements() {
-        return elements;
-    }
-
-    public void setElements(StackTraceElementEntry[] elements) {
-        this.elements = elements;
-    }
-
-    public int getHashcode() {
-        return hashcode;
-    }
-
-    public void setHashcode(int hashcode) {
-        this.hashcode = hashcode;
-    }
-
 }

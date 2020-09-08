@@ -282,7 +282,8 @@ public class Session extends JPanel implements FacadeListener, Closeable {
                 } catch (NumberFormatException e) {
                     port = 27017;
                 }
-                storeClient.connect(hostname, port, params.get(SessionParameter.USERNAME), params.get(SessionParameter.PASSWORD));
+                String db = params.getOrDefault(SessionParameter.DB, "djigger");
+                storeClient.connect(hostname, port, params.get(SessionParameter.USERNAME), params.get(SessionParameter.PASSWORD),db);
             } else if (getSessionType() == SessionType.AGENT_CAPTURE) {
                 final File file = new File(config.getParameters().get(SessionParameter.FILE));
                 MonitoredExecution execution = new MonitoredExecution(main.getFrame(), "Opening session... Please wait.", new MonitoredExecutionRunnable() {

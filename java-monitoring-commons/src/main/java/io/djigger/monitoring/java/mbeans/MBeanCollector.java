@@ -27,10 +27,7 @@ import javax.management.*;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.CompositeType;
 import javax.management.openmbean.TabularData;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -260,7 +257,7 @@ public class MBeanCollector {
 
     public void invokeListener(long timestamp, ValueListener listener, ObjectName mbeanName, GenericObject object) {
         String metricName = mbeanName.getDomain() + "/" + mbeanName.getKeyPropertyListString();
-        Metric<GenericObject> metric = new Metric<GenericObject>(timestamp, metricName, object);
+        Metric<GenericObject> metric = new Metric<GenericObject>(new Date(timestamp), metricName, object);
         listener.valueReceived(metric);
     }
 

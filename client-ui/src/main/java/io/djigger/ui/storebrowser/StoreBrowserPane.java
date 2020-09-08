@@ -19,6 +19,8 @@
  *******************************************************************************/
 package io.djigger.ui.storebrowser;
 
+import io.djigger.model.TaggedInstrumentationEvent;
+import io.djigger.model.TaggedMetric;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.model.ThreadInfo;
@@ -36,10 +38,9 @@ import javax.swing.text.DefaultEditorKit;
 import java.awt.*;
 import java.awt.event.*;
 import java.text.ParseException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.Iterator;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @SuppressWarnings("serial")
 public class StoreBrowserPane extends JPanel implements ActionListener {
@@ -286,17 +287,15 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
                 private void retrieveInstumentationEvents(final Bson query, final Date from, final Date to, MonitoredExecution execution) {
                     execution.setText("Retrieving instrumentation events...");
                     execution.setIndeterminate();
-                    int count = 0;
-                    Iterator<InstrumentationEvent> it = parent.getStoreClient().getInstrumentationAccessor().getTaggedEvents(query, from, to);
-
-                    InstrumentationEvent event;
-                    while (it.hasNext() && !execution.isInterrupted()) {
-                        count++;
-                        execution.setValue(count);
-                        event = it.next();
+                    AtomicInteger count = new AtomicInteger(0);
+                    Spliterator<TaggedInstrumentationEvent> taggedInstrumentationEventSpliterator = parent.getStoreClient().getInstrumentationAccessor().get(query, from, to);
+                    while (!execution.isInterrupted() && taggedInstrumentationEventSpliterator.tryAdvance(taggedEvent -> {
+                        InstrumentationEvent event = taggedEvent.getEvent();
+                        int countValue = count.incrementAndGet();
+                        execution.setValue(countValue);
                         parent.getStore().getInstrumentationEvents().add(event);
-                    }
-                    logger.debug("Fetched " + count + " instrumentation events.");
+                    }))
+                    logger.debug("Fetched " + count.get() + " instrumentation events.");
                 }
 
                 private void retrieveThreadInfos(final Bson query, final Date from, final Date to,
@@ -320,17 +319,15 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
                                              MonitoredExecution execution) {
                     execution.setText("Retrieving metrics...");
                     execution.setIndeterminate();
-                    int count = 0;
-                    Iterator<Metric<?>> it = parent.getStoreClient().getMetricAccessor().get(query, from, to);
+                    AtomicInteger count = new AtomicInteger(0);
+                    Spliterator<TaggedMetric> taggedMetricSpliterator = parent.getStoreClient().getMetricAccessor().get(query, from, to);
 
-                    Metric<?> metrics;
-                    while (it.hasNext() && !execution.isInterrupted()) {
-                        count++;
-                        metrics = it.next();
-                        parent.getStore().getMetrics().add(metrics);
-                    }
+                    while (!execution.isInterrupted() && taggedMetricSpliterator.tryAdvance(tm -> {
+                        count.incrementAndGet();
+                        parent.getStore().getMetrics().add(tm.getMetric());
+                    }))
 
-                    logger.debug("Fetched " + count + " metrics.");
+                    logger.debug("Fetched " + count.get() + " metrics.");
                 }
             }, true);
 

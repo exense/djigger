@@ -60,6 +60,8 @@ public class SessionConfiguration {
 
         PASSWORD,
 
+        DB,
+
         FILE,
 
         QUERY,

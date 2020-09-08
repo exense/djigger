@@ -21,6 +21,7 @@ package io.djigger.ui.analyzer;
 
 import io.djigger.aggregation.AnalyzerService;
 import io.djigger.aggregation.Thread.RealNodePathWrapper;
+import io.djigger.model.TaggedInstrumentationEvent;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.GlobalThreadId;
 import io.djigger.sequencetree.SequenceTreeView;
@@ -41,6 +42,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListener {
@@ -149,11 +151,13 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
     }
 
     public void addDrilldownPane(ObjectId parentID) {
-        Iterator<InstrumentationEvent> it = parent.getStoreClient().getInstrumentationAccessor().getByParentId(parentID);
-        if (it.hasNext()) {
-            InstrumentationEvent event = it.next();
-            addSequenceTreePane(event.getTransactionID());
-        } else {
+        Spliterator<TaggedInstrumentationEvent> taggedIntrumentationEvents = parent.getStoreClient().getInstrumentationAccessor().getByParentId(parentID);
+        AtomicInteger atomicInteger = new AtomicInteger(0);
+        taggedIntrumentationEvents.tryAdvance(event -> {
+            atomicInteger.incrementAndGet();
+            addSequenceTreePane(event.getEvent().getTransactionID());
+        });
+        if (atomicInteger.get() == 0) {
             JOptionPane.showMessageDialog(parent, "No child transaction found.", "Drilldown", JOptionPane.INFORMATION_MESSAGE);
         }
 
