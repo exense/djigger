@@ -195,7 +195,7 @@ public class Parser {
         STANDARD_OUTPUT(
             Pattern.compile("Full thread dump"),
             Pattern.compile("JNI global references"),
-            Pattern.compile("\"(.+?)\".+prio=[0-9]+ tid=(.+?) nid=.+"),
+            Pattern.compile("\"(.+?)\".+ prio=[0-9]+.* tid=(.+?) nid=.+"),
             Pattern.compile("java\\.lang\\.Thread\\.State: (.+?) "),
             Pattern.compile("at (.*)\\.(.+?)\\(.*?(?::(\\d+))?\\)"),
             Pattern.compile("^[ \t]*$")),
