@@ -142,7 +142,7 @@ public class Server {
             public void threadInfosReceived(List<ThreadInfo> threaddumps) {
                 try {
                     for (ThreadInfo dump : threaddumps) {
-                        dump.setAttributes(attributes);
+                        dump.setTags(attributes);
                         // enrich with the runtime ID. TODO: support agent side RuntimeID?
                         dump.getGlobalId().setRuntimeId(client.getConnectionId());
                         threadInfoAccessor.save(dump);

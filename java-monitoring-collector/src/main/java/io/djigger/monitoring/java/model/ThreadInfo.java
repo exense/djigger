@@ -33,7 +33,7 @@ public class ThreadInfo implements Serializable {
 
     private Thread.State state;
 
-    private Map<String, String> attributes;
+    private Map<String, String> tags;
 
     private StackTraceElement[] stackTrace;
 
@@ -64,12 +64,12 @@ public class ThreadInfo implements Serializable {
         this.timestamp = timestamp;
     }
 
-    public Map<String, String> getAttributes() {
-        return attributes;
+    public Map<String, String> getTags() {
+        return tags;
     }
 
-    public void setAttributes(Map<String, String> attributes) {
-        this.attributes = attributes;
+    public void setTags(Map<String, String> tags) {
+        this.tags = tags;
     }
 
 	public GlobalThreadId getGlobalId() {

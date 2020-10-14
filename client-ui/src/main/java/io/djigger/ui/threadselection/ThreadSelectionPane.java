@@ -258,7 +258,7 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
                 GlobalThreadId threadId = thread.getGlobalId();
                 ThreadBlock block = blockMap.get(threadId);
                 if (block == null) {
-                    block = new ThreadBlock(this, threadId, thread.getName(), thread.getAttributes(), rangeDefinition);
+                    block = new ThreadBlock(this, threadId, thread.getName(), thread.getTags(), rangeDefinition);
                     blockMap.put(threadId, block);
                 }
                 block.add(thread.getTimestamp(), thread);

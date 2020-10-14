@@ -124,7 +124,7 @@ public class ThreadInfoAccessorImpl implements ThreadInfoAccessor {
                         info.setTransactionID(UUID.fromString(tInfo.getTrid()));
                     }
 
-                    info.setAttributes(tInfo.getAttributes());
+                    info.setTags(tInfo.getTags());
                     return info;
                 }
 

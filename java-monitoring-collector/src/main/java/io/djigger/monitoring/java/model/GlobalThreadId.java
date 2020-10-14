@@ -13,7 +13,9 @@ public class GlobalThreadId implements Serializable {
 	protected String runtimeId;
 	
 	protected long threadId;
-	
+
+	public GlobalThreadId() {super();
+	}
 	public GlobalThreadId(String runtimeId, long threadId) {
 		super();
 		this.runtimeId = runtimeId;

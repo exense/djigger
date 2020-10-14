@@ -27,11 +27,13 @@ import java.util.*;
 
 import ch.exense.commons.core.mongo.MongoClientSession;
 import ch.exense.commons.core.mongo.accessors.generic.AbstractCRUDAccessor;
+import ch.exense.commons.core.web.container.JacksonMapperProvider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.bson.BsonDocument;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+import org.jongo.Find;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +51,7 @@ public class InstrumentationEventAccessor extends AbstractCRUDAccessor<TaggedIns
 
     public InstrumentationEventAccessor(MongoClientSession mongoClientSession) {
         super(mongoClientSession, InstrumentationEventAccessor.collectionName, TaggedInstrumentationEvent.class);
-        mapper = new ObjectMapper();
+        mapper = JacksonMapperProvider.createMapper();
     }
 
     public void createIndexesIfNeeded(Long ttl) {
@@ -98,7 +100,7 @@ public class InstrumentationEventAccessor extends AbstractCRUDAccessor<TaggedIns
     }
 
     private String buildQuery(Bson mongoQuery, Date from, Date to) {
-        Bson result = and(gt("start", from), lt("start", to));
+        Bson result = and(gt("event.start", from.getTime()), lt("event.start", to.getTime()));
         if (mongoQuery != null) {
             result = and(mongoQuery, result);
         }

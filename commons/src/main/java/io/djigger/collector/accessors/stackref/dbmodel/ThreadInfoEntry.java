@@ -40,7 +40,7 @@ public class ThreadInfoEntry extends AbstractIdentifiableObject {
 
     private Thread.State state;
 
-    private Map<String, String> attributes;
+    private Map<String, String> tags;
 
     private ObjectId stackTraceID;
 
@@ -58,7 +58,7 @@ public class ThreadInfoEntry extends AbstractIdentifiableObject {
         }
         this.name = threadInfo.getName();
         this.state = threadInfo.getState();
-        this.attributes = threadInfo.getAttributes();
+        this.tags = threadInfo.getTags();
         this.stackTraceID = stackTraceID;
     }
 
@@ -118,11 +118,11 @@ public class ThreadInfoEntry extends AbstractIdentifiableObject {
         this.timestamp = timestamp;
     }
 
-    public Map<String, String> getAttributes() {
-        return attributes;
+    public Map<String, String> getTags() {
+        return tags;
     }
 
-    public void setAttributes(Map<String, String> attributes) {
-        this.attributes = attributes;
+    public void setTags(Map<String, String> tags) {
+        this.tags = tags;
     }
 }

@@ -19,15 +19,12 @@
  *******************************************************************************/
 package io.djigger.ui.metrics;
 
-import io.djigger.monitoring.java.model.GenericArray;
-import io.djigger.monitoring.java.model.GenericObject;
 import io.djigger.monitoring.java.model.Metric;
 
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class MetricTreeModel implements TreeModel {
 
@@ -41,6 +38,14 @@ public class MetricTreeModel implements TreeModel {
     public MetricTreeModel(List<Metric<?>> metrics) {
         this();
         load(metrics);
+        this.sort(root);
+    }
+
+    private void sort(MetricNode node) {
+        Collections.sort(node.children);
+        for (MetricNode child: node.children) {
+            sort(child);
+        }
     }
 
     @Override
@@ -48,7 +53,7 @@ public class MetricTreeModel implements TreeModel {
         return root;
     }
 
-    public static class MetricNode {
+    public static class MetricNode implements Comparable {
 
         String name;
 
@@ -67,6 +72,7 @@ public class MetricTreeModel implements TreeModel {
             return result;
         }
 
+
         @Override
         public boolean equals(Object obj) {
             if (this == obj)
@@ -84,6 +90,11 @@ public class MetricTreeModel implements TreeModel {
             return true;
         }
 
+        @Override
+        public int compareTo(Object o) {
+            MetricNode compareTo = (MetricNode) o;
+            return this.name.compareTo(compareTo.name);
+        }
     }
 
     public void load(List<Metric<?>> metrics) {
@@ -96,8 +107,8 @@ public class MetricTreeModel implements TreeModel {
                 root.children.add(child);
             }
 
-            if (m.getValue() instanceof GenericObject) {
-                loadJson(child, (GenericObject) m.getValue());
+            if (m.getValue() instanceof LinkedHashMap) {
+                loadJson(child, (LinkedHashMap<String, Object>) m.getValue());
             } else {
                 // This is a leaf. Nothing else to do here.
             }
@@ -114,7 +125,7 @@ public class MetricTreeModel implements TreeModel {
         return null;
     }
 
-    public void loadJson(MetricNode parent, GenericObject o) {
+    public void loadJson(MetricNode parent, HashMap<String, Object> o) {
         for (String key : o.keySet()) {
             MetricNode child = findChildByName(parent.children, key);
             if (child == null) {
@@ -123,9 +134,9 @@ public class MetricTreeModel implements TreeModel {
                 parent.children.add(child);
             }
             Object value = o.get(key);
-            if (value instanceof GenericObject) {
-                loadJson(child, (GenericObject) value);
-            } else if (value instanceof GenericArray) {
+            if (value instanceof LinkedHashMap) {
+                loadJson(child, (LinkedHashMap<String, Object>) value);
+            } else if (value instanceof ArrayList) {
                 // todo
             } else {
                 // this is a leaf. Nothing to do here

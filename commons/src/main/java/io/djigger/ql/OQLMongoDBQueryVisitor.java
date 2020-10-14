@@ -31,9 +31,9 @@ public class OQLMongoDBQueryVisitor extends OQLBaseVisitor<Bson> {
         }
 
         if (op.equals("="))
-            return new Document(ctx.expr(0).getText(), value);
+            return new Document("tags." + ctx.expr(0).getText(), value);
         else if (op.equals("~"))
-            return regex(ctx.expr(0).getText(), value);
+            return regex("tags." + ctx.expr(0).getText(), value);
         else
             throw new RuntimeException("Invalid operator: '" + op + "'");
     }

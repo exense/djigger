@@ -1,6 +1,5 @@
 package io.djigger.ui.metrics;
 
-import io.djigger.monitoring.java.model.GenericObject;
 import io.djigger.monitoring.java.model.Metric;
 import io.djigger.ql.Filter;
 import io.djigger.store.Store;
@@ -25,6 +24,7 @@ import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 public class MetricPane extends Dashlet {
@@ -118,12 +118,12 @@ public class MetricPane extends Dashlet {
                     if (m.getName().equals(firstNode.name)) {
                         if (reportNodePath.length > 2) {
                             Object value = m.getValue();
-                            if (value instanceof GenericObject) {
+                            if (value instanceof LinkedHashMap) {
                                 Object currentValue = value;
                                 for (int i = 2; i < reportNodePath.length; i++) {
                                     MetricNode node = (MetricNode) reportNodePath[i];
-                                    if (currentValue instanceof GenericObject) {
-                                        GenericObject genericObject = (GenericObject) currentValue;
+                                    if (currentValue instanceof LinkedHashMap) {
+                                        LinkedHashMap genericObject = (LinkedHashMap) currentValue;
                                         if (genericObject.containsKey(node.name)) {
                                             currentValue = genericObject.get(node.name);
                                         } else {

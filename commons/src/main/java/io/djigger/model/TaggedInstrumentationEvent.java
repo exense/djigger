@@ -30,6 +30,8 @@ public class TaggedInstrumentationEvent extends AbstractOrganizableObject {
 
     private InstrumentationEvent event;
 
+    public TaggedInstrumentationEvent() { super();}
+
     public TaggedInstrumentationEvent(Map<String, String> tags, InstrumentationEvent event) {
         super();
         this.tags = tags;

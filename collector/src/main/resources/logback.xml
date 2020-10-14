@@ -11,9 +11,9 @@
 		</encoder>
 	</appender>
 	<logger name="org.lightcouch" level="error"/>
-	<logger name="MetricWriter" level="trace"/>
+	<!--<logger name="MetricWriter" level="trace"/>-->
 	<!-- <logger name="io.djigger...." level="debug" /> -->
-
+	 <logger name="InstrumentationEventWriter" level="trace" />
 	<root level="info">
 		<appender-ref ref="STDOUT"/>
 		<appender-ref ref="FILE"/>

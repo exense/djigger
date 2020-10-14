@@ -55,6 +55,8 @@ public class InstrumentationEvent implements Serializable {
 
     private transient long startNano;
 
+    public InstrumentationEvent() {super();}
+
     public InstrumentationEvent(String classname, String methodname) {
         super();
         this.classname = classname;
