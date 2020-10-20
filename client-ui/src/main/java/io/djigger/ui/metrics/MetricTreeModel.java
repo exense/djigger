@@ -19,6 +19,7 @@
  *******************************************************************************/
 package io.djigger.ui.metrics;
 
+import io.djigger.model.TaggedMetric;
 import io.djigger.monitoring.java.model.Metric;
 
 import javax.swing.event.TreeModelListener;
@@ -35,9 +36,9 @@ public class MetricTreeModel implements TreeModel {
         root.name = "Root";
     }
 
-    public MetricTreeModel(List<Metric<?>> metrics) {
+    public MetricTreeModel(List<TaggedMetric> tMetrics) {
         this();
-        load(metrics);
+        load(tMetrics);
         this.sort(root);
     }
 
@@ -97,15 +98,26 @@ public class MetricTreeModel implements TreeModel {
         }
     }
 
-    public void load(List<Metric<?>> metrics) {
+    private MetricNode addMissingChildNode(MetricNode parent, String name) {
+        MetricNode child = findChildByName(parent.children, name);
+        if (child == null) {
+            child = new MetricNode();
+            child.name = name;
+            parent.children.add(child);
+        }
+        return child;
+    }
+
+    public void load(List<TaggedMetric> tMetrics) {
         root.children.clear();
-        for (Metric<?> m : metrics) {
-            MetricNode child = findChildByName(root.children, m.getName());
-            if (child == null) {
-                child = new MetricNode();
-                child.name = m.getName();
-                root.children.add(child);
+        for (TaggedMetric tm : tMetrics) {
+            MetricNode rootOrTag = root;
+            Map<String, String> tags = tm.getTags();
+            if (tags != null && tags.size()>0) {
+                rootOrTag = addMissingChildNode(root, tags.toString());
             }
+            Metric m = tm.getMetric();
+            MetricNode child = addMissingChildNode(rootOrTag, m.getName());
 
             if (m.getValue() instanceof LinkedHashMap) {
                 loadJson(child, (LinkedHashMap<String, Object>) m.getValue());

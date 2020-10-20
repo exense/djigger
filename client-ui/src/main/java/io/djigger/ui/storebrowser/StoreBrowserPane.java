@@ -324,7 +324,7 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
 
                     while (!execution.isInterrupted() && taggedMetricSpliterator.tryAdvance(tm -> {
                         count.incrementAndGet();
-                        parent.getStore().getMetrics().add(tm.getMetric());
+                        parent.getStore().getMetrics().add(tm);
                     }))
 
                     logger.debug("Fetched " + count.get() + " metrics.");

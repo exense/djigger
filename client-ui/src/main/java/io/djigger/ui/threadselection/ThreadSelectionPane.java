@@ -63,6 +63,7 @@ import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 
+import io.djigger.model.TaggedMetric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -618,10 +619,11 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
                     && (startDate == null || sample.getStart() >= startDate)
                     && (endDate == null || sample.getEnd() <= endDate);
             }
-        }, new Filter<Metric<?>>() {
+        }, new Filter<TaggedMetric>() {
 
             @Override
-            public boolean isValid(Metric<?> sample) {
+            public boolean isValid(TaggedMetric sampleTm) {
+                Metric sample = sampleTm.getMetric();
                 return (startDate == null || sample.getTime().getTime() >= startDate)
                     && (endDate == null || sample.getTime().getTime() <= endDate);
             }

@@ -1,5 +1,6 @@
 package io.djigger.ui.metrics;
 
+import io.djigger.model.TaggedMetric;
 import io.djigger.monitoring.java.model.Metric;
 import io.djigger.ql.Filter;
 import io.djigger.store.Store;
@@ -37,7 +38,7 @@ public class MetricPane extends Dashlet {
 
     private final Session session;
 
-    private List<Metric<?>> metrics;
+    private List<TaggedMetric> taggedMetrics;
 
     public MetricPane(final Session session) {
         super(new BorderLayout());
@@ -75,17 +76,17 @@ public class MetricPane extends Dashlet {
         Store store = session.getStore();
 
         final StoreFilter storeFilter = this.session.getStoreFilter();
-        Filter<Metric<?>> mergedFilter = new Filter<Metric<?>>() {
+        Filter<TaggedMetric> mergedFilter = new Filter<TaggedMetric>() {
 
             @Override
-            public boolean isValid(Metric<?> metric) {
-                return (storeFilter == null || storeFilter.getMetricFilter().isValid(metric));
+            public boolean isValid(TaggedMetric tm) {
+                return (storeFilter == null || storeFilter.getMetricFilter().isValid(tm));
             }
         };
 
-        metrics = store.getMetrics().query(mergedFilter);
+        taggedMetrics = store.getMetrics().query(mergedFilter);
 
-        metricTreeModel = new MetricTreeModel(metrics);
+        metricTreeModel = new MetricTreeModel(taggedMetrics);
         TreePath[] selectionBefore = metricTree.getSelectionPaths();
         Enumeration<TreePath> expandedDesc = metricTree.getExpandedDescendants(new TreePath(metricTree.getModel().getRoot()));
 
@@ -105,7 +106,6 @@ public class MetricPane extends Dashlet {
         for (TreePath path : selectedPaths) {
             Object[] reportNodePath = path.getPath();
             if (reportNodePath.length > 1) {
-                MetricNode firstNode = (MetricNode) reportNodePath[1];
 
                 StringBuilder serieName = new StringBuilder();
                 for (int i = 1; i < reportNodePath.length; i++) {
@@ -114,34 +114,42 @@ public class MetricPane extends Dashlet {
                 }
                 TimeSeries series1 = new TimeSeries(serieName.toString().replaceFirst("/", ""));
 
-                for (Metric<?> m : metrics) {
-                    if (m.getName().equals(firstNode.name)) {
-                        if (reportNodePath.length > 2) {
-                            Object value = m.getValue();
-                            if (value instanceof LinkedHashMap) {
-                                Object currentValue = value;
-                                for (int i = 2; i < reportNodePath.length; i++) {
-                                    MetricNode node = (MetricNode) reportNodePath[i];
-                                    if (currentValue instanceof LinkedHashMap) {
-                                        LinkedHashMap genericObject = (LinkedHashMap) currentValue;
-                                        if (genericObject.containsKey(node.name)) {
-                                            currentValue = genericObject.get(node.name);
-                                        } else {
-                                            currentValue = null;
-                                            break;
-                                            // TODO
+                for (TaggedMetric tm : taggedMetrics) {
+                    boolean hasTags = (tm.getTags() != null && tm.getTags().size() > 0);
+                    int firstNodeIndex = (hasTags) ? 2 : 1;
+                    int minReportNodeSize = (hasTags) ? 3 : 2;
+                    if (!hasTags || (tm.getTags().toString().equals(((MetricNode) reportNodePath[1]).name)
+                            && reportNodePath.length > 2)) {
+                        Metric<?> m = tm.getMetric();
+                        MetricNode firstNode = (MetricNode) reportNodePath[firstNodeIndex];
+                        if (m.getName().equals(firstNode.name) ) {
+                            if (reportNodePath.length > minReportNodeSize) {
+                                Object value = m.getValue();
+                                if (value instanceof LinkedHashMap) {
+                                    Object currentValue = value;
+                                    for (int i = minReportNodeSize; i < reportNodePath.length; i++) {
+                                        MetricNode node = (MetricNode) reportNodePath[i];
+                                        if (currentValue instanceof LinkedHashMap) {
+                                            LinkedHashMap genericObject = (LinkedHashMap) currentValue;
+                                            if (genericObject.containsKey(node.name)) {
+                                                currentValue = genericObject.get(node.name);
+                                            } else {
+                                                currentValue = null;
+                                                break;
+                                                // TODO
+                                            }
+                                        }
+                                    }
+                                    if (currentValue != null) {
+                                        if (currentValue instanceof Number) {
+                                            Number numberValue = (Number) currentValue;
+                                            series1.addOrUpdate(new Second(m.getTime()), numberValue);
                                         }
                                     }
                                 }
-                                if (currentValue != null) {
-                                    if (currentValue instanceof Number) {
-                                        Number numberValue = (Number) currentValue;
-                                        series1.addOrUpdate(new Second(m.getTime()), numberValue);
-                                    }
-                                }
                             }
-                        }
 
+                        }
                     }
 
                 }

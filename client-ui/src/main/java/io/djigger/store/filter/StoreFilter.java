@@ -19,8 +19,9 @@
  *******************************************************************************/
 package io.djigger.store.filter;
 
+import io.djigger.model.TaggedMetric;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
-import io.djigger.monitoring.java.model.Metric;
+
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.ql.Filter;
 
@@ -30,20 +31,20 @@ public class StoreFilter {
 
     private Filter<InstrumentationEvent> instrumentationEventsFilter;
 
-    private Filter<Metric<?>> metricFilter;
+    private Filter<TaggedMetric> metricFilter;
 
-    public StoreFilter(Filter<ThreadInfo> threadInfoFilter, Filter<InstrumentationEvent> instrumentationEventsFilter, Filter<Metric<?>> metricFilter) {
+    public StoreFilter(Filter<ThreadInfo> threadInfoFilter, Filter<InstrumentationEvent> instrumentationEventsFilter, Filter<TaggedMetric> metricFilter) {
         super();
         this.threadInfoFilter = threadInfoFilter;
         this.instrumentationEventsFilter = instrumentationEventsFilter;
         this.metricFilter = metricFilter;
     }
 
-    public Filter<Metric<?>> getMetricFilter() {
+    public Filter<TaggedMetric> getMetricFilter() {
         return metricFilter;
     }
 
-    public void setMetricFilter(Filter<Metric<?>> metricFilter) {
+    public void setMetricFilter(Filter<TaggedMetric> metricFilter) {
         this.metricFilter = metricFilter;
     }
 

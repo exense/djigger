@@ -22,16 +22,13 @@ package io.djigger.ui;
 import java.awt.BorderLayout;
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
+import io.djigger.model.TaggedMetric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -614,7 +611,7 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 
     @Override
     public void metricsReceived(List<Metric<?>> metrics) {
-        store.getMetrics().addAll(metrics);
+        metrics.forEach(m->store.getMetrics().add(new TaggedMetric(null,m)));
     }
 
     @Override

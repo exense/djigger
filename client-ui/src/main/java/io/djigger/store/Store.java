@@ -20,6 +20,7 @@
 package io.djigger.store;
 
 import io.djigger.model.Capture;
+import io.djigger.model.TaggedMetric;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.model.ThreadInfo;
@@ -37,7 +38,7 @@ public class Store implements Serializable {
 
     private final StoreCollection<InstrumentationEvent> instrumentationEvents = new StoreCollection<>();
 
-    private final StoreCollection<Metric<?>> metrics = new StoreCollection<>();
+    private final StoreCollection<TaggedMetric> taggedMetrics = new StoreCollection<>();
 
 
     public Store() {
@@ -48,14 +49,14 @@ public class Store implements Serializable {
         captures.clear();
         threadInfos.clear();
         instrumentationEvents.clear();
-        metrics.clear();
+        taggedMetrics.clear();
     }
 
     public void drainTo(Store target) {
         captures.drainTo(target.captures);
         threadInfos.drainTo(target.threadInfos);
         instrumentationEvents.drainTo(target.instrumentationEvents);
-        metrics.drainTo(target.metrics);
+        taggedMetrics.drainTo(target.taggedMetrics);
     }
 
     public StoreCollection<Capture> getCaptures() {
@@ -70,7 +71,7 @@ public class Store implements Serializable {
         return instrumentationEvents;
     }
 
-    public StoreCollection<Metric<?>> getMetrics() {
-        return metrics;
+    public StoreCollection<TaggedMetric> getMetrics() {
+        return taggedMetrics;
     }
 }
