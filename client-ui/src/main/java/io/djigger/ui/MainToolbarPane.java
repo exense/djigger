@@ -49,6 +49,12 @@ public class MainToolbarPane extends JPanel {
                 removeSession();
             }
         }));
+        commandPanel.add(new CommandButton("duplicate.png", "Duplicate selected session", new Runnable() {
+            @Override
+            public void run() {
+                main.duplicateCurrentSession();
+            }
+        }));
         commandPanel.add(new CommandButton("importConfig.png", "Load Session list...", new Runnable() {
             @Override
             public void run() {

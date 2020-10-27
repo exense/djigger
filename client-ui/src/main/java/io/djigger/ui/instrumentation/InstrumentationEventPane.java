@@ -125,6 +125,10 @@ public class InstrumentationEventPane extends Dashlet {
         setQueryAndSearch(query);
     }
 
+    public String getEventFilter() {
+        return filterTextField.getText();
+    }
+
     public void setQueryAndSearch(final String query) {
         if (query != null) {
             filterTextField.setText(query);

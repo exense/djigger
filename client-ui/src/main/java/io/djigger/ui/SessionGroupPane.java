@@ -20,6 +20,7 @@
 package io.djigger.ui;
 
 import io.djigger.ui.common.EnhancedTabbedPane;
+import io.djigger.ui.storebrowser.StoreBrowserPane;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -47,6 +48,17 @@ public class SessionGroupPane extends EnhancedTabbedPane implements ChangeListen
     public void addSession(Session session) {
         addTab(session, session.getSessionName(), true);
     }
+
+    public void duplicateSession(Session session) {
+        SessionConfiguration sessionConfiguration = session.cloneConfiguration();
+        Session duplicatedSession = new Session(sessionConfiguration, session.getMain());
+        main.addSession(duplicatedSession);
+        //trigger the search directly for store session
+        if (session.getSessionType() == Session.SessionType.STORE) {
+            duplicatedSession.getStoreBrowserPane().search();
+        }
+    }
+
 
     public void selectSession(Session session) {
         if (getCurrentTab() != session) {

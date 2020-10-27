@@ -56,7 +56,7 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
 
     private final JComboBox<DatePresets> datePresets;
 
-    enum DatePresets {
+    public enum DatePresets {
         MINS5("Last 5 mins", 300000, 0),
         MINS15("Last 15 mins", 900000, 0),
         MINS60("Last 60 mins", 3600000, 0),
@@ -231,6 +231,10 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
         }
     }
 
+    public String getQuery() {
+        return queryTextField.getText();
+    }
+
     public void setQuery(String query) {
         queryTextField.setText(query);
     }
@@ -239,6 +243,22 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
         datePresets.setSelectedItem(DatePresets.CUSTOM);
         fromDateSpinner.getModel().setValue(start);
         toDateSpinner.getModel().setValue(end);
+    }
+
+    public void setSelectedPreset(String selectedDataPreset) {
+        datePresets.setSelectedItem(DatePresets.valueOf(selectedDataPreset));
+    }
+
+    public DatePresets getSelectedDatePresets(){
+        return (DatePresets) datePresets.getSelectedItem();
+    }
+
+    public Date getFromDate() {
+         return (Date) fromDateSpinner.getModel().getValue();
+    }
+
+    public Date getToDate() {
+        return (Date) toDateSpinner.getModel().getValue();
     }
 
     private void applyPreset() {

@@ -170,7 +170,26 @@ public class MainFrame extends JPanel {
 
     public void removeCurrentSession() {
         Session currentSession = groupPane.getCurrentSession();
-        removeSession(currentSession);
+        if (currentSession != null) {
+            removeSession(currentSession);
+        } else {
+            JOptionPane.showMessageDialog(getFrame(),
+                    "There is currently no session selected.",
+                    "Warning",
+                    JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+    public void duplicateCurrentSession() {
+        Session currentSession = groupPane.getCurrentSession();
+        if (currentSession != null) {
+            groupPane.duplicateSession(currentSession);
+        } else {
+            JOptionPane.showMessageDialog(getFrame(),
+                    "There is currently no session selected.",
+                    "Warning",
+                    JOptionPane.WARNING_MESSAGE);
+        }
     }
 
     private synchronized void removeSession(Session session) {
