@@ -88,7 +88,7 @@ public class PseudoInstrumentationEventsGenerator {
                                 NameBasedSubscription subscription_ = ((NameBasedSubscription) subscription);
                                 if (subscription_.isRelatedToClass(element.getClassName()) &&
                                     subscription_.isRelatedToMethod(element.getMethodName())) {
-                                    event.setTransactionID(UUID.randomUUID());
+                                    event.setTransactionID(UUID.randomUUID().toString());
                                     break;
                                 }
                             }

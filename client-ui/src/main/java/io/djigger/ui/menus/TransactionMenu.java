@@ -58,7 +58,7 @@ public class TransactionMenu {
                 if (event instanceof PseudoInstrumentationEvent) {
                     session.getAnalyzerGroupPane().addSequenceTreePane((PseudoInstrumentationEvent) event);
                 } else {
-                    UUID transactionID = callback.getCurrentEvent().getTransactionID();
+                    String transactionID = callback.getCurrentEvent().getTransactionID();
                     session.getAnalyzerGroupPane().addSequenceTreePane(transactionID);
                 }
             }
@@ -73,7 +73,7 @@ public class TransactionMenu {
         target.add(new JMenuItem(new AbstractAction("Event list") {
             @Override
             public void actionPerformed(ActionEvent arg0) {
-                final UUID transactionID = callback.getCurrentEvent().getTransactionID();
+                final String transactionID = callback.getCurrentEvent().getTransactionID();
                 session.getAnalyzerGroupPane().addInstrumentationEventPaneForTransaction(transactionID);
             }
         }));

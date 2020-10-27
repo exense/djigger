@@ -43,7 +43,7 @@ public class SequenceTreeService {
         this.realdNodeTreeBuilder = new RealNodeSequenceTreeBuilder();
     }
 
-    public synchronized void load(UUID transactionID, boolean includeLineNumbers) {
+    public synchronized void load(String transactionID, boolean includeLineNumbers) {
         List<InstrumentationEvent> threadInfos = query(transactionID);
 
         realTree = realdNodeTreeBuilder.buildRealNodeTree(threadInfos);
@@ -64,7 +64,7 @@ public class SequenceTreeService {
         });
     }
 
-    private List<InstrumentationEvent> query(final UUID transactionID) {
+    private List<InstrumentationEvent> query(final String transactionID) {
         return store.getInstrumentationEvents().query(new Filter<InstrumentationEvent>() {
 
             @Override

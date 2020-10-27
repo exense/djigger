@@ -155,7 +155,7 @@ public class InstrumentationEventPane extends Dashlet {
 
                         // TODO do this in a generic way
                         if (attribute.equals("trid") && operator.equals("=")) {
-                            final UUID uuid = UUID.fromString(value);
+                            final String uuid = value;
                             return new Filter<InstrumentationEvent>() {
                                 @Override
                                 public boolean isValid(InstrumentationEvent input) {

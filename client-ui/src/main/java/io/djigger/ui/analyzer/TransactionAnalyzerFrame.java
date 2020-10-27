@@ -78,7 +78,7 @@ public class TransactionAnalyzerFrame extends JPanel {
                 }
             }, null);
         } else {
-            final UUID transactionID = event.getTransactionID();
+            final String transactionID = event.getTransactionID();
             filter = new StoreFilter(new Filter<ThreadInfo>() {
 
                 @Override
@@ -93,7 +93,7 @@ public class TransactionAnalyzerFrame extends JPanel {
                 }
             }, null);
         }
-        UUID transactionID = event.getTransactionID();
+        String transactionID = event.getTransactionID();
 
         frame = new JFrame("djigger - Transaction " + (transactionID != null ? transactionID.toString() : ""));
         frame.setPreferredSize(new Dimension(1300, 700));

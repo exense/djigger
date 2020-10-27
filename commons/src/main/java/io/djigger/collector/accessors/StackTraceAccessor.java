@@ -23,6 +23,7 @@ import ch.exense.commons.core.mongo.MongoClientSession;
 import ch.exense.commons.core.mongo.accessors.generic.AbstractCRUDAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.djigger.collector.accessors.stackref.dbmodel.StackTraceEntry;
+import io.djigger.model.TaggedInstrumentationEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,15 +50,10 @@ public class StackTraceAccessor extends AbstractCRUDAccessor<StackTraceEntry>{
     }
 
     public StackTraceEntry findByHashcode(int hashcode) {
-        HashMap<String, String> attr = new HashMap<>();
-        attr.put("hashcode", String.valueOf(hashcode));
-        return findByAttributes(attr);
-
+        return collection.findOne("{hashcode: # }",hashcode).as(StackTraceEntry.class);
     }
 
     public Spliterator<StackTraceEntry> findManyByHashcode(int hashcode) {
-        HashMap<String, String> attr = new HashMap<>();
-        attr.put("hashcode", String.valueOf(hashcode));
-        return findManyByAttributes(attr);
+        return collection.find("{hashcode: # }",hashcode).as(StackTraceEntry.class).spliterator();
     }
 }

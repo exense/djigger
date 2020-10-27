@@ -39,7 +39,7 @@ public class InstrumentationEvent implements Serializable {
 
     private int subscriptionID;
 
-    private UUID transactionID;
+    private String transactionID;
 
     private String classname;
 
@@ -115,11 +115,11 @@ public class InstrumentationEvent implements Serializable {
 		this.globalThreadId = globalThreadID;
 	}
 
-	public UUID getTransactionID() {
+	public String getTransactionID() {
         return transactionID;
     }
 
-    public void setTransactionID(UUID transactionID) {
+    public void setTransactionID(String transactionID) {
         this.transactionID = transactionID;
     }
 

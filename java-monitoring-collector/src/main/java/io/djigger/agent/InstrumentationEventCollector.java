@@ -169,7 +169,7 @@ public class InstrumentationEventCollector {
         InstrumentationEvent event = transaction.popEvent();
         event.setDuration(endNano - event.getStartNano());
 
-        event.setTransactionID(transaction.getId());
+        event.setTransactionID(transaction.getId().toString());
 
         if (data != null) {
             event.addData(data);

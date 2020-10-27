@@ -43,7 +43,7 @@ public class SequenceTreeView extends SequenceTreePane implements TreeSelectionL
 
     private JTree tree;
 
-    public SequenceTreeView(final AnalyzerGroupPane parent, TreeType treeType, UUID transactionID) {
+    public SequenceTreeView(final AnalyzerGroupPane parent, TreeType treeType, String transactionID) {
         super(parent, treeType, transactionID);
         initView(parent);
     }

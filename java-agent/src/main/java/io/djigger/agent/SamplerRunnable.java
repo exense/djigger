@@ -59,7 +59,7 @@ public class SamplerRunnable implements Runnable {
         for (ThreadInfo threadInfo : infos) {
             io.djigger.monitoring.java.model.ThreadInfo event = ThreadDumpHelper.toThreadInfo(timestamp, threadInfo);
             Transaction currentTransaction = InstrumentationEventCollector.getCurrentTransaction(threadInfo.getThreadId());
-            UUID currentTrID = currentTransaction != null ? currentTransaction.getId() : null;
+            String currentTrID = currentTransaction != null ? currentTransaction.getId().toString() : null;
             event.setTransactionID(currentTrID);
             threadInfoQueue.add(event);
         }

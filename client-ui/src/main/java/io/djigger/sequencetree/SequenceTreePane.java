@@ -97,7 +97,7 @@ public abstract class SequenceTreePane extends JPanel implements ActionListener 
         add(contentPanel, BorderLayout.CENTER);
     }
 
-    protected SequenceTreePane(AnalyzerGroupPane parent, TreeType treeType, UUID transactionID) {
+    protected SequenceTreePane(AnalyzerGroupPane parent, TreeType treeType, String transactionID) {
         this(parent, treeType);
         if (session.getSessionType() == SessionType.STORE) {
             session.getStoreClient().getInstrumentationAccessor().getByTransactionId(transactionID).forEachRemaining(taggedEvent->

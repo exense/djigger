@@ -163,9 +163,9 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
 
     }
 
-    public void addSequenceTreePane(UUID trID) {
+    public void addSequenceTreePane(String trID) {
         SequenceTreeView view = new SequenceTreeView(this, TreeType.NORMAL, trID);
-        addTab(view, "Sequence tree " + trID.toString(), true);
+        addTab(view, "Sequence tree " + trID, true);
     }
 
     public void addSequenceTreePane(PseudoInstrumentationEvent pseudoEvent) {
@@ -173,7 +173,7 @@ public class AnalyzerGroupPane extends EnhancedTabbedPane implements ChangeListe
         addTab(view, "Sequence tree " + pseudoEvent.getMethodname(), true);
     }
 
-    public void addInstrumentationEventPaneForTransaction(UUID trID) {
+    public void addInstrumentationEventPaneForTransaction(String trID) {
         InstrumentationEventPane view = new InstrumentationEventPane(parent, "trid=" + trID, this);
         addTab(view, "Event list " + trID.toString(), true);
     }

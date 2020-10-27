@@ -83,15 +83,11 @@ public class InstrumentationEventAccessor extends AbstractCRUDAccessor<TaggedIns
     }
 
     public Spliterator<TaggedInstrumentationEvent> getByParentId(ObjectId parentId) {
-        HashMap<String, String> attr = new HashMap<>();
-        attr.put("parentid", parentId.toString());
-        return findManyByAttributes(attr);
+        return collection.find("{event.parentID: # }",parentId).as(TaggedInstrumentationEvent.class).spliterator();
     }
 
-    public Spliterator<TaggedInstrumentationEvent> getByTransactionId(UUID transactionIDd) {
-        HashMap<String, String> attr = new HashMap<>();
-        attr.put("trid", transactionIDd.toString());
-        return findManyByAttributes(attr);
+    public Spliterator<TaggedInstrumentationEvent> getByTransactionId(String transactionID) {
+        return collection.find("{event.transactionID: # }",transactionID).as(TaggedInstrumentationEvent.class).spliterator();
     }
 
     public Spliterator<TaggedInstrumentationEvent> get(Bson filter, Date from, Date to) {

@@ -54,7 +54,7 @@ public class ThreadInfoEntry extends AbstractIdentifiableObject {
         this.tid = threadInfo.getGlobalId().getThreadId();
         this.rid = threadInfo.getGlobalId().getRuntimeId();
         if (threadInfo.getTransactionID() != null) {
-            this.trid = threadInfo.getTransactionID().toString();
+            this.trid = threadInfo.getTransactionID();
         }
         this.name = threadInfo.getName();
         this.state = threadInfo.getState();
