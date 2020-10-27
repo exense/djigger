@@ -630,6 +630,14 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
         });
     }
 
+    public String getThreadnameFilter() {
+        return threadnameFilterTextField.getText();
+    }
+
+    public void setThreadnameFilter(String text) {
+        threadnameFilterTextField.setText(text);
+    }
+
 
     private Filter<ThreadInfo> parseThreadnameFilter() {
         Filter<ThreadInfo> complexFilter = null;

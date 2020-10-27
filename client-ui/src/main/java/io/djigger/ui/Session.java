@@ -23,12 +23,12 @@ import java.awt.BorderLayout;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
 import io.djigger.model.TaggedMetric;
+import io.djigger.ui.analyzer.AnalyzerPane;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -305,6 +305,10 @@ public class Session extends JPanel implements FacadeListener, Closeable {
             storeBrowserPane.setQuery(query);
         }
 
+        String preset = config.getParameters().get(SessionParameter.TIMEINTERVAL_PRESETS);
+        if (preset!=null && !preset.equals("")) {
+            storeBrowserPane.setSelectedPreset(preset);
+        }
         String start = config.getParameters().get(SessionParameter.TIMEINTERVAL_START);
         if (start != null) {
             String end = config.getParameters().get(SessionParameter.TIMEINTERVAL_END);
@@ -327,12 +331,120 @@ public class Session extends JPanel implements FacadeListener, Closeable {
             analyzerGroupPane.selectTabByName(initialPaneSelection);
         }
 
+        String threadFilter = config.getParameters().get(SessionParameter.THREAD_FILTER);
+        if (threadFilter != null) {
+            threadSelectionPane.setThreadnameFilter(threadFilter);
+        }
+
+        setAnalyserPaneFilters("Tree view",
+                config.getParameters().get(SessionParameter.TREE_STACK_FILTER),
+                config.getParameters().get(SessionParameter.TREE_NODE_FILTER));
+
+        setAnalyserPaneFilters("Reverse tree view",
+                config.getParameters().get(SessionParameter.RTREE_STACK_FILTER),
+                config.getParameters().get(SessionParameter.RTREE_NODE_FILTER));
+
+        setAnalyserPaneFilters("Block view",
+                config.getParameters().get(SessionParameter.BLOCK_STACK_FILTER),
+                config.getParameters().get(SessionParameter.BLOCK_NODE_FILTER));
+
+        setAnalyserPaneFilters("Reverse block view",
+                config.getParameters().get(SessionParameter.RBLOCK_STACK_FILTER),
+                config.getParameters().get(SessionParameter.RBLOCK_NODE_FILTER));
+
         String eventListQuery = config.getParameters().get(SessionParameter.EVENT_LIST_QUERY);
         if (eventListQuery != null) {
             InstrumentationEventPane pane = (InstrumentationEventPane) analyzerGroupPane.getTabByName("Events");
             pane.setQueryAndSearch(eventListQuery);
         }
 
+    }
+
+    private void setAnalyserPaneFilters(String paneName, String stackFilter, String nodeFilter) {
+        AnalyzerPane pane = null;
+        try {
+            pane = (AnalyzerPane) analyzerGroupPane.getTabByName(paneName);
+        } catch (RuntimeException e) {
+            logger.warn("Could not apply filters for tab " + paneName + ". The tab was not found or is not supported.");
+        }
+        if (pane != null) {
+            if (stackFilter != null) {
+                pane.setStacktraceFilter(stackFilter);
+            }
+            if (nodeFilter != null) {
+                pane.setNodeFilter(nodeFilter);
+            }
+        }
+    }
+
+    public SessionConfiguration cloneConfiguration() {
+        SessionConfiguration newSessionConfig = config.clone();
+        HashMap<SessionParameter, String> newParams = newSessionConfig.getParameters();
+        //Add Time frame config
+        if (config.getType() == Session.SessionType.STORE) {
+            String query = storeBrowserPane.getQuery();
+            if (query != null) {
+                newParams.put(SessionConfiguration.SessionParameter.QUERY, query);
+            }
+            StoreBrowserPane.DatePresets selectedDatePresets = storeBrowserPane.getSelectedDatePresets();
+            newParams.put(SessionParameter.TIMEINTERVAL_PRESETS,selectedDatePresets.toString());
+            if (selectedDatePresets == StoreBrowserPane.DatePresets.CUSTOM) {
+                Date start = storeBrowserPane.getFromDate();
+                if (start != null) {
+                    SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+                    newParams.put(SessionParameter.TIMEINTERVAL_START, format.format(start));
+                    Date end = storeBrowserPane.getToDate();
+                    if (end != null) {
+                        newParams.put(SessionParameter.TIMEINTERVAL_END, format.format(end));
+                    }
+                }
+            }
+        }
+        //Add Thread Filter
+        String threadnameFilter = threadSelectionPane.getThreadnameFilter();
+        if (threadnameFilter != null) {
+            newParams.put(SessionParameter.THREAD_FILTER, threadnameFilter);
+        }
+        //Add AnalyserPanes filters
+        addAnalyserPaneFiltersParameters(newParams,"Tree view",
+                SessionParameter.TREE_STACK_FILTER, SessionParameter.TREE_NODE_FILTER);
+
+        addAnalyserPaneFiltersParameters(newParams,"Reverse tree view",
+                SessionParameter.RTREE_STACK_FILTER, SessionParameter.RTREE_NODE_FILTER);
+
+        addAnalyserPaneFiltersParameters(newParams,"Block view",
+                SessionParameter.BLOCK_STACK_FILTER, SessionParameter.BLOCK_NODE_FILTER);
+
+        addAnalyserPaneFiltersParameters(newParams,"Reverse block view",
+                SessionParameter.RBLOCK_STACK_FILTER, SessionParameter.RBLOCK_NODE_FILTER);
+
+        //Add event config
+        InstrumentationEventPane ePane = (InstrumentationEventPane) analyzerGroupPane.getTabByName("Events");
+        String eventFilter = ePane.getEventFilter();
+        if (eventFilter != null) {
+            newParams.put(SessionParameter.EVENT_LIST_QUERY, eventFilter);
+        }
+        return newSessionConfig;
+    }
+
+    private void addAnalyserPaneFiltersParameters(HashMap<SessionParameter, String> params, String paneName,
+                                                  SessionParameter stackFilterParam, SessionParameter nodeFilterParam) {
+        AnalyzerPane pane = null;
+        try {
+            pane = (AnalyzerPane) analyzerGroupPane.getTabByName(paneName);
+        } catch (RuntimeException e) {
+            logger.warn("Could not get filters for tab " + paneName + ". The tab was not found or is not supported.");
+        }
+        if (pane != null) {
+            String stackFilter = pane.getStacktraceFilter();
+            String nodeFilter = pane.getNodeFilter();
+            if (stackFilter != null) {
+                params.put(stackFilterParam, stackFilter);
+            }
+            if (nodeFilter != null) {
+                params.put(nodeFilterParam, nodeFilter);
+            }
+        }
     }
 
     public Facade getFacade() {
@@ -375,6 +487,10 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 
     public Store getStore() {
         return store;
+    }
+
+    public StoreBrowserPane getStoreBrowserPane() {
+        return storeBrowserPane;
     }
 
     public InstrumentationStatisticsCache getStatisticsCache() {

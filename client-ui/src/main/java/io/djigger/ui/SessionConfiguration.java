@@ -37,6 +37,12 @@ public class SessionConfiguration {
         this.type = type;
     }
 
+    protected SessionConfiguration clone() {
+        SessionConfiguration clone = new SessionConfiguration(name, type);
+        clone.getParameters().putAll(parameters);
+        return clone;
+    }
+
     public String getName() {
         return name;
     }
@@ -48,6 +54,7 @@ public class SessionConfiguration {
     public HashMap<SessionParameter, String> getParameters() {
         return parameters;
     }
+
 
     public enum SessionParameter {
         PROCESSID,
@@ -70,11 +77,32 @@ public class SessionConfiguration {
 
         TIMEINTERVAL_END,
 
+        TIMEINTERVAL_PRESETS,
+
         CALCULATE_PSEUDO_EVENTS,
 
         INITIAL_PANE_SELECTION,
 
-        EVENT_LIST_QUERY;
+        EVENT_LIST_QUERY,
+
+        THREAD_FILTER,
+
+        TREE_STACK_FILTER,
+
+        TREE_NODE_FILTER,
+
+        RTREE_STACK_FILTER,
+
+        RTREE_NODE_FILTER,
+
+        BLOCK_STACK_FILTER,
+
+        BLOCK_NODE_FILTER,
+
+        RBLOCK_STACK_FILTER,
+
+        RBLOCK_NODE_FILTER;
+
     }
 
 }

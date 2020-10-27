@@ -22,7 +22,6 @@ package io.djigger.ui.storebrowser;
 import io.djigger.model.TaggedInstrumentationEvent;
 import io.djigger.model.TaggedMetric;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
-import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.ql.OQLMongoDBBuilder;
 import io.djigger.ui.Session;
@@ -39,7 +38,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.text.ParseException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @SuppressWarnings("serial")
@@ -57,7 +55,7 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
 
     private final JComboBox<DatePresets> datePresets;
 
-    enum DatePresets {
+    public enum DatePresets {
         MINS5("Last 5 mins", 300000, 0),
         MINS15("Last 15 mins", 900000, 0),
         MINS60("Last 60 mins", 3600000, 0),
@@ -232,6 +230,10 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
         }
     }
 
+    public String getQuery() {
+        return queryTextField.getText();
+    }
+
     public void setQuery(String query) {
         queryTextField.setText(query);
     }
@@ -240,6 +242,22 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
         datePresets.setSelectedItem(DatePresets.CUSTOM);
         fromDateSpinner.getModel().setValue(start);
         toDateSpinner.getModel().setValue(end);
+    }
+
+    public void setSelectedPreset(String selectedDataPreset) {
+        datePresets.setSelectedItem(DatePresets.valueOf(selectedDataPreset));
+    }
+
+    public DatePresets getSelectedDatePresets(){
+        return (DatePresets) datePresets.getSelectedItem();
+    }
+
+    public Date getFromDate() {
+         return (Date) fromDateSpinner.getModel().getValue();
+    }
+
+    public Date getToDate() {
+        return (Date) toDateSpinner.getModel().getValue();
     }
 
     private void applyPreset() {
