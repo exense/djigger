@@ -25,7 +25,7 @@ import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 
 public class MetricPane extends Dashlet {
@@ -125,12 +125,12 @@ public class MetricPane extends Dashlet {
                         if (m.getName().equals(firstNode.name) ) {
                             if (reportNodePath.length > minReportNodeSize) {
                                 Object value = m.getValue();
-                                if (value instanceof LinkedHashMap) {
+                                if (value instanceof HashMap) {
                                     Object currentValue = value;
                                     for (int i = minReportNodeSize; i < reportNodePath.length; i++) {
                                         MetricNode node = (MetricNode) reportNodePath[i];
-                                        if (currentValue instanceof LinkedHashMap) {
-                                            LinkedHashMap genericObject = (LinkedHashMap) currentValue;
+                                        if (currentValue instanceof HashMap) {
+                                            HashMap genericObject = (HashMap) currentValue;
                                             if (genericObject.containsKey(node.name)) {
                                                 currentValue = genericObject.get(node.name);
                                             } else {

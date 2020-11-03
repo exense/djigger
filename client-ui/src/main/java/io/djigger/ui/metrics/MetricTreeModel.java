@@ -119,8 +119,8 @@ public class MetricTreeModel implements TreeModel {
             Metric m = tm.getMetric();
             MetricNode child = addMissingChildNode(rootOrTag, m.getName());
 
-            if (m.getValue() instanceof LinkedHashMap) {
-                loadJson(child, (LinkedHashMap<String, Object>) m.getValue());
+            if (m.getValue() instanceof HashMap) {
+                loadJson(child, (HashMap<String, Object>) m.getValue());
             } else {
                 // This is a leaf. Nothing else to do here.
             }
@@ -146,8 +146,8 @@ public class MetricTreeModel implements TreeModel {
                 parent.children.add(child);
             }
             Object value = o.get(key);
-            if (value instanceof LinkedHashMap) {
-                loadJson(child, (LinkedHashMap<String, Object>) value);
+            if (value instanceof HashMap) {
+                loadJson(child, (HashMap<String, Object>) value);
             } else if (value instanceof ArrayList) {
                 // todo
             } else {
