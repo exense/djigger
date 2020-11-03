@@ -3,9 +3,12 @@ package io.djigger.model;
 import ch.exense.commons.core.model.accessors.AbstractOrganizableObject;
 import io.djigger.monitoring.java.model.Metric;
 
+import java.io.Serializable;
 import java.util.Map;
 
-public class TaggedMetric extends AbstractOrganizableObject {
+public class TaggedMetric extends AbstractOrganizableObject implements Serializable  {
+
+    private static final long serialVersionUID = 8672664655551132300L;
 
     private Map<String, String> tags;
 
@@ -27,5 +30,13 @@ public class TaggedMetric extends AbstractOrganizableObject {
 
     public Metric<?> getMetric() {
         return metric;
+    }
+
+    public void setTags(Map<String, String> tags) {
+        this.tags = tags;
+    }
+
+    public void setMetric(Metric<?> metric) {
+        this.metric = metric;
     }
 }
