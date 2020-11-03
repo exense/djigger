@@ -191,7 +191,14 @@ public class MainFrame extends JPanel {
     public void duplicateCurrentSession() {
         Session currentSession = groupPane.getCurrentSession();
         if (currentSession != null) {
-            groupPane.duplicateSession(currentSession);
+            if (currentSession.getSessionType() != SessionType.AGENT) {
+                groupPane.duplicateSession(currentSession);
+            } else {
+                JOptionPane.showMessageDialog(getFrame(),
+                        "This type of session/connection cannot be duplicated.",
+                        "Warning",
+                        JOptionPane.WARNING_MESSAGE);
+            }
         } else {
             JOptionPane.showMessageDialog(getFrame(),
                     "There is currently no session selected.",
