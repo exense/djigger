@@ -3,6 +3,7 @@ package io.djigger.client;
 import com.sun.tools.attach.VirtualMachine;
 import com.sun.tools.attach.VirtualMachineDescriptor;
 import io.denkbar.smb.core.MessageRouter;
+import io.djigger.client.util.Jps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,14 +61,42 @@ public class ProcessAttachFacade extends AgentFacade {
 
         String processID = null;
         Object processNamePattern = properties.get(Parameters.PROCESS_NAME_PATTERN);
+
+        // show a list of all PIDs and displayNames, if needed.
+        String listVmsLogLevel = null;
+
         if (processNamePattern != null) {
             Pattern pattern = Pattern.compile(processNamePattern.toString());
             for (VirtualMachineDescriptor vm_ : VirtualMachine.list()) {
                 Matcher matcher = pattern.matcher(vm_.displayName());
                 if (matcher.find()) {
+                    if (processID != null) {
+                        logger.warn("Found multiple PIDs matching process name pattern \""+ processNamePattern+"\" , currently using PID: " + processID);
+                        listVmsLogLevel = "warn";
+                    }
                     processID = vm_.id();
                 }
             }
+            if (processID == null) {
+                logger.error("No processes found matching process name pattern \"" + processNamePattern + "\"");
+                listVmsLogLevel = "error";
+            }
+
+            if (listVmsLogLevel != null) {
+                String intro = "List of all currently running processes and displayNames (process name patterns):";
+                if (listVmsLogLevel.equals("error")) {
+                    logger.error(intro);
+                    for (String line: Jps.listVms()) {
+                        logger.error(line);
+                    }
+                } else {
+                    logger.warn(intro);
+                    for (String line: Jps.listVms()) {
+                        logger.warn(line);
+                    }
+                }
+            }
+
             if (processID == null) {
                 throw new RuntimeException("No VM found matching pattern " + processNamePattern);
             }
