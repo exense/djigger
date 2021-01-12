@@ -590,15 +590,16 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
         }
 
         Filter<ThreadInfo> threadnameFilter = parseThreadnameFilter();
+        Filter<TaggedMetric> metricFilter = createMetricFilter();
         if (currentSelection.selectWholeRange) {
-            filter = timeStoreFilter(threadnameFilter, threadIdsFilter, null, null);
+            filter = timeStoreFilter(threadnameFilter, metricFilter, threadIdsFilter, null, null);
         } else {
-            filter = timeStoreFilter(threadnameFilter, threadIdsFilter, currentSelection.start, currentSelection.end);
+            filter = timeStoreFilter(threadnameFilter, metricFilter, threadIdsFilter, currentSelection.start, currentSelection.end);
         }
         return filter;
     }
 
-    private StoreFilter timeStoreFilter(final Filter<ThreadInfo> threadnameFilter, final Set<GlobalThreadId> threadIds, final Long startDate, final Long endDate) {
+    private StoreFilter timeStoreFilter(final Filter<ThreadInfo> threadnameFilter, final Filter<TaggedMetric> metricFilter, final Set<GlobalThreadId> threadIds, final Long startDate, final Long endDate) {
         return new StoreFilter(new Filter<ThreadInfo>() {
 
             @Override
@@ -625,7 +626,8 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
             public boolean isValid(TaggedMetric sampleTm) {
                 Metric sample = sampleTm.getMetric();
                 return (startDate == null || sample.getTime().getTime() >= startDate)
-                    && (endDate == null || sample.getTime().getTime() <= endDate);
+                    && (endDate == null || sample.getTime().getTime() <= endDate) &&
+                        (metricFilter == null || metricFilter.isValid(sampleTm));
             }
         });
     }
@@ -659,10 +661,47 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
                 @Override
                 public Filter<ThreadInfo> createAttributeFilter(
                     String operator, String attribute, String value) {
-                    // TODO Auto-generated method stub
                     return new Filter<ThreadInfo>() {
                         @Override
                         public boolean isValid(ThreadInfo input) {
+                            return input.getTags().containsKey(attribute) && input.getTags().get(attribute).equals(value);
+                        }
+
+                    };
+                }
+            };
+            try {
+                complexFilter = OQLFilterBuilder.getFilter(filter, factory);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+        return complexFilter;
+    }
+
+    //metrics are also filtered based on the attributes given in the common thread filter text area
+    private Filter<TaggedMetric> createMetricFilter() {
+        Filter<TaggedMetric> complexFilter = null;
+        final String filter = threadnameFilterTextField.getText();
+        if (filter != null) {
+            FilterFactory<TaggedMetric> factory = new FilterFactory<TaggedMetric>() {
+
+                @Override
+                public Filter<TaggedMetric> createFullTextFilter(final String expression) {
+                    return new Filter<TaggedMetric>() {
+                        @Override
+                        public boolean isValid(TaggedMetric input) {
+                            return true;
+                        }
+                    };
+                }
+
+                @Override
+                public Filter<TaggedMetric> createAttributeFilter(
+                        String operator, String attribute, String value) {
+                    return new Filter<TaggedMetric>() {
+                        @Override
+                        public boolean isValid(TaggedMetric input) {
                             return input.getTags().containsKey(attribute) && input.getTags().get(attribute).equals(value);
                         }
 
