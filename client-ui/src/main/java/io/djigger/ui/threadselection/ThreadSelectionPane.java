@@ -589,15 +589,16 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
         }
 
         Filter<ThreadInfo> threadnameFilter = parseThreadnameFilter();
+        Filter<Metric> metricFilter = createMetricFilter();
         if (currentSelection.selectWholeRange) {
-            filter = timeStoreFilter(threadnameFilter, threadIdsFilter, null, null);
+            filter = timeStoreFilter(threadnameFilter, metricFilter, threadIdsFilter, null, null);
         } else {
-            filter = timeStoreFilter(threadnameFilter, threadIdsFilter, currentSelection.start, currentSelection.end);
+            filter = timeStoreFilter(threadnameFilter, metricFilter, threadIdsFilter, currentSelection.start, currentSelection.end);
         }
         return filter;
     }
 
-    private StoreFilter timeStoreFilter(final Filter<ThreadInfo> threadnameFilter, final Set<GlobalThreadId> threadIds, final Long startDate, final Long endDate) {
+    private StoreFilter timeStoreFilter(final Filter<ThreadInfo> threadnameFilter, final Filter<Metric> metricFilter, final Set<GlobalThreadId> threadIds, final Long startDate, final Long endDate) {
         return new StoreFilter(new Filter<ThreadInfo>() {
 
             @Override
@@ -623,7 +624,8 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
             @Override
             public boolean isValid(Metric<?> sample) {
                 return (startDate == null || sample.getTime() >= startDate)
-                    && (endDate == null || sample.getTime() <= endDate);
+                    && (endDate == null || sample.getTime() <= endDate) &&
+                        (metricFilter == null || metricFilter.isValid(sample));
             }
         });
     }
@@ -657,10 +659,46 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
                 @Override
                 public Filter<ThreadInfo> createAttributeFilter(
                     String operator, String attribute, String value) {
-                    // TODO Auto-generated method stub
                     return new Filter<ThreadInfo>() {
                         @Override
                         public boolean isValid(ThreadInfo input) {
+                            return input.getAttributes().containsKey(attribute) && input.getAttributes().get(attribute).equals(value);
+                        }
+                    };
+                }
+            };
+            try {
+                complexFilter = OQLFilterBuilder.getFilter(filter, factory);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+        return complexFilter;
+    }
+
+    //metrics are also filtered based on the attributes given in the common thread filter text area
+    private Filter<Metric> createMetricFilter() {
+        Filter<Metric> complexFilter = null;
+        final String filter = threadnameFilterTextField.getText();
+        if (filter != null) {
+            FilterFactory<Metric> factory = new FilterFactory<Metric>() {
+
+                @Override
+                public Filter<Metric> createFullTextFilter(final String expression) {
+                    return new Filter<Metric>() {
+                        @Override
+                        public boolean isValid(Metric input) {
+                            return true;
+                        }
+                    };
+                }
+
+                @Override
+                public Filter<Metric> createAttributeFilter(
+                        String operator, String attribute, String value) {
+                    return new Filter<Metric>() {
+                        @Override
+                        public boolean isValid(Metric input) {
                             return input.getAttributes().containsKey(attribute) && input.getAttributes().get(attribute).equals(value);
                         }
 

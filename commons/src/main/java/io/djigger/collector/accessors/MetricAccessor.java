@@ -32,10 +32,7 @@ import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import static com.mongodb.client.model.Filters.*;
 
@@ -191,6 +188,16 @@ public class MetricAccessor extends AbstractAccessor {
         Metric<Object> metric = new Metric<Object>(time, name, value);
         if (value instanceof Document) {
             metric.setValue(documentToGenericObject((Document) value));
+        }
+        //TODO implement this properly
+        if (doc.keySet().size() > 4) {
+            Map<String,String> attributes = new HashMap<>();
+            for (String key : doc.keySet()) {
+                if (!key.equals("_id") && !key.equals("name") && !key.equals("value") && !key.equals("time")) {
+                    attributes.put(key,doc.get(key).toString());
+                }
+            }
+            metric.setAttributes(attributes);
         }
         return metric;
     }

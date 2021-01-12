@@ -1,6 +1,8 @@
 package io.djigger.monitoring.java.model;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Metric<T> implements Serializable {
 
@@ -11,6 +13,8 @@ public class Metric<T> implements Serializable {
     private String name;
 
     private T value;
+
+    private Map<String,String> attributes;
 
     public Metric(String name, T value) {
         super();
@@ -47,5 +51,13 @@ public class Metric<T> implements Serializable {
 
     public void setValue(T value) {
         this.value = value;
+    }
+
+    public Map<String, String> getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(Map<String, String> attributes) {
+        this.attributes = attributes;
     }
 }
