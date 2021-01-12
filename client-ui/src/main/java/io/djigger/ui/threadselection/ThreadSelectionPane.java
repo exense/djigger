@@ -663,7 +663,7 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
                     return new Filter<ThreadInfo>() {
                         @Override
                         public boolean isValid(ThreadInfo input) {
-                            return input.getAttributes().containsKey(attribute) && input.getAttributes().get(attribute).equals(value);
+                            return input.getTags().containsKey(attribute) && input.getTags().get(attribute).equals(value);
                         }
 
                     };
