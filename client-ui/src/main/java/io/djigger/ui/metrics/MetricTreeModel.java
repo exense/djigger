@@ -28,6 +28,7 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class MetricTreeModel implements TreeModel {
 
@@ -86,15 +87,25 @@ public class MetricTreeModel implements TreeModel {
 
     }
 
+    private MetricNode addMissingChildNode(MetricNode parent, String name) {
+        MetricNode child = findChildByName(parent.children, name);
+        if (child == null) {
+            child = new MetricNode();
+            child.name = name;
+            parent.children.add(child);
+        }
+        return child;
+    }
+
     public void load(List<Metric<?>> metrics) {
         root.children.clear();
         for (Metric<?> m : metrics) {
-            MetricNode child = findChildByName(root.children, m.getName());
-            if (child == null) {
-                child = new MetricNode();
-                child.name = m.getName();
-                root.children.add(child);
+            MetricNode rootOrTag = root;
+            Map<String, String> tags = m.getAttributes();
+            if (tags != null && tags.size()>0) {
+                rootOrTag = addMissingChildNode(root, tags.toString());
             }
+            MetricNode child = addMissingChildNode(rootOrTag, m.getName());
 
             if (m.getValue() instanceof GenericObject) {
                 loadJson(child, (GenericObject) m.getValue());

@@ -25,6 +25,7 @@ import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 
 public class MetricPane extends Dashlet {
@@ -105,7 +106,6 @@ public class MetricPane extends Dashlet {
         for (TreePath path : selectedPaths) {
             Object[] reportNodePath = path.getPath();
             if (reportNodePath.length > 1) {
-                MetricNode firstNode = (MetricNode) reportNodePath[1];
 
                 StringBuilder serieName = new StringBuilder();
                 for (int i = 1; i < reportNodePath.length; i++) {
@@ -115,28 +115,35 @@ public class MetricPane extends Dashlet {
                 TimeSeries series1 = new TimeSeries(serieName.toString().replaceFirst("/", ""));
 
                 for (Metric<?> m : metrics) {
-                    if (m.getName().equals(firstNode.name)) {
-                        if (reportNodePath.length > 2) {
-                            Object value = m.getValue();
-                            if (value instanceof GenericObject) {
-                                Object currentValue = value;
-                                for (int i = 2; i < reportNodePath.length; i++) {
-                                    MetricNode node = (MetricNode) reportNodePath[i];
-                                    if (currentValue instanceof GenericObject) {
-                                        GenericObject genericObject = (GenericObject) currentValue;
-                                        if (genericObject.containsKey(node.name)) {
-                                            currentValue = genericObject.get(node.name);
-                                        } else {
-                                            currentValue = null;
-                                            break;
-                                            // TODO
+                    boolean hasTags = (m.getAttributes() != null && m.getAttributes().size() > 0);
+                    int firstNodeIndex = (hasTags) ? 2 : 1;
+                    int minReportNodeSize = (hasTags) ? 3 : 2;
+                    if (!hasTags || (m.getAttributes().toString().equals(((MetricNode) reportNodePath[1]).name)
+                            && reportNodePath.length > 2)) {
+                        MetricNode firstNode = (MetricNode) reportNodePath[firstNodeIndex];
+                        if (m.getName().equals(firstNode.name) ) {
+                            if (reportNodePath.length > minReportNodeSize) {
+                                Object value = m.getValue();
+                                if (value instanceof GenericObject) {
+                                    Object currentValue = value;
+                                    for (int i = minReportNodeSize; i < reportNodePath.length; i++) {
+                                        MetricNode node = (MetricNode) reportNodePath[i];
+                                        if (currentValue instanceof GenericObject) {
+                                            GenericObject genericObject = (GenericObject) currentValue;
+                                            if (genericObject.containsKey(node.name)) {
+                                                currentValue = genericObject.get(node.name);
+                                            } else {
+                                                currentValue = null;
+                                                break;
+                                                // TODO
+                                            }
                                         }
                                     }
-                                }
-                                if (currentValue != null) {
-                                    if (currentValue instanceof Number) {
-                                        Number numberValue = (Number) currentValue;
-                                        series1.addOrUpdate(new Second(new Date(m.getTime())), numberValue);
+                                    if (currentValue != null) {
+                                        if (currentValue instanceof Number) {
+                                            Number numberValue = (Number) currentValue;
+                                            series1.addOrUpdate(new Second(new Date(m.getTime())), numberValue);
+                                        }
                                     }
                                 }
                             }
