@@ -22,6 +22,7 @@ package io.djigger.collector.server.services;
 import ch.exense.commons.core.server.Registrable;
 import ch.exense.commons.core.web.container.ServerContext;
 import io.djigger.client.Facade;
+import io.djigger.client.FacadeStatus;
 import io.djigger.collector.server.ClientConnection;
 import io.djigger.collector.server.Server;
 
@@ -29,9 +30,7 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.*;
 
@@ -47,43 +46,6 @@ public class Services implements Registrable {
     @PostConstruct
     public void init() {
         server= (Server) context.get(Server.class);
-    }
-
-    public class FacadeStatus  {
-
-        String facadeClass;
-
-        Map<String, String> attributes;
-
-        Map<String, String> properties;
-
-        boolean connected;
-
-        public FacadeStatus(String facadeClass, Map<String, String> attributes, Map<String, String> properties,
-                            boolean connected) {
-            super();
-            this.facadeClass = facadeClass;
-            this.attributes = attributes;
-            this.properties = properties;
-            this.connected = connected;
-        }
-
-        public String getFacadeClass() {
-            return facadeClass;
-        }
-
-        public Map<String, String> getAttributes() {
-            return attributes;
-        }
-
-        public Map<String, String> getProperties() {
-            return properties;
-        }
-
-        public boolean isConnected() {
-            return connected;
-        }
-
     }
 
     @GET
@@ -104,13 +66,53 @@ public class Services implements Registrable {
             }
 
             // if sampling, show at which interval
+            // if sampling, show at which interval
             if (facade.isSampling()) {
                 newProperties.put("samplingRate", facade.getSamplingInterval() + "");
             }
 
-            result.add(new FacadeStatus(facade.getClass().getSimpleName(), sorted(connection.getAttributes()), sorted(newProperties), facade.isConnected()));
+            result.add(new FacadeStatus(facade.getConnectionId(), facade.getClass().getSimpleName(),
+                sorted(connection.getAttributes()), sorted(newProperties),
+                facade.isConnected(),facade.getSamplingInterval(),facade.isSampling()));
         }
         return result;
+    }
+
+    @GET
+    @Path("/toggleConnection/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void toggleConnection(@PathParam("id") String id) throws Exception {
+        ClientConnection clientConnection = server.getClientConnection(id);
+        if (clientConnection != null) {
+            clientConnection.getFacade().toggleConnection();
+        } else {
+            throw new RuntimeException("The related connection could not be found");
+        }
+    }
+
+    @GET
+    @Path("/toggleSampling/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void toggleSampling(@PathParam("id") String id) {
+        ClientConnection clientConnection = server.getClientConnection(id);
+        if (clientConnection != null) {
+            clientConnection.getFacade().setSampling(!clientConnection.getFacade().isSampling());
+        } else {
+            throw new RuntimeException("The related connection could not be found");
+        }
+    }
+
+    @GET
+    @Path("/samplingRate/{id}/{samplingInterval}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void toggleSampling(@PathParam("id") String id, @PathParam("samplingInterval") int samplingInterval) {
+        ClientConnection clientConnection = server.getClientConnection(id);
+        if (clientConnection != null) {
+            clientConnection.getFacade().setSamplingInterval(samplingInterval);
+        } else {
+            throw new RuntimeException("The related connection could not be found");
+        }
+
     }
 
     private SortedMap<String, String> sorted(Map<String, String> map) {

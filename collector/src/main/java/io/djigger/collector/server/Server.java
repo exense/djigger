@@ -225,4 +225,15 @@ public class Server {
             return new ArrayList<ClientConnection>(clients);
         }
     }
+
+    public ClientConnection getClientConnection(String id) {
+        ClientConnection result = null;
+        for (ClientConnection c:getClients()) {
+            if (c.getFacade().getConnectionId().equals(id)) {
+                result = c;
+                break;
+            }
+        }
+        return result;
+    }
 }

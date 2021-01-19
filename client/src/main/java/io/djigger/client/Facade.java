@@ -92,6 +92,8 @@ public abstract class Facade {
      */
     private final String connectionId;
 
+    private boolean autoReconnect;
+
     private boolean connected;
 
     protected final Properties properties;
@@ -121,27 +123,33 @@ public abstract class Facade {
         this.connected = false;
         this.samplingRate = DEFAULT_RATE;
 
+        this.autoReconnect = autoReconnect;
+
         if (autoReconnect) {
-            timer = new Timer();
-            timer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    try {
-                        if (!isConnected()) {
-                            connect();
-                            restoreSession();
-                        }
-                    } catch (Exception e) {
-                    	if (logger.isDebugEnabled()) {
-                    		logger.debug("Unable to reconnect facade " + properties.toString(), e);
-                    	} else {
-                    		logger.warn("Unable to reconnect facade " + properties.toString());
-                    	}
+            createReconnectTimer();
+        }
+    }
+
+    protected void createReconnectTimer() {
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    if (!isConnected()) {
+                        connect();
+                        restoreSession();
+                    }
+                } catch (Exception e) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Unable to reconnect facade " + properties.toString(), e);
+                    } else {
+                        logger.warn("Unable to reconnect facade " + properties.toString());
                     }
                 }
+            }
 
-            }, 10000, 5000);
-        }
+        }, 10000, 5000);
     }
 
     public String getConnectionId() {
@@ -150,6 +158,19 @@ public abstract class Facade {
 
 	public Properties getProperties() {
         return properties;
+    }
+
+    public void toggleConnection() throws Exception {
+        if (isConnected()) {
+            destroy();
+         } else {
+            if (autoReconnect) {
+                createReconnectTimer();
+            } else {
+                connect();
+            }
+            restoreSession();
+        }
     }
 
     public void connect() throws Exception {
