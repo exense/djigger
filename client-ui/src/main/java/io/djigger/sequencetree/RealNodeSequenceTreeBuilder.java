@@ -47,7 +47,7 @@ public class RealNodeSequenceTreeBuilder {
             }
         }
 
-        InstrumentationEventNode rootNode = lastNode;
+        InstrumentationEventNode rootNode = (lastNode != null) ? lastNode : new InstrumentationEventNode(events.get(0));
         while (rootNode.getParent() != null) {
             rootNode = rootNode.getParent();
         }
