@@ -714,7 +714,7 @@ public class ThreadSelectionPane extends JPanel implements MouseMotionListener, 
         return complexFilter;
     }
 
-    private void selectionChanged() {
+    public void selectionChanged() {
         main.onThreadSelection(getFilterForCurrentSelection(true));
     }
 

@@ -506,6 +506,7 @@ public class Session extends JPanel implements FacadeListener, Closeable {
         reloadStatisticsCache();
 
         threadSelectionPane.refresh();
+        threadSelectionPane.selectionChanged();
         refreshAnalyzerGroupPane();
     }
 
