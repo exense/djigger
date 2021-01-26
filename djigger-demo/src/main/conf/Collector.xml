@@ -1,7 +1,5 @@
 <Collector>
-	<servicePort>8080</servicePort>
 	<dataTTL>3600</dataTTL>
-	<db host="localhost"/>
 	<connectionFiles>
 		
 		<string>../djigger-demo/src/main/conf/Connections.xml</string>
