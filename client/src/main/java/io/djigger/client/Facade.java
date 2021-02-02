@@ -160,10 +160,10 @@ public abstract class Facade {
         return properties;
     }
 
-    public void toggleConnection() throws Exception {
-        if (isConnected()) {
+    public void toggleConnection(boolean newStateOn) throws Exception {
+        if (isConnected() && !newStateOn) {
             destroy();
-         } else {
+         } else if (!isConnected() && newStateOn) {
             if (autoReconnect) {
                 createReconnectTimer();
             } else {

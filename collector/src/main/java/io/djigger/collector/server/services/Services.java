@@ -21,10 +21,13 @@ package io.djigger.collector.server.services;
 
 import ch.exense.commons.core.server.Registrable;
 import ch.exense.commons.core.web.container.ServerContext;
+import io.djigger.client.AgentFacade;
 import io.djigger.client.Facade;
 import io.djigger.client.FacadeStatus;
 import io.djigger.collector.server.ClientConnection;
 import io.djigger.collector.server.Server;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -33,10 +36,13 @@ import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Singleton
 @Path("/services")
 public class Services implements Registrable {
+
+    private static final Logger logger = LoggerFactory.getLogger(Services.class);
 
     Server server;//serverContext
 
@@ -79,24 +85,94 @@ public class Services implements Registrable {
     }
 
     @GET
-    @Path("/toggleConnection/{id}")
+    @Path("/toggleConnection/{id}/{state}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void toggleConnection(@PathParam("id") String id) throws Exception {
+    public void toggleConnection(@PathParam("id") String id, @PathParam("state") boolean newStateOn) throws Exception {
+        changeConnectionState(id,newStateOn);
+    }
+
+    @POST
+    @Path("/disableConnections")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void disableConnections(List<String> ids) throws Exception {
+        changeManyConnectionState(ids, false);
+    }
+
+    @POST
+    @Path("/enableConnections")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void enableConnections(List<String> ids) throws Exception{
+        changeManyConnectionState(ids, true);
+    }
+
+    private void changeManyConnectionState(List<String> ids, boolean state) throws Exception {
+        AtomicInteger errors = new AtomicInteger();
+        ids.forEach(id -> {
+            try {
+                changeConnectionState(id,state);
+            } catch (Exception e) {
+                logger.error("Disable connection service failed for id " + id,e);
+                errors.incrementAndGet();
+            }
+        });
+        if (errors.get() > 0) {
+            throw new RuntimeException("Changing the connection state failed for " + errors.get() + " connections. More details can be found in the logs.");
+        }
+    }
+
+    private void changeConnectionState(String id, boolean state) throws Exception {
         ClientConnection clientConnection = server.getClientConnection(id);
         if (clientConnection != null) {
-            clientConnection.getFacade().toggleConnection();
+            clientConnection.getFacade().toggleConnection(state);
         } else {
             throw new RuntimeException("The related connection could not be found");
         }
     }
 
     @GET
-    @Path("/toggleSampling/{id}")
+    @Path("/toggleSampling/{id}/{newState}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void toggleSampling(@PathParam("id") String id) {
+    public void toggleSampling(@PathParam("id") String id, @PathParam("newState") boolean newState) {
         ClientConnection clientConnection = server.getClientConnection(id);
         if (clientConnection != null) {
-            clientConnection.getFacade().setSampling(!clientConnection.getFacade().isSampling());
+            clientConnection.getFacade().setSampling(newState);
+        } else {
+            throw new RuntimeException("The related connection could not be found");
+        }
+    }
+
+    @POST
+    @Path("/stopSampling")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void stopSampling(List<String> ids) throws Exception {
+        changeManySamplingState(ids,false);
+    }
+
+    @POST
+    @Path("/startSampling")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void startSampling(List<String> ids) throws Exception {
+        changeManySamplingState(ids,true);
+    }
+
+    private void changeManySamplingState(List<String> ids, boolean state) throws Exception {
+        AtomicInteger errors = new AtomicInteger();
+        ids.forEach(id -> {
+            try {
+                changeSamplingState(id,state);
+            } catch (Exception e) {
+                logger.error("Disable connection service failed for id: " + id,e);
+                errors.incrementAndGet();
+            }
+        });
+        if (errors.get() > 0) {
+            throw new RuntimeException("Changing the sampling state failed for " + errors.get() + " connections. More details can be found in the logs.");
+        }
+    }
+    private void changeSamplingState(String id, boolean state) {
+        ClientConnection clientConnection = server.getClientConnection(id);
+        if (clientConnection != null) {
+            clientConnection.getFacade().setSampling(state);
         } else {
             throw new RuntimeException("The related connection could not be found");
         }
@@ -105,7 +181,7 @@ public class Services implements Registrable {
     @GET
     @Path("/samplingRate/{id}/{samplingInterval}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void toggleSampling(@PathParam("id") String id, @PathParam("samplingInterval") int samplingInterval) {
+    public void editSampling(@PathParam("id") String id, @PathParam("samplingInterval") int samplingInterval) {
         ClientConnection clientConnection = server.getClientConnection(id);
         if (clientConnection != null) {
             clientConnection.getFacade().setSamplingInterval(samplingInterval);

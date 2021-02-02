@@ -76,10 +76,12 @@ public class AgentFacade extends Facade implements MessageListener {
     }
 
     protected void stopSampling() {
-        try {
-            client.sendMessage(JavaAgentMessageType.UNSUBSCRIBE_THREAD_SAMPLING, null);
-        } catch (IOException e) {
-            logger.error("Error while sending message to agent:", e);
+        if (client != null) {
+            try {
+                client.sendMessage(JavaAgentMessageType.UNSUBSCRIBE_THREAD_SAMPLING, null);
+            } catch (IOException e) {
+                logger.error("Error while sending message to agent:", e);
+            }
         }
     }
 
