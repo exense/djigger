@@ -22,6 +22,7 @@ package io.djigger.client;
 import io.djigger.client.jstack.Parser;
 import io.djigger.client.jstack.Parser.Format;
 import io.djigger.client.jstack.Parser.ParserEventListener;
+import io.djigger.model.Connection;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import io.djigger.tailer.LogTailer;
@@ -46,7 +47,7 @@ public class JstackLogTailFacade extends Facade {
     @Override
     protected void connect_() throws Exception {
 
-        String fileParam = properties.getProperty(Parameters.FILE);
+        String fileParam = properties.getProperty(Connection.Parameters.FILE);
         if (fileParam != null) {
             final List<ThreadInfo> threadInfos = new ArrayList<>(1);
             final Parser parser = new Parser(Format.STANDARD_OUTPUT, new ParserEventListener() {
@@ -60,7 +61,7 @@ public class JstackLogTailFacade extends Facade {
                 }
             });
 
-            boolean startAtFileBegin = Boolean.parseBoolean(properties.getProperty(Parameters.START_AT_FILE_BEGIN, "false"));
+            boolean startAtFileBegin = Boolean.parseBoolean(properties.getProperty(Connection.Parameters.START_AT_FILE_BEGIN, "false"));
 
             File file = new File(fileParam);
             logTailer = new LogTailer(file, startAtFileBegin, new LogTailerListener() {
@@ -87,7 +88,7 @@ public class JstackLogTailFacade extends Facade {
                 }
             }
         } else {
-            throw new RuntimeException("File not specified. Please specify the file to be read by setting the parameter '" + Parameters.FILE + "'");
+            throw new RuntimeException("File not specified. Please specify the file to be read by setting the parameter '" + Connection.Parameters.FILE + "'");
         }
     }
 

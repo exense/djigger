@@ -17,7 +17,7 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.collector.accessors;
+package io.djigger.accessors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

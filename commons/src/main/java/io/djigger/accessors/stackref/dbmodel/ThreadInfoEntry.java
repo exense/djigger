@@ -17,7 +17,7 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.collector.accessors.stackref.dbmodel;
+package io.djigger.accessors.stackref.dbmodel;
 
 import ch.exense.commons.core.model.accessors.AbstractIdentifiableObject;
 import io.djigger.monitoring.java.model.ThreadInfo;

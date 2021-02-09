@@ -27,6 +27,7 @@ import java.util.*;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
+import io.djigger.model.Connection;
 import io.djigger.model.TaggedMetric;
 import io.djigger.ui.analyzer.AnalyzerPane;
 import org.slf4j.Logger;
@@ -40,7 +41,7 @@ import io.djigger.client.FacadeListener;
 import io.djigger.client.JMXClientFacade;
 import io.djigger.client.JstackLogTailFacade;
 import io.djigger.client.ProcessAttachFacade;
-import io.djigger.client.mbeans.MetricCollectionConfiguration;
+import io.djigger.mbeans.MetricCollectionConfiguration;
 import io.djigger.db.client.StoreClient;
 import io.djigger.model.Capture;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
@@ -231,25 +232,25 @@ public class Session extends JPanel implements FacadeListener, Closeable {
         if (config.getType() == SessionType.AGENT) {
             final Properties prop = new Properties();
             if (config.getParameters().containsKey(SessionParameter.PROCESSID)) {
-                prop.put(Facade.Parameters.PROCESS_ID, config.getParameters().get(SessionParameter.PROCESSID));
+                prop.put(Connection.Parameters.PROCESS_ID, config.getParameters().get(SessionParameter.PROCESSID));
                 facade = new ProcessAttachFacade(prop, false);
             } else {
-                prop.put(Facade.Parameters.HOST, config.getParameters().get(SessionParameter.HOSTNAME));
-                prop.put(Facade.Parameters.PORT, config.getParameters().get(SessionParameter.PORT));
+                prop.put(Connection.Parameters.HOST, config.getParameters().get(SessionParameter.HOSTNAME));
+                prop.put(Connection.Parameters.PORT, config.getParameters().get(SessionParameter.PORT));
                 facade = new AgentFacade(prop, false);
             }
         } else if (config.getType() == SessionType.FILE) {
             Properties prop = new Properties();
-            prop.put(Facade.Parameters.FILE, config.getParameters().get(SessionParameter.FILE));
-            prop.put(Facade.Parameters.START_AT_FILE_BEGIN, "true");
+            prop.put(Connection.Parameters.FILE, config.getParameters().get(SessionParameter.FILE));
+            prop.put(Connection.Parameters.START_AT_FILE_BEGIN, "true");
 
             facade = new JstackLogTailFacade(prop, false);
         } else if (config.getType() == SessionType.JMX) {
             Properties prop = new Properties();
-            prop.put(Facade.Parameters.HOST, config.getParameters().get(SessionParameter.HOSTNAME));
-            prop.put(Facade.Parameters.PORT, config.getParameters().get(SessionParameter.PORT));
-            prop.put(Facade.Parameters.USERNAME, config.getParameters().get(SessionParameter.USERNAME));
-            prop.put(Facade.Parameters.PASSWORD, config.getParameters().get(SessionParameter.PASSWORD));
+            prop.put(Connection.Parameters.HOST, config.getParameters().get(SessionParameter.HOSTNAME));
+            prop.put(Connection.Parameters.PORT, config.getParameters().get(SessionParameter.PORT));
+            prop.put(Connection.Parameters.USERNAME, config.getParameters().get(SessionParameter.USERNAME));
+            prop.put(Connection.Parameters.PASSWORD, config.getParameters().get(SessionParameter.PASSWORD));
             facade = new JMXClientFacade(prop, false);
         } else {
             facade = null;

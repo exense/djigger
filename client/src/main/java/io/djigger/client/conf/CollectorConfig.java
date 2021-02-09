@@ -17,20 +17,30 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.collector.accessors.stackref;
+package io.djigger.client.conf;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.List;
 
-public class LRUCache<K, V> extends LinkedHashMap<K, V> {
-    private int cacheSize;
 
-    public LRUCache(int cacheSize) {
-        super(16, (float) 0.75, true);
-        this.cacheSize = cacheSize;
+public class CollectorConfig {
+
+    Long dataTTL;
+
+    List<String> connectionFiles;
+
+    public List<String> getConnectionFiles() {
+        return connectionFiles;
     }
 
-    protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
-        return size() >= cacheSize;
+    public void setConnectionFiles(List<String> connectionFiles) {
+        this.connectionFiles = connectionFiles;
+    }
+
+    public Long getDataTTL() {
+        return dataTTL;
+    }
+
+    public void setDataTTL(Long dataTTL) {
+        this.dataTTL = dataTTL;
     }
 }

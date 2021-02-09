@@ -23,6 +23,7 @@ import io.denkbar.smb.core.Message;
 import io.denkbar.smb.core.MessageListener;
 import io.denkbar.smb.core.MessageRouter;
 import io.djigger.agent.InstrumentationError;
+import io.djigger.model.Connection;
 import io.djigger.monitoring.java.agent.JavaAgentMessageType;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
@@ -137,8 +138,8 @@ public class AgentFacade extends Facade implements MessageListener {
 
     @Override
     public void connect_() throws Exception {
-        String host = properties.getProperty(Parameters.HOST);
-        String port = properties.getProperty(Parameters.PORT);
+        String host = properties.getProperty(Connection.Parameters.HOST);
+        String port = properties.getProperty(Connection.Parameters.PORT);
         this.client = new MessageRouter(host, Integer.parseInt(port));
 
         startClient();

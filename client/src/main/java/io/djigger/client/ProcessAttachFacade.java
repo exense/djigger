@@ -4,6 +4,7 @@ import com.sun.tools.attach.VirtualMachine;
 import com.sun.tools.attach.VirtualMachineDescriptor;
 import io.denkbar.smb.core.MessageRouter;
 import io.djigger.client.util.Jps;
+import io.djigger.model.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +61,7 @@ public class ProcessAttachFacade extends AgentFacade {
         }).start();
 
         String processID = null;
-        Object processNamePattern = properties.get(Parameters.PROCESS_NAME_PATTERN);
+        Object processNamePattern = properties.get(Connection.Parameters.PROCESS_NAME_PATTERN);
 
         // show a list of all PIDs and displayNames, if needed.
         String listVmsLogLevel = null;
@@ -101,7 +102,7 @@ public class ProcessAttachFacade extends AgentFacade {
                 throw new RuntimeException("No VM found matching pattern " + processNamePattern);
             }
         } else {
-            processID = properties.get(Parameters.PROCESS_ID).toString();
+            processID = properties.get(Connection.Parameters.PROCESS_ID).toString();
         }
         vm = VirtualMachine.attach(processID);
 
@@ -124,7 +125,7 @@ public class ProcessAttachFacade extends AgentFacade {
 
         vm.loadAgent(agentJar.getAbsolutePath(), "host:" + Inet4Address.getLocalHost().getHostName() + ",port:" + port);
 
-        long timeout = Long.parseLong(properties.getProperty(Parameters.CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT));
+        long timeout = Long.parseLong(properties.getProperty(Connection.Parameters.CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT));
         synchronized (this) {
             wait(timeout);
         }

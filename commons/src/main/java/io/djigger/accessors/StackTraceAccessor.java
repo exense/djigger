@@ -17,17 +17,15 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.collector.accessors;
+package io.djigger.accessors;
 
 import ch.exense.commons.core.mongo.MongoClientSession;
 import ch.exense.commons.core.mongo.accessors.generic.AbstractCRUDAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.djigger.collector.accessors.stackref.dbmodel.StackTraceEntry;
-import io.djigger.model.TaggedInstrumentationEvent;
+import io.djigger.accessors.stackref.dbmodel.StackTraceEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.Spliterator;
 
 public class StackTraceAccessor extends AbstractCRUDAccessor<StackTraceEntry>{

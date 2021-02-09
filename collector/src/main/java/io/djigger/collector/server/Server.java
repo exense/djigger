@@ -21,16 +21,16 @@ package io.djigger.collector.server;
 
 import ch.exense.commons.core.web.container.ServerContext;
 
+import io.djigger.accessors.*;
 import io.djigger.agent.InstrumentationError;
 import io.djigger.client.Facade;
 import io.djigger.client.FacadeListener;
-import io.djigger.collector.accessors.*;
-import io.djigger.collector.accessors.stackref.ThreadInfoAccessorImpl;
-import io.djigger.collector.accessors.stackref.dbmodel.StackTraceEntry;
-import io.djigger.collector.accessors.stackref.dbmodel.ThreadInfoEntry;
-import io.djigger.collector.server.conf.*;
-import io.djigger.model.TaggedInstrumentationEvent;
-import io.djigger.model.TaggedMetric;
+import io.djigger.client.conf.Configurator;
+import io.djigger.model.*;
+import io.djigger.accessors.stackref.ThreadInfoAccessorImpl;
+import io.djigger.accessors.stackref.dbmodel.StackTraceEntry;
+import io.djigger.accessors.stackref.dbmodel.ThreadInfoEntry;
+import io.djigger.client.conf.*;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.Metric;
@@ -50,6 +50,10 @@ public class Server {
     private StackTraceAccessor stackTraceAccessor;
 
     private InstrumentationEventAccessor instrumentationEventsAccessor;
+
+    private ConnectionAccessor connectionAccessor;
+
+    private SubscriptionAccessor subscriptionAccessor;
 
     private MetricAccessor metricAccessor;
 
@@ -83,6 +87,13 @@ public class Server {
             metricAccessor = (MetricAccessor) context.get(TaggedMetric.class.getName());
             metricAccessor.createIndexesIfNeeded(ttl);
 
+
+            connectionAccessor = (ConnectionAccessor) context.get(Connection.class.getName());
+            connectionAccessor.createIndexesIfNeeded(ttl);
+
+            subscriptionAccessor = (SubscriptionAccessor) context.get(Subscription.class.getName());
+            subscriptionAccessor.createIndexesIfNeeded(ttl);
+
             processGroup(null, cc.getConnectionGroup());
         } catch (Exception e) {
             logger.error("A fatal error occurred while starting collector.", e);
@@ -115,25 +126,38 @@ public class Server {
                 }
             } catch (Exception e) {
                 logger.error("An error occurred while creating client " + connectionParam.toString(), e);
+            } finally {
+                //config files including all subscriptions parsed -> save all to DB
+                saveParsedConfigToDB(connectionParam);
             }
         }
     }
-    
+
+    private void saveParsedConfigToDB(Connection connectionParam) {
+        List<String> subscriptionsIds = new ArrayList();
+        //persist subscriptions
+        //TODO detect duplicated templates?
+        if (connectionParam.getSubscriptions() != null) {
+            subscriptionAccessor.save(connectionParam.getSubscriptions());
+        }
+        connectionAccessor.save(connectionParam);
+
+    }
+
     private void mergeSubscriptions(Connection connectionParam) throws Exception {
     	List<InstrumentSubscription> subsFromFile = Configurator.parseSubscriptionsFiles(connectionParam.getSubscriptionFiles());
     	if (subsFromFile != null) {
-	    	if (connectionParam.getSubscriptions() != null) {
-	    		connectionParam.getSubscriptions().addAll(subsFromFile);
-	    	} else {
-	    		connectionParam.setSubscriptions(subsFromFile);
-	    	}
+	    	if (connectionParam.getSubscriptions() == null) {
+                connectionParam.setSubscriptions(new ArrayList());
+            }
+            subsFromFile.forEach(s -> connectionParam.getSubscriptions().add(new Subscription(s)));
     	}
     }
 
 
-    private Facade createClient(final Map<String, String> attributes, Connection connectionConfig) throws Exception {
-        Constructor<?> c = Class.forName(connectionConfig.getConnectionClass()).getDeclaredConstructor(Properties.class, boolean.class);
-        final Facade client = (Facade) c.newInstance(connectionConfig.getConnectionProperties(), true);
+    private Facade createClient(final Map<String, String> attributes, Connection connection) throws Exception {
+        Constructor<?> c = Class.forName(connection.getConnectionClass()).getDeclaredConstructor(Properties.class, boolean.class);
+        final Facade client = (Facade) c.newInstance(connection.getConnectionProperties(), true);
         final ThreadInfoAccessor threadInfoAccessor = context.get(ThreadInfoAccessor.class);
 
         client.addListener(new FacadeListener() {
@@ -204,17 +228,17 @@ public class Server {
 			}
         });
 
-        client.setSamplingInterval(connectionConfig.getSamplingParameters().getSamplingRate());
+        client.setSamplingInterval(connection.getSamplingParameters().getSamplingRate());
         client.setSampling(true);
 
-        if (connectionConfig.getSubscriptions() != null) {
-            for (InstrumentSubscription subscription : connectionConfig.getSubscriptions()) {
-                client.addInstrumentation(subscription);
+        if (connection.getSubscriptions() != null) {
+            for (Subscription subscription : connection.getSubscriptions()) {
+                client.addInstrumentation(subscription.getSubscription());
             }
         }
 
-        if (connectionConfig.getMetrics() != null) {
-            client.setMetricCollectionConfiguration(connectionConfig.getMetrics());
+        if (connection.getMetrics() != null) {
+            client.setMetricCollectionConfiguration(connection.getMetrics());
         }
 
         return client;

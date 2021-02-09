@@ -19,6 +19,7 @@
  *******************************************************************************/
 package io.djigger.client;
 
+import io.djigger.model.Connection;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.mbeans.MBeanCollector;
 import io.djigger.monitoring.java.mbeans.MBeanCollector.ValueListener;
@@ -136,10 +137,10 @@ public class JMXClientFacade extends Facade implements NotificationListener {
 
     @Override
     protected synchronized void connect_() throws Exception {
-        String host = properties.getProperty(Parameters.HOST);
-        String port = properties.getProperty(Parameters.PORT);
-        String username = properties.getProperty(Parameters.USERNAME);
-        String password = properties.getProperty(Parameters.PASSWORD);
+        String host = properties.getProperty(Connection.Parameters.HOST);
+        String port = properties.getProperty(Connection.Parameters.PORT);
+        String username = properties.getProperty(Connection.Parameters.USERNAME);
+        String password = properties.getProperty(Connection.Parameters.PASSWORD);
 
         logger.info("Attempting to create JMX connection to " + host + ":" + port);
 

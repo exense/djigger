@@ -23,15 +23,17 @@
  * Configurator : practical static methods used to load various parts of the collector's configuration  
  /*******************************************************************************/
 
-package io.djigger.collector.server.conf;
+package io.djigger.client.conf;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.xstream.XStream;
-import io.djigger.client.Facade;
 import io.djigger.client.JMXClientFacade;
-import io.djigger.client.mbeans.MetricCollectionConfiguration;
-import io.djigger.collector.server.conf.mixin.InstrumentSubscriptionMixin;
+import io.djigger.mbeans.MetricCollectionConfiguration;
+import io.djigger.client.conf.mixin.InstrumentSubscriptionMixin;
+import io.djigger.model.Connection;
+import io.djigger.model.ConnectionGroupNode;
+import io.djigger.model.SamplingParameters;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.mbeans.MBeanCollectorConfiguration;
 
@@ -281,7 +283,7 @@ public class Configurator {
     }
 
     private static ConnectionGroupNode parseAndBuildConnection(String csvLine) throws Exception {
-        Connection connection = new io.djigger.collector.server.conf.Connection();
+        Connection connection = new Connection();
 
         String[] splitLine = csvLine.split(";");
 
@@ -290,10 +292,10 @@ public class Configurator {
 
         // JMX Connection Properties
         Properties connectionProperties = new Properties();
-        connectionProperties.setProperty(Facade.Parameters.HOST, splitLine[0]);
-        connectionProperties.setProperty(Facade.Parameters.PORT, splitLine[1]);
-        connectionProperties.setProperty(Facade.Parameters.USERNAME, splitLine[2]);
-        connectionProperties.setProperty(Facade.Parameters.PASSWORD, resolvePasswordFromPath(splitLine[3]));
+        connectionProperties.setProperty(Connection.Parameters.HOST, splitLine[0]);
+        connectionProperties.setProperty(Connection.Parameters.PORT, splitLine[1]);
+        connectionProperties.setProperty(Connection.Parameters.USERNAME, splitLine[2]);
+        connectionProperties.setProperty(Connection.Parameters.PASSWORD, resolvePasswordFromPath(splitLine[3]));
 
         //connectionProperties.setProperty(arg0, arg1)
 

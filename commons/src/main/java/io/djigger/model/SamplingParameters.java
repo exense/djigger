@@ -17,30 +17,32 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.collector.server.conf;
+package io.djigger.model;
 
-import java.util.List;
+import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 
+public class SamplingParameters {
 
-public class CollectorConfig {
+    @XStreamAsAttribute
+    private int samplingRate;
 
-    Long dataTTL;
-
-    List<String> connectionFiles;
-
-    public List<String> getConnectionFiles() {
-        return connectionFiles;
+    public int getSamplingRate() {
+        return samplingRate;
     }
 
-    public void setConnectionFiles(List<String> connectionFiles) {
-        this.connectionFiles = connectionFiles;
+    public void setSamplingRate(int samplingRate) {
+        this.samplingRate = samplingRate;
     }
 
-    public Long getDataTTL() {
-        return dataTTL;
-    }
+    /*
+     * @author dcransac
+     * @since 20.05.2015
+     *
+     * 	For debug purposes
+     *
+     */
 
-    public void setDataTTL(Long dataTTL) {
-        this.dataTTL = dataTTL;
+    public String toString() {
+        return "samplingRate=" + samplingRate;
     }
 }

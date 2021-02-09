@@ -20,8 +20,8 @@
 package io.djigger.db.client;
 
 import ch.exense.commons.core.mongo.MongoClientSession;
-import io.djigger.collector.accessors.*;
-import io.djigger.collector.accessors.stackref.ThreadInfoAccessorImpl;
+import io.djigger.accessors.*;
+import io.djigger.accessors.stackref.ThreadInfoAccessorImpl;
 
 public class StoreClient {
 

@@ -17,7 +17,9 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.collector.server.conf;
+package io.djigger.client.conf;
+
+import io.djigger.model.ConnectionGroupNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +31,7 @@ public class ConnectionGroup implements ConnectionGroupNode {
 
     List<ConnectionGroupNode> groups;
 
-    ConnectionGroup() {
+    public ConnectionGroup() {
         this.groups = new ArrayList<ConnectionGroupNode>();
     }
 

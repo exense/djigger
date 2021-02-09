@@ -21,11 +21,11 @@ package io.djigger.collector.server.services;
 
 import ch.exense.commons.core.server.Registrable;
 import ch.exense.commons.core.web.container.ServerContext;
-import io.djigger.client.AgentFacade;
 import io.djigger.client.Facade;
 import io.djigger.client.FacadeStatus;
 import io.djigger.collector.server.ClientConnection;
 import io.djigger.collector.server.Server;
+import io.djigger.model.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,8 +67,8 @@ public class Services implements Registrable {
             newProperties.putAll(facade.getProperties());
 
             // mask password
-            if (newProperties.get(Facade.Parameters.PASSWORD) != null) {
-                newProperties.put(Facade.Parameters.PASSWORD, "*****");
+            if (newProperties.get(Connection.Parameters.PASSWORD) != null) {
+                newProperties.put(Connection.Parameters.PASSWORD, "*****");
             }
 
             // if sampling, show at which interval
@@ -200,7 +200,7 @@ public class Services implements Registrable {
 
     private SortedMap<String, String> sorted(Properties props) {
         // sort according to the logic defined in Facade.Parameters
-        SortedMap<String, String> sorted = new TreeMap<>(Facade.Parameters.SORT_COMPARATOR);
+        SortedMap<String, String> sorted = new TreeMap<>(Connection.Parameters.SORT_COMPARATOR);
         for (String key : props.stringPropertyNames()) {
             String value = props.getProperty(key);
             sorted.put(key, value);

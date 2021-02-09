@@ -17,16 +17,16 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.collector.accessors.stackref;
+package io.djigger.accessors.stackref;
 
 import com.mongodb.MongoExecutionTimeoutException;
 import com.mongodb.client.model.CountOptions;
-import io.djigger.collector.accessors.StackTraceAccessor;
-import io.djigger.collector.accessors.ThreadDumpAccessor;
-import io.djigger.collector.accessors.ThreadInfoAccessor;
-import io.djigger.collector.accessors.stackref.dbmodel.StackTraceElementEntry;
-import io.djigger.collector.accessors.stackref.dbmodel.StackTraceEntry;
-import io.djigger.collector.accessors.stackref.dbmodel.ThreadInfoEntry;
+import io.djigger.accessors.StackTraceAccessor;
+import io.djigger.accessors.ThreadDumpAccessor;
+import io.djigger.accessors.stackref.dbmodel.StackTraceElementEntry;
+import io.djigger.accessors.stackref.dbmodel.StackTraceEntry;
+import io.djigger.accessors.ThreadInfoAccessor;
+import io.djigger.accessors.stackref.dbmodel.ThreadInfoEntry;
 import io.djigger.monitoring.java.model.GlobalThreadId;
 import io.djigger.monitoring.java.model.ThreadInfo;
 import org.bson.BsonDocument;

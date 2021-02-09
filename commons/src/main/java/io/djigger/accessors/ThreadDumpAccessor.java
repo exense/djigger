@@ -17,13 +17,13 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.collector.accessors;
+package io.djigger.accessors;
 
 import ch.exense.commons.core.mongo.MongoClientSession;
 import ch.exense.commons.core.mongo.accessors.generic.AbstractCRUDAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.model.CountOptions;
-import io.djigger.collector.accessors.stackref.dbmodel.ThreadInfoEntry;
+import io.djigger.accessors.stackref.dbmodel.ThreadInfoEntry;
 import io.djigger.model.TaggedMetric;
 import org.bson.BsonDocument;
 import org.bson.conversions.Bson;

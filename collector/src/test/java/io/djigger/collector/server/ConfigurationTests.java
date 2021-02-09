@@ -4,9 +4,9 @@ import java.util.List;
 
 import org.junit.Test;
 
-import io.djigger.collector.server.conf.CollectorConfig;
-import io.djigger.collector.server.conf.Configurator;
-import io.djigger.collector.server.conf.ConnectionsConfig;
+import io.djigger.client.conf.CollectorConfig;
+import io.djigger.client.conf.Configurator;
+import io.djigger.client.conf.ConnectionsConfig;
 import junit.framework.Assert;
 
 

@@ -17,18 +17,17 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.collector.server.conf;
+package io.djigger.model;
 
+import ch.exense.commons.core.model.accessors.AbstractOrganizableObject;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
-import io.djigger.client.Facade;
-import io.djigger.client.mbeans.MetricCollectionConfiguration;
+import io.djigger.mbeans.MetricCollectionConfiguration;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
-public class Connection implements ConnectionGroupNode {
+public class Connection extends AbstractOrganizableObject implements ConnectionGroupNode {
 
     @XStreamAsAttribute
     private String connectionClass;
@@ -39,8 +38,9 @@ public class Connection implements ConnectionGroupNode {
 
     private MetricCollectionConfiguration metrics;
 
-    private List<InstrumentSubscription> subscriptions;
-    
+    private List<Subscription> subscriptions;
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     List<String> subscriptionFiles;
 
     private Map<String, String> attributes;
@@ -69,11 +69,11 @@ public class Connection implements ConnectionGroupNode {
         this.samplingParameters = samplingParameters;
     }
 
-    public List<InstrumentSubscription> getSubscriptions() {
+    public List<Subscription> getSubscriptions() {
         return subscriptions;
     }
 
-    public void setSubscriptions(List<InstrumentSubscription> subscriptions) {
+    public void setSubscriptions(List<Subscription> subscriptions) {
         this.subscriptions = subscriptions;
     }
     
@@ -108,7 +108,7 @@ public class Connection implements ConnectionGroupNode {
 
     public String toString() {
         Properties hiddenPassword = ((Properties) connectionProperties.clone());
-        hiddenPassword.setProperty(Facade.Parameters.PASSWORD, "***");
+        hiddenPassword.setProperty(Connection.Parameters.PASSWORD, "***");
         return connectionClass + ";" +
             hiddenPassword + ";" +
             samplingParameters.toString() + ";" +
@@ -116,4 +116,58 @@ public class Connection implements ConnectionGroupNode {
             subscriptions + ";";
     }
 
+    public static class Parameters {
+        // used by JStackLogTailFacade
+        public static final String FILE = "file";
+        public static final String START_AT_FILE_BEGIN = "startAtFileBegin";
+
+        // used by ProcessAttachFacade
+        public static final String PROCESS_ID = "processID";
+        public static final String PROCESS_NAME_PATTERN = "processNamePattern";
+        public static final String CONNECTION_TIMEOUT = "connectionTimeoutMs";
+
+        // used by AgentFacade and JMXClientFacade
+        public static final String HOST = "host";
+        public static final String PORT = "port";
+
+        // used by JMXClientFacade
+        public static final String USERNAME = "username";
+        public static final String PASSWORD = "password";
+
+        /*
+         Defines the order in which the parameters should be shown when listed.
+         This is relevant for the collector status page, to guarantee a consistent and
+         logical order, e.g: host, port, username, password. This, in turn, also makes
+         the sort capabilities on the web page more useful.
+
+         The comparator also accepts values not contained in the list of known parameter
+         names. They will be sorted in alphabetical order, after the known ones.
+        */
+        public static final Comparator<String> SORT_COMPARATOR = new Comparator<String>() {
+            private final List<String> knownParamsOrder = Arrays.asList(
+                FILE, START_AT_FILE_BEGIN,
+                PROCESS_ID, PROCESS_NAME_PATTERN, CONNECTION_TIMEOUT,
+                HOST, PORT, USERNAME, PASSWORD
+            );
+
+            @Override
+            public int compare(String s1, String s2) {
+                int i1 = knownParamsOrder.indexOf(s1);
+                int i2 = knownParamsOrder.indexOf(s2);
+
+                if (i1 >= 0 && i2 >= 0) {
+                    // both are known: compare by index in knownParamsOrder
+                    return Integer.compare(i1, i2);
+                } else if (i1 < 0 && i2 < 0) {
+                    // both are unknown: compare by name
+                    return s1.compareToIgnoreCase(s2);
+                } else {
+                    // exactly one is known (>=0), and one is unknown (<0).
+                    // put the known one first, which is equivalent to a reverse integer sort
+                    return -Integer.compare(i1, i2);
+                }
+            }
+        };
+
+    }
 }

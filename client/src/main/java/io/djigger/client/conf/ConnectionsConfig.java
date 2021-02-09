@@ -23,7 +23,9 @@
  * ConnectionsConfig : separate abstraction containing a representation of the connections  
  /*******************************************************************************/
 
-package io.djigger.collector.server.conf;
+package io.djigger.client.conf;
+
+import io.djigger.model.ConnectionGroupNode;
 
 import java.util.ArrayList;
 import java.util.List;
