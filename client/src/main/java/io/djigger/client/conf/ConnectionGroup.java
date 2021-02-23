@@ -19,8 +19,6 @@
  *******************************************************************************/
 package io.djigger.client.conf;
 
-import io.djigger.model.ConnectionGroupNode;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

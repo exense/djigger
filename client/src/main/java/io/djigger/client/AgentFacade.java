@@ -46,7 +46,10 @@ public class AgentFacade extends Facade implements MessageListener {
     protected MessageRouter client;
 
     public AgentFacade(Properties properties, boolean autoReconnect) {
-        super(properties, autoReconnect);
+        this(null, properties, autoReconnect);
+    }
+    public AgentFacade(String connectionId, Properties properties, boolean autoReconnect) {
+        super(connectionId, properties, autoReconnect);
         this.client = null;
     }
 
@@ -143,6 +146,18 @@ public class AgentFacade extends Facade implements MessageListener {
         this.client = new MessageRouter(host, Integer.parseInt(port));
 
         startClient();
+    }
+
+    @Override
+    public String getConnectionPropertiesString() {
+        return properties.getProperty(Connection.Parameters.HOST) +
+                properties.getProperty(Connection.Parameters.PORT);
+
+    }
+
+    @Override
+    public boolean supportMultipleConnection() {
+        return false;
     }
 
     protected void startClient() {

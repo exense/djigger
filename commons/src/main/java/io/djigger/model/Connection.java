@@ -20,14 +20,12 @@
 package io.djigger.model;
 
 import ch.exense.commons.core.model.accessors.AbstractOrganizableObject;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 import io.djigger.mbeans.MetricCollectionConfiguration;
-import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 
 import java.util.*;
 
-public class Connection extends AbstractOrganizableObject implements ConnectionGroupNode {
+public class Connection extends AbstractOrganizableObject  {
 
     @XStreamAsAttribute
     private String connectionClass;
@@ -39,9 +37,6 @@ public class Connection extends AbstractOrganizableObject implements ConnectionG
     private MetricCollectionConfiguration metrics;
 
     private List<Subscription> subscriptions;
-
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    List<String> subscriptionFiles;
 
     private Map<String, String> attributes;
 
@@ -76,14 +71,6 @@ public class Connection extends AbstractOrganizableObject implements ConnectionG
     public void setSubscriptions(List<Subscription> subscriptions) {
         this.subscriptions = subscriptions;
     }
-    
-    public List<String> getSubscriptionFiles() {
-        return subscriptionFiles;
-    }
-
-    public void setSubscriptionFiles(List<String> subscriptionFiles) {
-        this.subscriptionFiles = subscriptionFiles;
-    }
 
     public MetricCollectionConfiguration getMetrics() {
         return metrics;
@@ -99,11 +86,6 @@ public class Connection extends AbstractOrganizableObject implements ConnectionG
 
     public void setAttributes(Map<String, String> attributes) {
         this.attributes = attributes;
-    }
-
-    @Override
-    public List<ConnectionGroupNode> getGroups() {
-        return null;
     }
 
     public String toString() {

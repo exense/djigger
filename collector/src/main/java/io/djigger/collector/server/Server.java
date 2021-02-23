@@ -25,12 +25,10 @@ import io.djigger.accessors.*;
 import io.djigger.agent.InstrumentationError;
 import io.djigger.client.Facade;
 import io.djigger.client.FacadeListener;
-import io.djigger.client.conf.Configurator;
 import io.djigger.model.*;
 import io.djigger.accessors.stackref.ThreadInfoAccessorImpl;
 import io.djigger.accessors.stackref.dbmodel.StackTraceEntry;
 import io.djigger.accessors.stackref.dbmodel.ThreadInfoEntry;
-import io.djigger.client.conf.*;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.Metric;
@@ -40,6 +38,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Server {
 
@@ -57,20 +56,17 @@ public class Server {
 
     private MetricAccessor metricAccessor;
 
-    private List<ClientConnection> clients = new ArrayList<>();
+    private ClientConnectionManager ccMgr = new ClientConnectionManager();
 
     private ServerContext context;
 
     public void start(ServerContext context) throws Exception {
         try {
             this.context = context;
-            String collConfigFilename = context.getConfiguration().getProperty("io.djigger.collector.configFile","conf/Collector.xml");
+            context.put(Server.class, this);
 
-            CollectorConfig config = Configurator.parseCollectorConfiguration(collConfigFilename);
-            ConnectionsConfig cc = Configurator.parseConnectionsConfiguration(config.getConnectionFiles());
-
-            //initAccessors(config);
-            Long ttl = config.getDataTTL();
+            Long ttl = context.getConfiguration().getPropertyAsLong("db.data.ttl");
+            logger.info("Data retention period configured with " + ttl + " seconds.");
 
             threadDumpAccessor = (ThreadDumpAccessor) context.get(ThreadInfoEntry.class.getName());
             threadDumpAccessor.createIndexesIfNeeded(ttl);
@@ -94,70 +90,38 @@ public class Server {
             subscriptionAccessor = (SubscriptionAccessor) context.get(Subscription.class.getName());
             subscriptionAccessor.createIndexesIfNeeded(ttl);
 
-            processGroup(null, cc.getConnectionGroup());
+            loadConnections();
+
         } catch (Exception e) {
             logger.error("A fatal error occurred while starting collector.", e);
             throw e;
         }
     }
 
-    protected void processGroup(Map<String, String> attributeStack, ConnectionGroupNode groupNode) {
-        HashMap<String, String> attributes = new HashMap<>();
-        if (attributeStack != null) {
-            attributes.putAll(attributeStack);
-        }
-
-        if (groupNode.getAttributes() != null && groupNode.getAttributes().size() > 0)
-            attributes.putAll(groupNode.getAttributes());
-
-        if (groupNode.getGroups() != null) {
-            for (ConnectionGroupNode child : groupNode.getGroups()) {
-                processGroup(attributes, child);
-            }
-        }
-
-        if (groupNode instanceof Connection) {
-            Connection connectionParam = (Connection) groupNode;
-            try {
-            	mergeSubscriptions(connectionParam);
-                Facade client = createClient(attributes, connectionParam);
-                synchronized (clients) {
-                    clients.add(new ClientConnection(client, attributes));
+    public void loadConnections() throws Exception {
+        Iterator<Connection> all = connectionAccessor.getAll();
+        while (all.hasNext()) {
+            Connection next = all.next();
+            //TODO check/review
+            //Avoid to recreate same clients when reloading from DB
+            //All live updates should be performned on the facade and saved to DB at the same time
+            //so this should only be called at startup and import of configurations
+            if (!ccMgr.hasConnectionId(next.getId().toString())) {
+                Facade client = createClient(next.getAttributes(), next);
+                synchronized (ccMgr) {
+                    ccMgr.addClient(new ClientConnection(client, next.getAttributes()));
                 }
-            } catch (Exception e) {
-                logger.error("An error occurred while creating client " + connectionParam.toString(), e);
-            } finally {
-                //config files including all subscriptions parsed -> save all to DB
-                saveParsedConfigToDB(connectionParam);
+                if (ccMgr.singleConnection(client) || client.supportMultipleConnection()) {
+                    client.initConnection();
+                }
             }
         }
     }
-
-    private void saveParsedConfigToDB(Connection connectionParam) {
-        List<String> subscriptionsIds = new ArrayList();
-        //persist subscriptions
-        //TODO detect duplicated templates?
-        if (connectionParam.getSubscriptions() != null) {
-            subscriptionAccessor.save(connectionParam.getSubscriptions());
-        }
-        connectionAccessor.save(connectionParam);
-
-    }
-
-    private void mergeSubscriptions(Connection connectionParam) throws Exception {
-    	List<InstrumentSubscription> subsFromFile = Configurator.parseSubscriptionsFiles(connectionParam.getSubscriptionFiles());
-    	if (subsFromFile != null) {
-	    	if (connectionParam.getSubscriptions() == null) {
-                connectionParam.setSubscriptions(new ArrayList());
-            }
-            subsFromFile.forEach(s -> connectionParam.getSubscriptions().add(new Subscription(s)));
-    	}
-    }
-
 
     private Facade createClient(final Map<String, String> attributes, Connection connection) throws Exception {
-        Constructor<?> c = Class.forName(connection.getConnectionClass()).getDeclaredConstructor(Properties.class, boolean.class);
-        final Facade client = (Facade) c.newInstance(connection.getConnectionProperties(), true);
+        Constructor<?> c = Class.forName(connection.getConnectionClass()).getDeclaredConstructor(String.class, Properties.class, boolean.class);
+        final Facade client = (Facade) c.newInstance(connection.getId().toString(),
+                connection.getConnectionProperties(), true);
         final ThreadInfoAccessor threadInfoAccessor = context.get(ThreadInfoAccessor.class);
 
         client.addListener(new FacadeListener() {
@@ -245,19 +209,12 @@ public class Server {
     }
 
     public List<ClientConnection> getClients() {
-        synchronized (clients) {
-            return new ArrayList<ClientConnection>(clients);
+        synchronized (ccMgr) {
+            return new ArrayList<ClientConnection>(ccMgr.getClients());
         }
     }
 
     public ClientConnection getClientConnection(String id) {
-        ClientConnection result = null;
-        for (ClientConnection c:getClients()) {
-            if (c.getFacade().getConnectionId().equals(id)) {
-                result = c;
-                break;
-            }
-        }
-        return result;
+        return ccMgr.getConnectionById(id);
     }
 }

@@ -35,6 +35,7 @@ import javax.inject.Singleton;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -87,22 +88,40 @@ public class Services implements Registrable {
     @GET
     @Path("/toggleConnection/{id}/{state}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void toggleConnection(@PathParam("id") String id, @PathParam("state") boolean newStateOn) throws Exception {
-        changeConnectionState(id,newStateOn);
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response toggleConnection(@PathParam("id") String id, @PathParam("state") boolean newStateOn)  {
+        try {
+            changeConnectionState(id,newStateOn);
+            return Response.status(Response.Status.OK).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).type("text/plain").build();
+        }
     }
 
     @POST
     @Path("/disableConnections")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void disableConnections(List<String> ids) throws Exception {
-        changeManyConnectionState(ids, false);
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response disableConnections(List<String> ids)  {
+        try {
+            changeManyConnectionState(ids, false);
+            return Response.status(Response.Status.OK).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).type("text/plain").build();
+        }
     }
 
     @POST
     @Path("/enableConnections")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void enableConnections(List<String> ids) throws Exception{
-        changeManyConnectionState(ids, true);
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response enableConnections(List<String> ids) {
+        try {
+            changeManyConnectionState(ids, true);
+            return Response.status(Response.Status.OK).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).type("text/plain").build();
+        }
     }
 
     private void changeManyConnectionState(List<String> ids, boolean state) throws Exception {
@@ -132,27 +151,41 @@ public class Services implements Registrable {
     @GET
     @Path("/toggleSampling/{id}/{newState}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void toggleSampling(@PathParam("id") String id, @PathParam("newState") boolean newState) {
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response toggleSampling(@PathParam("id") String id, @PathParam("newState") boolean newState) {
         ClientConnection clientConnection = server.getClientConnection(id);
         if (clientConnection != null) {
             clientConnection.getFacade().setSampling(newState);
+            return Response.status(Response.Status.OK).build();
         } else {
-            throw new RuntimeException("The related connection could not be found");
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("The related connection could not be found.").type("text/plain").build();
         }
     }
 
     @POST
     @Path("/stopSampling")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void stopSampling(List<String> ids) throws Exception {
-        changeManySamplingState(ids,false);
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response stopSampling(List<String> ids)  {
+        try {
+            changeManySamplingState(ids,false);
+            return Response.status(Response.Status.OK).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).type("text/plain").build();
+        }
     }
 
     @POST
     @Path("/startSampling")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void startSampling(List<String> ids) throws Exception {
-        changeManySamplingState(ids,true);
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response startSampling(List<String> ids) {
+        try {
+            changeManySamplingState(ids,true);
+            return Response.status(Response.Status.OK).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).type("text/plain").build();
+        }
     }
 
     private void changeManySamplingState(List<String> ids, boolean state) throws Exception {
@@ -181,14 +214,15 @@ public class Services implements Registrable {
     @GET
     @Path("/samplingRate/{id}/{samplingInterval}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void editSampling(@PathParam("id") String id, @PathParam("samplingInterval") int samplingInterval) {
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response editSampling(@PathParam("id") String id, @PathParam("samplingInterval") int samplingInterval) {
         ClientConnection clientConnection = server.getClientConnection(id);
         if (clientConnection != null) {
             clientConnection.getFacade().setSamplingInterval(samplingInterval);
+            return Response.status(Response.Status.OK).build();
         } else {
-            throw new RuntimeException("The related connection could not be found");
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("The related connection could not be found").type("text/plain").build();
         }
-
     }
 
     private SortedMap<String, String> sorted(Map<String, String> map) {

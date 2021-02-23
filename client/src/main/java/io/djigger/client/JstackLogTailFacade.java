@@ -39,7 +39,11 @@ public class JstackLogTailFacade extends Facade {
     private LogTailer logTailer;
 
     public JstackLogTailFacade(Properties properties, boolean autoReconnect) {
-        super(properties, autoReconnect);
+        this(null,properties, autoReconnect);
+    }
+
+    public JstackLogTailFacade(String connectionId, Properties properties, boolean autoReconnect) {
+        super(connectionId, properties, autoReconnect);
     }
 
     private final Object lock = new Object();
@@ -90,6 +94,16 @@ public class JstackLogTailFacade extends Facade {
         } else {
             throw new RuntimeException("File not specified. Please specify the file to be read by setting the parameter '" + Connection.Parameters.FILE + "'");
         }
+    }
+
+    @Override
+    public String getConnectionPropertiesString() {
+        return properties.getProperty(Connection.Parameters.FILE);
+    }
+
+    @Override
+    public boolean supportMultipleConnection() {
+        return true;
     }
 
 

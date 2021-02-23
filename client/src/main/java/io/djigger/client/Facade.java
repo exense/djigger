@@ -59,19 +59,28 @@ public abstract class Facade {
 
     protected MetricCollectionConfiguration metricCollectionConfiguration;
 
-    public Facade(final Properties properties, boolean autoReconnect) {
+    public Facade(String connectionId, final Properties properties, boolean autoReconnect) {
         super();
         this.properties = properties;
 
-        this.connectionId = UUID.randomUUID().toString();
+        this.connectionId = (connectionId!=null) ? connectionId : UUID.randomUUID().toString();
 
         this.connected = false;
         this.samplingRate = DEFAULT_RATE;
 
         this.autoReconnect = autoReconnect;
+    }
 
+    public void initConnection() {
         if (autoReconnect) {
             createReconnectTimer();
+        } else {
+            try {
+                connect();
+            } catch (Exception e) {
+                logger.error("Initial connection of facade failed.", e);
+            }
+            restoreSession();
         }
     }
 
@@ -125,6 +134,10 @@ public abstract class Facade {
     }
 
     protected abstract void connect_() throws Exception;
+
+    public abstract String getConnectionPropertiesString();
+
+    public abstract boolean supportMultipleConnection();
 
     public boolean isConnected() {
         return connected;

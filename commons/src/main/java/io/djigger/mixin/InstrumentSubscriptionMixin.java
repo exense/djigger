@@ -1,4 +1,4 @@
-package io.djigger.client.conf.mixin;
+package io.djigger.mixin;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;

@@ -28,7 +28,10 @@ public class ProcessAttachFacade extends AgentFacade {
     private static final String DEFAULT_CONNECTION_TIMEOUT = "10000";
 
     public ProcessAttachFacade(Properties properties, boolean autoReconnect) {
-        super(properties, autoReconnect);
+        this(null, properties, autoReconnect);
+    }
+    public ProcessAttachFacade(String connectionId, Properties properties, boolean autoReconnect) {
+        super(connectionId, properties, autoReconnect);
     }
 
     @Override
@@ -136,5 +139,16 @@ public class ProcessAttachFacade extends AgentFacade {
 
         startClient();
     }
+
+    @Override
+    public String getConnectionPropertiesString() {
+        Object processNamePattern = properties.get(Connection.Parameters.PROCESS_NAME_PATTERN);
+        if (processNamePattern != null) {
+            return processNamePattern.toString();
+        } else {
+            return properties.get(Connection.Parameters.PROCESS_ID).toString();
+        }
+    }
+
 
 }

@@ -12,3 +12,4 @@ collector.jar
 .idea/
 *.iml
 dependency-reduced-pom.xml
+/collector/testing/

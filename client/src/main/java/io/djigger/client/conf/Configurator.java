@@ -30,9 +30,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.thoughtworks.xstream.XStream;
 import io.djigger.client.JMXClientFacade;
 import io.djigger.mbeans.MetricCollectionConfiguration;
-import io.djigger.client.conf.mixin.InstrumentSubscriptionMixin;
+import io.djigger.mixin.InstrumentSubscriptionMixin;
 import io.djigger.model.Connection;
-import io.djigger.model.ConnectionGroupNode;
 import io.djigger.model.SamplingParameters;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.mbeans.MBeanCollectorConfiguration;
@@ -50,20 +49,24 @@ public class Configurator {
     private static String mBeansAttributesKey = "mBeanAttributes";
     private static String mBeansExclusionAttributesKey = "mBeanExclusionAttributes";
 
-    public static CollectorConfig parseCollectorConfiguration(String collConfigFilename) throws Exception {
-
-        if (collConfigFilename == null || collConfigFilename.trim().isEmpty())
-            throw new Exception("Invalid collector config file : " + collConfigFilename + ". Check your property 'io.djigger.collector.configFile' in your config properties file.");
-
+    public static CollectorConfig parseCollectorConfiguration(InputStream stream) throws Exception {
         try {
             XStream xstream = new XStream();
             xstream.alias("Collector", CollectorConfig.class);
-            return (CollectorConfig) xstream.fromXML(new File(collConfigFilename));
+            return (CollectorConfig) xstream.fromXML(stream);
         } catch (Exception e) {
-            String errorMessage = "XStream could not load the collector's config file located at " + collConfigFilename + ". Exception message was : " + e.getMessage();
+            String errorMessage = "XStream could not load the provider collector's config file. Exception message was : " + e.getMessage();
             logger.error(errorMessage, e);
             throw new RuntimeException(errorMessage, e);
         }
+    }
+
+    public static CollectorConfig parseCollectorConfiguration(String collConfigFilename) throws Exception {
+
+        if (collConfigFilename == null || collConfigFilename.trim().isEmpty())
+            throw new Exception("Invalid collector config file : " + collConfigFilename + ".");
+
+        return parseCollectorConfiguration(new FileInputStream(collConfigFilename));
     }
 
     public static ConnectionsConfig parseConnectionsConfiguration(List<String> connectionsConfigFiles) throws Exception {
@@ -179,8 +182,8 @@ public class Configurator {
             XStream xstream = new XStream();
             // [dcransac] Only Connections / Groups
             xstream.alias("Group", ConnectionGroup.class);
-            xstream.alias("Connection", Connection.class);
-            xstream.processAnnotations(Connection.class);
+            xstream.alias("Connection", ConnectionConfig.class);
+            xstream.processAnnotations(ConnectionConfig.class);
             xstream.processAnnotations(SamplingParameters.class);
 
             ConnectionGroup cg = (ConnectionGroup) xstream.fromXML(new File(connectionsConfigFilename));
@@ -244,7 +247,7 @@ public class Configurator {
         ObjectMapper mapper = new ObjectMapper();
         mapper.addMixIn(InstrumentSubscription.class, InstrumentSubscriptionMixin.class);
 
-        JavaType type = mapper.getTypeFactory().constructCollectionType(List.class, Connection.class);
+        JavaType type = mapper.getTypeFactory().constructCollectionType(List.class, ConnectionConfig.class);
 
         List<ConnectionGroupNode> connections;
         try {
@@ -283,7 +286,7 @@ public class Configurator {
     }
 
     private static ConnectionGroupNode parseAndBuildConnection(String csvLine) throws Exception {
-        Connection connection = new Connection();
+        ConnectionConfig connection = new ConnectionConfig();
 
         String[] splitLine = csvLine.split(";");
 

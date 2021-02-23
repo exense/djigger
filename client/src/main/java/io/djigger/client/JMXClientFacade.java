@@ -59,7 +59,11 @@ public class JMXClientFacade extends Facade implements NotificationListener {
     protected final Sampler sampler;
 
     public JMXClientFacade(Properties properties, boolean autoReconnect) {
-        super(properties, autoReconnect);
+        this(null, properties, autoReconnect);
+    }
+
+    public JMXClientFacade(String connectionId, Properties properties, boolean autoReconnect) {
+        super(connectionId, properties, autoReconnect);
 
         final JMXClientFacade me = this;
 
@@ -165,6 +169,19 @@ public class JMXClientFacade extends Facade implements NotificationListener {
         }
         
         logger.info("JMX connection to " + host + ":" + port + " created");
+    }
+
+    @Override
+    public String getConnectionPropertiesString() {
+        return properties.getProperty(Connection.Parameters.HOST) +
+            properties.getProperty(Connection.Parameters.PORT) +
+            properties.getProperty(Connection.Parameters.USERNAME) +
+            properties.getProperty(Connection.Parameters.PASSWORD);
+    }
+
+    @Override
+    public boolean supportMultipleConnection() {
+        return true;
     }
 
     @Override

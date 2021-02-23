@@ -17,7 +17,7 @@
  *  along with djigger.  If not, see <http://www.gnu.org/licenses/>.
  *
  *******************************************************************************/
-package io.djigger.model;
+package io.djigger.client.conf;
 
 import java.util.List;
 import java.util.Map;
