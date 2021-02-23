@@ -104,6 +104,8 @@ public class ConnectionConfig implements ConnectionGroupNode {
 		con.setAttributes(this.attributes);
 		con.setMetrics(this.metrics);
 		con.setConnectionClass(this.connectionClass);
+		con.setConnectionEnabled(true);
+		con.setSamplingEnabled(true);
 		con.setSamplingParameters(this.samplingParameters);
 		if (this.getSubscriptions() != null) {
 			con.setSubscriptions(new ArrayList());

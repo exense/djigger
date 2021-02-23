@@ -38,7 +38,6 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class Server {
 
@@ -56,14 +55,13 @@ public class Server {
 
     private MetricAccessor metricAccessor;
 
-    private ClientConnectionManager ccMgr = new ClientConnectionManager();
+    private ClientConnectionManager ccMgr;
 
     private ServerContext context;
 
     public void start(ServerContext context) throws Exception {
         try {
             this.context = context;
-            context.put(Server.class, this);
 
             Long ttl = context.getConfiguration().getPropertyAsLong("db.data.ttl");
             logger.info("Data retention period configured with " + ttl + " seconds.");
@@ -90,6 +88,9 @@ public class Server {
             subscriptionAccessor = (SubscriptionAccessor) context.get(Subscription.class.getName());
             subscriptionAccessor.createIndexesIfNeeded(ttl);
 
+            ccMgr = new ClientConnectionManager(connectionAccessor);
+            context.put(ClientConnectionManager.class, ccMgr);
+
             loadConnections();
 
         } catch (Exception e) {
@@ -109,9 +110,9 @@ public class Server {
             if (!ccMgr.hasConnectionId(next.getId().toString())) {
                 Facade client = createClient(next.getAttributes(), next);
                 synchronized (ccMgr) {
-                    ccMgr.addClient(new ClientConnection(client, next.getAttributes()));
+                    ccMgr.addClient(new ClientConnection(client, next));
                 }
-                if (ccMgr.singleConnection(client) || client.supportMultipleConnection()) {
+                if (ccMgr.singleConnection(client) || client.supportMultipleConnection() && client.isConnectionEnabled()) {
                     client.initConnection();
                 }
             }
@@ -192,8 +193,10 @@ public class Server {
 			}
         });
 
+        client.setConnectionEnabled(connection.isConnectionEnabled());
+
         client.setSamplingInterval(connection.getSamplingParameters().getSamplingRate());
-        client.setSampling(true);
+        client.setSampling(connection.isSamplingEnabled());
 
         if (connection.getSubscriptions() != null) {
             for (Subscription subscription : connection.getSubscriptions()) {
@@ -208,13 +211,5 @@ public class Server {
         return client;
     }
 
-    public List<ClientConnection> getClients() {
-        synchronized (ccMgr) {
-            return new ArrayList<ClientConnection>(ccMgr.getClients());
-        }
-    }
 
-    public ClientConnection getClientConnection(String id) {
-        return ccMgr.getConnectionById(id);
-    }
 }

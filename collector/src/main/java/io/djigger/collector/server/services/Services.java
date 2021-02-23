@@ -22,8 +22,8 @@ package io.djigger.collector.server.services;
 import ch.exense.commons.core.server.Registrable;
 import ch.exense.commons.core.web.container.ServerContext;
 import io.djigger.client.Facade;
-import io.djigger.client.FacadeStatus;
 import io.djigger.collector.server.ClientConnection;
+import io.djigger.collector.server.ClientConnectionManager;
 import io.djigger.collector.server.Server;
 import io.djigger.model.Connection;
 import org.slf4j.Logger;
@@ -45,22 +45,22 @@ public class Services implements Registrable {
 
     private static final Logger logger = LoggerFactory.getLogger(Services.class);
 
-    Server server;//serverContext
+    ClientConnectionManager ccMgr;
 
     @Inject
     ServerContext context;
 
     @PostConstruct
     public void init() {
-        server= (Server) context.get(Server.class);
+        ccMgr= (ClientConnectionManager) context.get(ClientConnectionManager.class);
     }
 
     @GET
     @Path("/status")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<FacadeStatus> getStatus() {
-        List<FacadeStatus> result = new ArrayList<>();
-        for (ClientConnection connection : server.getClients()) {
+    public List<FacadeProperties> getStatus() {
+        List<FacadeProperties> result = new ArrayList<>();
+        for (ClientConnection connection : ccMgr.browseClients()) {
 
             Facade facade = connection.getFacade();
 
@@ -78,9 +78,7 @@ public class Services implements Registrable {
                 newProperties.put("samplingRate", facade.getSamplingInterval() + "");
             }
 
-            result.add(new FacadeStatus(facade.getConnectionId(), facade.getClass().getSimpleName(),
-                sorted(connection.getAttributes()), sorted(newProperties),
-                facade.isConnected(),facade.getSamplingInterval(),facade.isSampling()));
+            result.add(new FacadeProperties(connection));
         }
         return result;
     }
@@ -91,7 +89,7 @@ public class Services implements Registrable {
     @Produces(MediaType.APPLICATION_JSON)
     public Response toggleConnection(@PathParam("id") String id, @PathParam("state") boolean newStateOn)  {
         try {
-            changeConnectionState(id,newStateOn);
+            ccMgr.changeConnectionState(id,newStateOn);
             return Response.status(Response.Status.OK).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).type("text/plain").build();
@@ -128,7 +126,7 @@ public class Services implements Registrable {
         AtomicInteger errors = new AtomicInteger();
         ids.forEach(id -> {
             try {
-                changeConnectionState(id,state);
+                ccMgr.changeConnectionState(id,state);
             } catch (Exception e) {
                 logger.error("Disable connection service failed for id " + id,e);
                 errors.incrementAndGet();
@@ -139,26 +137,16 @@ public class Services implements Registrable {
         }
     }
 
-    private void changeConnectionState(String id, boolean state) throws Exception {
-        ClientConnection clientConnection = server.getClientConnection(id);
-        if (clientConnection != null) {
-            clientConnection.getFacade().toggleConnection(state);
-        } else {
-            throw new RuntimeException("The related connection could not be found");
-        }
-    }
-
     @GET
     @Path("/toggleSampling/{id}/{newState}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response toggleSampling(@PathParam("id") String id, @PathParam("newState") boolean newState) {
-        ClientConnection clientConnection = server.getClientConnection(id);
-        if (clientConnection != null) {
-            clientConnection.getFacade().setSampling(newState);
+        try {
+            ccMgr.changeSamplingState(id, newState);
             return Response.status(Response.Status.OK).build();
-        } else {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("The related connection could not be found.").type("text/plain").build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).type("text/plain").build();
         }
     }
 
@@ -192,7 +180,7 @@ public class Services implements Registrable {
         AtomicInteger errors = new AtomicInteger();
         ids.forEach(id -> {
             try {
-                changeSamplingState(id,state);
+                ccMgr.changeSamplingState(id,state);
             } catch (Exception e) {
                 logger.error("Disable connection service failed for id: " + id,e);
                 errors.incrementAndGet();
@@ -202,44 +190,20 @@ public class Services implements Registrable {
             throw new RuntimeException("Changing the sampling state failed for " + errors.get() + " connections. More details can be found in the logs.");
         }
     }
-    private void changeSamplingState(String id, boolean state) {
-        ClientConnection clientConnection = server.getClientConnection(id);
-        if (clientConnection != null) {
-            clientConnection.getFacade().setSampling(state);
-        } else {
-            throw new RuntimeException("The related connection could not be found");
-        }
-    }
 
     @GET
     @Path("/samplingRate/{id}/{samplingInterval}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response editSampling(@PathParam("id") String id, @PathParam("samplingInterval") int samplingInterval) {
-        ClientConnection clientConnection = server.getClientConnection(id);
-        if (clientConnection != null) {
-            clientConnection.getFacade().setSamplingInterval(samplingInterval);
+        try {
+            ccMgr.changeSamplingInterval(id, samplingInterval);
             return Response.status(Response.Status.OK).build();
-        } else {
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("The related connection could not be found").type("text/plain").build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).type("text/plain").build();
         }
     }
 
-    private SortedMap<String, String> sorted(Map<String, String> map) {
-        // force a simple (alphabetical) sort
-        TreeMap<String, String> sorted = new TreeMap<>((Comparator<String>) null);
-        sorted.putAll(map);
-        return sorted;
-    }
 
-    private SortedMap<String, String> sorted(Properties props) {
-        // sort according to the logic defined in Facade.Parameters
-        SortedMap<String, String> sorted = new TreeMap<>(Connection.Parameters.SORT_COMPARATOR);
-        for (String key : props.stringPropertyNames()) {
-            String value = props.getProperty(key);
-            sorted.put(key, value);
-        }
-        return sorted;
-    }
 
 }

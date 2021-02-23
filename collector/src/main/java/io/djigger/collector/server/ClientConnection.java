@@ -20,6 +20,7 @@
 package io.djigger.collector.server;
 
 import io.djigger.client.Facade;
+import io.djigger.model.Connection;
 
 import java.util.Map;
 
@@ -27,12 +28,12 @@ public class ClientConnection {
 
     Facade facade;
 
-    Map<String, String> attributes;
+    Connection connection;
 
-    public ClientConnection(Facade facade, Map<String, String> attributes) {
+    public ClientConnection(Facade facade, Connection connection) {
         super();
         this.facade = facade;
-        this.attributes = attributes;
+        this.connection = connection;
     }
 
     public Facade getFacade() {
@@ -40,6 +41,11 @@ public class ClientConnection {
     }
 
     public Map<String, String> getAttributes() {
-        return attributes;
+        return connection.getAttributes();
     }
+
+    public Connection getConnection() {
+        return connection;
+    }
+
 }

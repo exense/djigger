@@ -32,6 +32,10 @@ public class Connection extends AbstractOrganizableObject  {
 
     private Properties connectionProperties;
 
+    private boolean connectionEnabled;
+
+    private boolean samplingEnabled;
+
     private SamplingParameters samplingParameters;
 
     private MetricCollectionConfiguration metrics;
@@ -54,6 +58,22 @@ public class Connection extends AbstractOrganizableObject  {
 
     public void setConnectionProperties(Properties connectionProperties) {
         this.connectionProperties = connectionProperties;
+    }
+
+    public boolean isConnectionEnabled() {
+        return connectionEnabled;
+    }
+
+    public void setConnectionEnabled(boolean connectionEnabled) {
+        this.connectionEnabled = connectionEnabled;
+    }
+
+    public boolean isSamplingEnabled() {
+        return samplingEnabled;
+    }
+
+    public void setSamplingEnabled(boolean samplingEnabled) {
+        this.samplingEnabled = samplingEnabled;
     }
 
     public SamplingParameters getSamplingParameters() {

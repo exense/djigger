@@ -41,6 +41,8 @@ public abstract class Facade {
 
     private boolean connected;
 
+    private boolean connectionEnabled;
+
     protected final Properties properties;
 
     protected final List<FacadeListener> listeners = new ArrayList<FacadeListener>();
@@ -115,6 +117,7 @@ public abstract class Facade {
     }
 
     public void toggleConnection(boolean newStateOn) throws Exception {
+        this.connectionEnabled = newStateOn;
         if (isConnected() && !newStateOn) {
             destroy();
          } else if (!isConnected() && newStateOn) {
@@ -216,6 +219,14 @@ public abstract class Facade {
 
     public boolean isSampling() {
         return samplingState;
+    }
+
+    public boolean isConnectionEnabled() {
+        return connectionEnabled;
+    }
+
+    public void setConnectionEnabled(boolean connectionEnabled) {
+        this.connectionEnabled = connectionEnabled;
     }
 
     public MetricCollectionConfiguration getMetricCollectionConfiguration() {
