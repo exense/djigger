@@ -33,7 +33,7 @@ import java.util.Map;
 @Path("/config")
 public class ImportExportServices implements Registrable {
 
-	private static final Logger logger = LoggerFactory.getLogger(Services.class);
+	private static final Logger logger = LoggerFactory.getLogger(ImportExportServices.class);
 
 	private ConnectionAccessor connectionAccessor;
 	private SubscriptionAccessor subscriptionAccessor;

@@ -4,7 +4,6 @@ import io.djigger.accessors.ConnectionAccessor;
 import io.djigger.client.Facade;
 import io.djigger.model.Connection;
 
-import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;

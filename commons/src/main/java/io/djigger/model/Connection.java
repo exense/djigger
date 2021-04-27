@@ -30,7 +30,7 @@ public class Connection extends AbstractOrganizableObject  {
     @XStreamAsAttribute
     private String connectionClass;
 
-    private Properties connectionProperties;
+    private Properties properties;
 
     private boolean connectionEnabled;
 
@@ -52,12 +52,12 @@ public class Connection extends AbstractOrganizableObject  {
         this.connectionClass = connectionClass;
     }
 
-    public Properties getConnectionProperties() {
-        return connectionProperties;
+    public Properties getProperties() {
+        return properties;
     }
 
-    public void setConnectionProperties(Properties connectionProperties) {
-        this.connectionProperties = connectionProperties;
+    public void setProperties(Properties properties) {
+        this.properties = properties;
     }
 
     public boolean isConnectionEnabled() {
@@ -109,7 +109,7 @@ public class Connection extends AbstractOrganizableObject  {
     }
 
     public String toString() {
-        Properties hiddenPassword = ((Properties) connectionProperties.clone());
+        Properties hiddenPassword = ((Properties) properties.clone());
         hiddenPassword.setProperty(Connection.Parameters.PASSWORD, "***");
         return connectionClass + ";" +
             hiddenPassword + ";" +

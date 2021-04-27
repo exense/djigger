@@ -2,6 +2,7 @@ package io.djigger.collector.server;
 
 import ch.exense.commons.core.server.AbstractStandardServer;
 import ch.exense.commons.core.web.container.ServerContext;
+import io.djigger.collector.server.services.DjiggerJacksonMapperProvider;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,12 +13,16 @@ public class DjiggerServer extends AbstractStandardServer {
 
 	@Override
 	protected void registerExplicitly_(ResourceConfig resourceConfig) {
-
 	}
 
 	@Override
 	protected void configure_() {
 
+	}
+
+	@Override
+	protected void registerJackonMapperProvider(ResourceConfig resourceConfig) {
+		resourceConfig.register(DjiggerJacksonMapperProvider.class);
 	}
 
 	@Override

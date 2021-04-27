@@ -19,12 +19,12 @@
  *******************************************************************************/
 package io.djigger.collector.server.services;
 
+import ch.exense.commons.core.access.Secured;
 import ch.exense.commons.core.server.Registrable;
 import ch.exense.commons.core.web.container.ServerContext;
 import io.djigger.client.Facade;
 import io.djigger.collector.server.ClientConnection;
 import io.djigger.collector.server.ClientConnectionManager;
-import io.djigger.collector.server.Server;
 import io.djigger.model.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,10 +40,10 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Singleton
-@Path("/services")
-public class Services implements Registrable {
+@Path("/connections")
+public class ConnectionsServices implements Registrable {
 
-    private static final Logger logger = LoggerFactory.getLogger(Services.class);
+    private static final Logger logger = LoggerFactory.getLogger(ConnectionsServices.class);
 
     ClientConnectionManager ccMgr;
 
@@ -56,6 +56,15 @@ public class Services implements Registrable {
     }
 
     @GET
+    @Secured
+    @Path("/connection/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Connection getConnection(@PathParam("id") String id) {
+        return ccMgr.getConnectionById(id).getConnection();
+    }
+
+    @GET
+    @Secured
     @Path("/status")
     @Produces(MediaType.APPLICATION_JSON)
     public List<FacadeProperties> getStatus() {
@@ -84,6 +93,7 @@ public class Services implements Registrable {
     }
 
     @GET
+    @Secured
     @Path("/toggleConnection/{id}/{state}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -97,6 +107,7 @@ public class Services implements Registrable {
     }
 
     @POST
+    @Secured
     @Path("/disableConnections")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -110,6 +121,7 @@ public class Services implements Registrable {
     }
 
     @POST
+    @Secured
     @Path("/enableConnections")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -138,6 +150,7 @@ public class Services implements Registrable {
     }
 
     @GET
+    @Secured
     @Path("/toggleSampling/{id}/{newState}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -151,6 +164,7 @@ public class Services implements Registrable {
     }
 
     @POST
+    @Secured
     @Path("/stopSampling")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -164,6 +178,7 @@ public class Services implements Registrable {
     }
 
     @POST
+    @Secured
     @Path("/startSampling")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -192,6 +207,7 @@ public class Services implements Registrable {
     }
 
     @GET
+    @Secured
     @Path("/samplingRate/{id}/{samplingInterval}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

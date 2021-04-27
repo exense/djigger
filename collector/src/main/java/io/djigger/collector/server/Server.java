@@ -122,7 +122,7 @@ public class Server {
     private Facade createClient(final Map<String, String> attributes, Connection connection) throws Exception {
         Constructor<?> c = Class.forName(connection.getConnectionClass()).getDeclaredConstructor(String.class, Properties.class, boolean.class);
         final Facade client = (Facade) c.newInstance(connection.getId().toString(),
-                connection.getConnectionProperties(), true);
+                connection.getProperties(), true);
         final ThreadInfoAccessor threadInfoAccessor = context.get(ThreadInfoAccessor.class);
 
         client.addListener(new FacadeListener() {

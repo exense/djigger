@@ -9,8 +9,6 @@ public class Subscription extends AbstractOrganizableObject {
 
 	private InstrumentSubscription subscription;
 
-	private List<String> connectionsIds;
-
 	public Subscription() {
 		super();
 	}
@@ -25,13 +23,5 @@ public class Subscription extends AbstractOrganizableObject {
 
 	public void setSubscription(InstrumentSubscription subscription) {
 		this.subscription = subscription;
-	}
-
-	public List<String> getConnectionsIds() {
-		return connectionsIds;
-	}
-
-	public void setConnectionsIds(List<String> connectionsIds) {
-		this.connectionsIds = connectionsIds;
 	}
 }

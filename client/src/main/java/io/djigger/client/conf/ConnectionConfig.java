@@ -100,7 +100,7 @@ public class ConnectionConfig implements ConnectionGroupNode {
 
 	public Connection convertToDBObject() {
 		Connection con = new Connection();
-		con.setConnectionProperties(this.connectionProperties);
+		con.setProperties(this.connectionProperties);
 		con.setAttributes(this.attributes);
 		con.setMetrics(this.metrics);
 		con.setConnectionClass(this.connectionClass);

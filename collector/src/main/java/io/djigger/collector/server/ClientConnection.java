@@ -40,10 +40,6 @@ public class ClientConnection {
         return facade;
     }
 
-    public Map<String, String> getAttributes() {
-        return connection.getAttributes();
-    }
-
     public Connection getConnection() {
         return connection;
     }

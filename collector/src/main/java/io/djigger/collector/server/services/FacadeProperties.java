@@ -29,7 +29,7 @@ public class FacadeProperties {
         Facade facade = clientConnection.getFacade();
         this.connectionId = facade.getConnectionId();
         this.facadeClass = facade.getClass().getSimpleName();
-        this.attributes = sorted(clientConnection.getAttributes());
+        this.attributes = sorted(clientConnection.getConnection().getAttributes());
         this.properties = sorted(facade.getProperties());
         this.connected = facade.isConnected();
         this.connectionEnabled = facade.isConnectionEnabled();
