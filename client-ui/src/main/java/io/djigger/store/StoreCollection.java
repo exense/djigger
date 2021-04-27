@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.locks.ReadWriteLock;
 
 public class StoreCollection<T> implements Serializable {
 
@@ -16,8 +17,11 @@ public class StoreCollection<T> implements Serializable {
 
     transient StoreCollectionListener<T> listener;
 
-    public StoreCollection() {
+    private ReadWriteLock lock;
+
+    public StoreCollection(ReadWriteLock lock) {
         super();
+        this.lock = lock;
     }
 
     public StoreCollection(StoreCollectionListener<T> listener) {
@@ -29,16 +33,30 @@ public class StoreCollection<T> implements Serializable {
         this.listener = listener;
     }
 
-    public synchronized boolean add(T e) {
-        onAdd(e);
-        return collection.add(e);
+    public boolean add(T e) {
+        boolean add = false;
+        lock.writeLock().lock();
+        try {
+            onAdd(e);
+            add = collection.add(e);
+        } finally {
+            lock.writeLock().unlock();
+        }
+        return add;
     }
 
-    public synchronized boolean addAll(Collection<? extends T> c) {
-        for (T t : c) {
-            onAdd(t);
+    public boolean addAll(Collection<? extends T> c) {
+        boolean add = false;
+        lock.writeLock().lock();
+        try {
+            for (T t : c) {
+                onAdd(t);
+            }
+            add = collection.addAll(c);
+        } finally {
+            lock.writeLock().unlock();
         }
-        return collection.addAll(c);
+        return add;
     }
 
     private void onAdd(T e) {
@@ -53,33 +71,56 @@ public class StoreCollection<T> implements Serializable {
         }
     }
 
-    public synchronized void drainTo(StoreCollection<T> target) {
-        target.addAll(collection);
-        clear();
-    }
-
-    public synchronized void clear() {
-        collection.clear();
-        onClear();
-    }
-
-    public synchronized List<T> query(Filter<T> filter) {
-        return Filters.apply(filter, collection);
-    }
-
-    public synchronized void remove(final Filter<T> filter) {
-        if (filter != null) {
-            collection = Filters.apply(new Filter<T>() {
-
-                @Override
-                public boolean isValid(T input) {
-                    return !filter.isValid(input);
-                }
-
-            }, collection);
+    public void drainTo(StoreCollection<T> target) {
+        lock.writeLock().lock();
+        try {
+            target.addAll(collection);
+            clear();
+        } finally {
+            lock.writeLock().unlock();
         }
-        if (listener != null) {
-            listener.onRemove(filter);
+
+    }
+
+    public void clear() {
+        lock.writeLock().lock();
+        try {
+            collection.clear();
+            onClear();
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    public List<T> query(Filter<T> filter) {
+        List<T> apply = null;
+        lock.readLock().lock();
+        try {
+            apply = Filters.apply(filter, collection);
+        } finally {
+            lock.readLock().unlock();
+        }
+        return apply;
+    }
+
+    public void remove(final Filter<T> filter) {
+        lock.writeLock().lock();
+        try {
+            if (filter != null) {
+                collection = Filters.apply(new Filter<T>() {
+
+                    @Override
+                    public boolean isValid(T input) {
+                        return !filter.isValid(input);
+                    }
+
+                }, collection);
+            }
+            if (listener != null) {
+                listener.onRemove(filter);
+            }
+        } finally {
+            lock.writeLock().unlock();
         }
     }
 

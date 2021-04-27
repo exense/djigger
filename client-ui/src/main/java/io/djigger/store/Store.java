@@ -25,20 +25,24 @@ import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.model.ThreadInfo;
 
 import java.io.Serializable;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
 public class Store implements Serializable {
 
     private static final long serialVersionUID = 8746530878726453216L;
 
-    private final StoreCollection<Capture> captures = new StoreCollection<>();
+    private ReadWriteLock lock = new ReentrantReadWriteLock();
 
-    private final StoreCollection<ThreadInfo> threadInfos = new StoreCollection<>();
+    private final StoreCollection<Capture> captures = new StoreCollection<>(lock);
 
-    private final StoreCollection<InstrumentationEvent> instrumentationEvents = new StoreCollection<>();
+    private final StoreCollection<ThreadInfo> threadInfos = new StoreCollection<>(lock);
 
-    private final StoreCollection<Metric<?>> metrics = new StoreCollection<>();
+    private final StoreCollection<InstrumentationEvent> instrumentationEvents = new StoreCollection<>(lock);
 
+    private final StoreCollection<Metric<?>> metrics = new StoreCollection<>(lock);
 
     public Store() {
         super();
@@ -72,5 +76,9 @@ public class Store implements Serializable {
 
     public StoreCollection<Metric<?>> getMetrics() {
         return metrics;
+    }
+
+    public ReadWriteLock getLock(){
+        return lock;
     }
 }

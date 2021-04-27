@@ -23,6 +23,8 @@ import java.awt.BorderLayout;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
@@ -130,9 +132,11 @@ public class Session extends JPanel implements FacadeListener, Closeable {
 
         store = new Store();
 
-        realNodePathCache = new StoreCollection<>();
-        realNodePathCacheWithLineNumbers = new StoreCollection<>();
-        instrumentationEventWrapperCache = new StoreCollection<>();
+        ReadWriteLock lock = new ReentrantReadWriteLock();
+
+        realNodePathCache = new StoreCollection<>(lock);
+        realNodePathCacheWithLineNumbers = new StoreCollection<>(lock);
+        instrumentationEventWrapperCache = new StoreCollection<>(lock);
 
         store.getThreadInfos().setListener(new StoreCollectionListener<ThreadInfo>() {
 

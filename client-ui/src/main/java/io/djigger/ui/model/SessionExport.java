@@ -48,13 +48,15 @@ public class SessionExport implements Serializable {
         Store store = main.getStore();
         SessionExport sessionExport = new SessionExport(store);
         ObjectOutputStream stream = null;
+        store.getLock().readLock().lock();
         try {
             stream = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
             stream.writeObject(sessionExport);
             stream.flush();
         } catch (IOException e) {
-            logger.error("Error whil saving session to file " + file, e);
+            logger.error("Error while saving session to file " + file, e);
         } finally {
+            store.getLock().readLock().unlock();
             if (stream != null) {
                 try {
                     stream.close();
