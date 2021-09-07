@@ -30,7 +30,7 @@
 		"URL_STAGING":[
 			"build@ftps.exense.ch",
       "NOT_USED",
-			"docker.exense.ch"
+			"docker-dev.exense.ch"
 		],
 		"URL_PROD":[
 			"build@ftps.exense.ch",
