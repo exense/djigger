@@ -24,6 +24,7 @@ import io.djigger.ui.Session.SessionType;
 import io.djigger.ui.common.FileChooserHelper;
 import io.djigger.ui.common.FileMetadata;
 import io.djigger.ui.common.Settings;
+import io.djigger.xstream.XStreamFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -212,7 +213,7 @@ public class MainFrame extends JPanel {
 
     private synchronized void exportSessions(File file) {
         if (file != null) {
-            XStream xstream = new XStream();
+            XStream xstream = XStreamFactory.createWithAllTypesPermission();
             List<SessionConfiguration> configs = new ArrayList<SessionConfiguration>();
             try {
                 for (Session session : sessions) {
@@ -231,7 +232,7 @@ public class MainFrame extends JPanel {
     }
 
     private void importSessionFile(File file) {
-        XStream xstream = new XStream();
+        XStream xstream = XStreamFactory.createWithAllTypesPermission();
         if (file != null) {
             String configXml;
             try {

@@ -47,6 +47,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 
+import io.djigger.xstream.XStreamFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -135,7 +136,7 @@ public class SubscriptionPane extends Dashlet {
         commandPanel.add(new CommandButton("importConfig.png", "Import subscriptions", new Runnable() {
             @Override
             public void run() {
-                XStream xstream = new XStream();
+                XStream xstream = XStreamFactory.createWithAllTypesPermission();
                 File file = FileChooserHelper.loadFile(FileMetadata.SUBSCRIPTIONS);
                 if (file != null) {
                     Object o = xstream.fromXML(file);
@@ -151,7 +152,7 @@ public class SubscriptionPane extends Dashlet {
         commandPanel.add(new CommandButton("save.png", "Export subscriptions", new Runnable() {
             @Override
             public void run() {
-                XStream xstream = new XStream();
+                XStream xstream = XStreamFactory.createWithAllTypesPermission();
                 File file = FileChooserHelper.saveFile(FileMetadata.SUBSCRIPTIONS);
                 if (file != null) {
                     try {
