@@ -81,4 +81,12 @@ public class Store implements Serializable {
     public ReadWriteLock getLock(){
         return lock;
     }
+
+    public void setLocks(ReadWriteLock lock) {
+        this.lock = lock;
+        captures.setLock(lock);
+        threadInfos.setLock(lock);
+        instrumentationEvents.setLock(lock);
+        metrics.setLock(lock);
+    }
 }

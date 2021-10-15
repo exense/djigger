@@ -137,8 +137,11 @@ public class StoreCollection<T> implements Serializable {
         public void onRemove(Filter<T> filter);
     }
 
+    public void setLock(ReadWriteLock lock) {
+        this.lock = lock;
+    }
 
-//	private Object readResolve() throws ObjectStreamException {
+    //	private Object readResolve() throws ObjectStreamException {
 //		return this;
 //	}
 }

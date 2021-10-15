@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
 public class SessionExport implements Serializable {
@@ -78,7 +79,12 @@ public class SessionExport implements Serializable {
 
             Object o = stream.readObject();
             if (o instanceof SessionExport) {
-                return (SessionExport) o;
+                SessionExport session = (SessionExport) o;
+                if (session.getStore().getLock() == null) {
+                    ReentrantReadWriteLock reentrantReadWriteLock = new ReentrantReadWriteLock();
+                    session.getStore().setLocks(reentrantReadWriteLock);
+                }
+                return session;
             } else {
                 return null;
             }
