@@ -35,6 +35,7 @@ import io.djigger.collector.server.conf.mixin.InstrumentSubscriptionMixin;
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.mbeans.MBeanCollectorConfiguration;
 
+import io.djigger.xstream.XStreamFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +55,7 @@ public class Configurator {
             throw new Exception("Invalid collector config file : " + collConfigFilename + ". Check your -DcollectorConfig option.");
 
         try {
-            XStream xstream = new XStream();
+            XStream xstream = XStreamFactory.createWithAllTypesPermission();
             xstream.alias("Collector", CollectorConfig.class);
             xstream.processAnnotations(MongoDBParameters.class);
             return (CollectorConfig) xstream.fromXML(new File(collConfigFilename));
@@ -175,7 +176,7 @@ public class Configurator {
         ConnectionsConfig cc = new ConnectionsConfig();
 
         try {
-            XStream xstream = new XStream();
+            XStream xstream = XStreamFactory.createWithAllTypesPermission();
             // [dcransac] Only Connections / Groups
             xstream.alias("Group", ConnectionGroup.class);
             xstream.alias("Connection", Connection.class);
@@ -219,7 +220,7 @@ public class Configurator {
     
     private static List<InstrumentSubscription> parseSubscriptionsXML(String subscriptionsConfigFilename) {
         try {
-            XStream xstream = new XStream();
+            XStream xstream = XStreamFactory.createWithAllTypesPermission();
             // [dcransac] Only Connections / Groups
             //xstream.alias("Group", ConnectionGroup.class);
             xstream.alias("subscriptions", List.class);
