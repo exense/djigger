@@ -77,7 +77,8 @@ public class Server {
             processGroup(null, cc.getConnectionGroup());
 
             serviceServer = new ServiceServer(this);
-            serviceServer.start(config.getServicePort() != null ? Integer.parseInt(config.getServicePort()) : 80);
+            serviceServer.start(config.getServicePort() != null ? Integer.parseInt(config.getServicePort()) : 80,
+                config.getServiceListenAddress() != null ? config.getServiceListenAddress() : "0.0.0.0");
         } catch (Exception e) {
             logger.error("A fatal error occurred while starting collector.", e);
             throw e;
