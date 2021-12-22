@@ -25,6 +25,7 @@ import java.util.List;
 public class CollectorConfig {
 
     String servicePort;
+    String serviceListenAddress;
 
     MongoDBParameters db;
 
@@ -54,6 +55,14 @@ public class CollectorConfig {
 
     public void setServicePort(String servicePort) {
         this.servicePort = servicePort;
+    }
+
+    public String getServiceListenAddress() {
+        return serviceListenAddress;
+    }
+
+    public void setServiceListenAddress(String serviceListenAddress) {
+        this.serviceListenAddress = serviceListenAddress;
     }
 
     public Long getDataTTL() {

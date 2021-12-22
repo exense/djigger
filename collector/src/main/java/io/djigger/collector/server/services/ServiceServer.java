@@ -22,6 +22,7 @@ package io.djigger.collector.server.services;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import java.net.InetSocketAddress;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.Resource;
@@ -35,6 +36,7 @@ public class ServiceServer {
 
     private final io.djigger.collector.server.Server collectorServer;
 
+    private String serverListenAddress;
     private int serverPort;
 
     public ServiceServer(io.djigger.collector.server.Server collectorServer) {
@@ -42,8 +44,9 @@ public class ServiceServer {
         this.collectorServer = collectorServer;
     }
 
-    public void start(int serverPort) throws Exception {
+    public void start(int serverPort, String serverListenAddress) throws Exception {
         this.serverPort = serverPort;
+        this.serverListenAddress = serverListenAddress;
 
         Server webServer = configureServer();
         webServer.start();
@@ -64,7 +67,7 @@ public class ServiceServer {
         });
         ServletContainer servletContainer = new ServletContainer(resourceConfig);
         ServletHolder sh = new ServletHolder(servletContainer);
-        Server server = new Server(serverPort);
+        Server server = new Server(new InetSocketAddress(serverListenAddress, serverPort));
 
         ServletContextHandler restContext = new ServletContextHandler(ServletContextHandler.SESSIONS);
         restContext.setContextPath("/rest");

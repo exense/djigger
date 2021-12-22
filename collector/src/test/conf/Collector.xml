@@ -1,5 +1,6 @@
 <Collector>
 	<servicePort>8080</servicePort>
+	<serviceListenAddress>0.0.0.0</serviceListenAddress>
 	<dataTTL>3600</dataTTL>
 	<db host="localhost"/>
 	<connectionFiles>
