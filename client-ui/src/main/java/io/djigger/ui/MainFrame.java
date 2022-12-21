@@ -77,7 +77,7 @@ public class MainFrame extends JPanel {
         }
         UIManager.put("Button.defaultButtonFollowsFocus", Boolean.TRUE);
 
-        frame = new JFrame("djigger 1.11.4");
+        frame = new JFrame("djigger 1.11.5");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setPreferredSize(new Dimension(1300, 700));
 
@@ -217,7 +217,8 @@ public class MainFrame extends JPanel {
             List<SessionConfiguration> configs = new ArrayList<SessionConfiguration>();
             try {
                 for (Session session : sessions) {
-                    configs.add(session.getConfig());
+                    //Using cloneConfiguration allows to get the config with all parameters (filters...)
+                    configs.add(session.cloneConfiguration());
                 }
                 xstream.toXML(configs, new FileWriter(file));
             } catch (IOException e) {
