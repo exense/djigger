@@ -50,7 +50,7 @@ public class EventQueueTest {
 
         run(5);
 
-        Thread.sleep(1000);
+        Thread.sleep(2000);
         Assert.assertFalse(c.isSkipAll());
 
         awaitTermination();
