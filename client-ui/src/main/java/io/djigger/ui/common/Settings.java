@@ -45,7 +45,7 @@ public class Settings {
         try {
             settings.load(new FileInputStream(SETTINGS_FILENAME));
         } catch (FileNotFoundException e) {
-            logger.error("Error while loading settings from file " + SETTINGS_FILENAME, e);
+            logger.warn("No setting file found: " + SETTINGS_FILENAME);
         } catch (IOException e) {
             logger.error("Error while loading settings from file " + SETTINGS_FILENAME, e);
         }

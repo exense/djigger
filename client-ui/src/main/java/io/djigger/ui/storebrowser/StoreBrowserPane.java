@@ -19,6 +19,9 @@
  *******************************************************************************/
 package io.djigger.ui.storebrowser;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.djigger.monitoring.java.instrumentation.InstrumentationEvent;
 import io.djigger.monitoring.java.model.Metric;
 import io.djigger.monitoring.java.model.ThreadInfo;
@@ -27,6 +30,7 @@ import io.djigger.ui.Session;
 import io.djigger.ui.common.EnhancedTextField;
 import io.djigger.ui.common.MonitoredExecution;
 import io.djigger.ui.common.MonitoredExecutionRunnable;
+import io.djigger.ui.common.Settings;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,9 +41,15 @@ import java.awt.*;
 import java.awt.event.*;
 import java.text.ParseException;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("serial")
 public class StoreBrowserPane extends JPanel implements ActionListener {
@@ -55,20 +65,21 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
     private final JSpinner toDateSpinner;
 
     private final JComboBox<DatePresets> datePresets;
+    private final Map<String, DatePresets> datePresetsMap;
 
-    public enum DatePresets {
-        MINS5("Last 5 mins", 300000, 0),
-        MINS15("Last 15 mins", 900000, 0),
-        MINS60("Last 60 mins", 3600000, 0),
-        HOURS4("Last 4 hours", 14400000, 0),
-        HOURS24("Last 24 hours", 86400000, 0),
-        CUSTOM("Custom", 0, 0);
 
-        String label;
+    public static class DatePresets {
 
-        int fromOffset;
+        public static String CUSTOM_LBL = "Custom";
+        public static DatePresets CUSTOM = new DatePresets(CUSTOM_LBL, 0, 0);
+        public String label;
 
-        int toOffset;
+        public int fromOffset;
+
+        public int toOffset;
+
+        public DatePresets() {
+        }
 
         DatePresets(String label, int fromOffset, int toOffset) {
             this.label = label;
@@ -119,7 +130,9 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
         fromDateSpinner = initSpinner();
         toDateSpinner = initSpinner();
 
-        DatePresets[] presets = DatePresets.values();
+        datePresetsMap = getDatePresetsMap();
+        Collection<DatePresets> values = datePresetsMap.values();
+        DatePresets[] presets = values.toArray(new DatePresets[values.size()]);
 
         datePresets = new JComboBox<>(presets);
         datePresets.setSelectedIndex(0);
@@ -143,6 +156,37 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
         setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
 
         onDatePresetSelection();
+    }
+
+    private Map<String, DatePresets> getDatePresetsMap() {
+        final Map<String, DatePresets> localDatePresetsMap = new LinkedHashMap<>();
+        ObjectMapper objectMapper = new ObjectMapper();
+        String datePresetsJsonString = Settings.getINSTANCE().getAsString("datePresets");
+        if (datePresetsJsonString != null && !datePresetsJsonString.isEmpty()) {
+            try {
+                List<DatePresets> datePresetsList = objectMapper.readValue(datePresetsJsonString, new TypeReference<List<DatePresets>>() {});
+                datePresetsList.forEach(e -> localDatePresetsMap.put(e.label, e));
+            } catch (JsonProcessingException e) {
+                logger.error("Unable to load date presets from djigger settings, falling back to defaults.", e);
+            }
+        }
+        //If no presets loaded from settings, load default and store them to the settings
+        if (localDatePresetsMap == null || localDatePresetsMap.size()<=0) {
+            localDatePresetsMap.put("Last 5 mins", new DatePresets("Last 5 mins", 300000, 0));
+            localDatePresetsMap.put("Last 15 mins", new DatePresets("Last 15 mins", 900000, 0));
+            localDatePresetsMap.put("Last 60 mins", new DatePresets("Last 60 mins", 3600000, 0));
+            localDatePresetsMap.put("Last 4 hours", new DatePresets("Last 4 hours", 14400000, 0));
+            localDatePresetsMap.put("Last 24 hours", new DatePresets("Last 24 hours", 86400000, 0));
+            localDatePresetsMap.put(DatePresets.CUSTOM_LBL, DatePresets.CUSTOM);
+            try {
+                Settings.getINSTANCE().put("datePresets", objectMapper.writeValueAsString(localDatePresetsMap.values()));
+            } catch (JsonProcessingException e) {
+                logger.error("Unable to persist the date presets to the djigger settings", e);
+            }
+        } else {
+            //make sure custom is always added?
+        }
+        return localDatePresetsMap;
     }
 
     private SpinnerHighlight findSpinnerHighlight(int caretPosition) {
@@ -246,7 +290,7 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
     }
 
     public void setSelectedPreset(String selectedDataPreset) {
-        datePresets.setSelectedItem(DatePresets.valueOf(selectedDataPreset));
+        datePresets.setSelectedItem(datePresetsMap.get(selectedDataPreset));
     }
 
     public DatePresets getSelectedDatePresets(){
