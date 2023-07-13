@@ -23,7 +23,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.RandomAccessFile;
+import java.nio.file.Files;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 public class LogTailer extends Thread {
 
@@ -56,22 +58,20 @@ public class LogTailer extends Thread {
     public void run() {
         try {
             while (running) {
-                Thread.sleep(updateInterval);
                 long len = file.length();
                 if (len < filePointer) {
                     logger.debug("Log file was reset. Restarting logging from start of file.");
                     filePointer = len;
                 } else if (len > filePointer) {
-                    RandomAccessFile raf = new RandomAccessFile(file, "r");
-                    raf.seek(filePointer);
-                    String line = null;
-                    while ((line = raf.readLine()) != null) {
-                        listener.onNewLine(line);
+                    AtomicInteger count = new AtomicInteger(0);
+                    try(Stream<String> fileStream = Files.lines(file.toPath())) {
+                        fileStream.skip(filePointer).forEach(l -> {listener.onNewLine(l);count.incrementAndGet();});
                     }
-                    filePointer = raf.getFilePointer();
-                    raf.close();
+                    //increment filePointer by the number of processed lines
+                    filePointer += count.get();
                 }
                 listener.onEndOfFileReached();
+                Thread.sleep(updateInterval);
             }
         } catch (Exception e) {
             logger.error("Fatal error while reading log file, log tailing has been stopped.", e);
