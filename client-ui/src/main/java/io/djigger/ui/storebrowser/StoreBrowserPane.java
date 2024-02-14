@@ -266,7 +266,7 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
 
     private void onDatePresetSelection() {
         DatePresets preset = (DatePresets) datePresets.getSelectedItem();
-        if (preset != DatePresets.CUSTOM) {
+        if (!preset.label.equals(DatePresets.CUSTOM.label)) {
             fromDateSpinner.setVisible(false);
             toDateSpinner.setVisible(false);
         } else {
