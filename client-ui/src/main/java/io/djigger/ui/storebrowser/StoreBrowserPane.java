@@ -307,7 +307,7 @@ public class StoreBrowserPane extends JPanel implements ActionListener {
 
     private void applyPreset() {
         DatePresets preset = (DatePresets) datePresets.getSelectedItem();
-        if (preset != DatePresets.CUSTOM) {
+        if (!preset.label.equals(DatePresets.CUSTOM.label)) {
             Calendar cal = new GregorianCalendar();
             cal.add(Calendar.MILLISECOND, -preset.fromOffset);
             fromDateSpinner.getModel().setValue(cal.getTime());

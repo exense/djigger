@@ -390,7 +390,7 @@ public class Session extends JPanel implements FacadeListener, Closeable {
             }
             StoreBrowserPane.DatePresets selectedDatePresets = storeBrowserPane.getSelectedDatePresets();
             newParams.put(SessionParameter.TIMEINTERVAL_PRESETS,selectedDatePresets.toString());
-            if (selectedDatePresets == StoreBrowserPane.DatePresets.CUSTOM) {
+            if (selectedDatePresets.label.equals(StoreBrowserPane.DatePresets.CUSTOM.label)) {
                 Date start = storeBrowserPane.getFromDate();
                 if (start != null) {
                     SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
