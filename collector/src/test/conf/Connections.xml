@@ -1,6 +1,18 @@
 <Group>
 	<attributes/>
 	<groups>
+		<Connection connectionClass="io.djigger.client.JMXClientFacade">
+			<samplingParameters samplingRate="10000" />
+			<connectionProperties>
+				<property name="host" value="localhost" />
+				<property name="port" value="1098" />
+				<property name="username" value="usertest" />
+				<property name="password" value="userPassword" />
+			</connectionProperties>
+			<attributes>
+				<entry><string>foo</string><string>bar</string></entry>
+			</attributes>
+		</Connection>
 		<!-- All subsciptions inline -->
 		<Connection connectionClass="io.djigger.client.AgentFacade">
 			<samplingParameters samplingRate="100"/>

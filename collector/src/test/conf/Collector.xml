@@ -4,6 +4,7 @@
 	<dataTTL>3600</dataTTL>
 	<db host="localhost"/>
 	<connectionFiles>
+		<string>./src/test/conf/Connections.csv</string>
 		<string>./src/test/conf/Connections.xml</string>
 		<string>./src/test/conf/Connections.json</string>
 	</connectionFiles>
