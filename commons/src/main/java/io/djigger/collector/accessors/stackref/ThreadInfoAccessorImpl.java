@@ -77,7 +77,7 @@ public class ThreadInfoAccessorImpl extends AbstractAccessor implements ThreadIn
         options.maxTime(timeout, timeUnit);
 
         try {
-            return threadInfoCollection.count(mongoQuery, options);
+            return threadInfoCollection.countDocuments(mongoQuery, options);
         } catch (MongoExecutionTimeoutException e) {
             throw new TimeoutException("Count exceeded time limit");
         }

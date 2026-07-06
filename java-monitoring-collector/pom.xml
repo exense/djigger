@@ -14,7 +14,7 @@
 			<dependency>
 			<groupId>org.mongodb</groupId>
 			<artifactId>bson</artifactId>
-			<version>3.2.2</version>
+			<version>5.5.1</version>
 		</dependency>
 	</dependencies>
   
