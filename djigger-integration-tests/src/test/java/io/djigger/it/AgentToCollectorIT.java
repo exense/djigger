@@ -65,8 +65,12 @@ public class AgentToCollectorIT {
             long count = probe.getDb().getCollection("threaddumps").countDocuments();
             assertTrue(stored, "expected the collector to store thread dumps sampled from the agent, but found " + count);
         } finally {
-            collector.stop();
+            // Stop the source (agent) first so no further samples are dispatched, give any in-flight save a
+            // moment to complete, then stop the collector. This avoids interrupting an in-flight Mongo write
+            // during shutdown (which would otherwise be logged as a MongoInterruptedException).
             JvmLauncher.stop(targetApp);
+            Thread.sleep(500);
+            collector.stop();
             try {
                 dropDjiggerCollections(probe.getDb());
             } finally {

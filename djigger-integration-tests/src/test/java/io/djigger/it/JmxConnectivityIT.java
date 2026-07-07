@@ -53,6 +53,9 @@ public class JmxConnectivityIT {
             assertTrue(workerSeen, "expected the sample worker thread to appear in the JMX thread dumps");
 
             facade.setSampling(false);
+            // let the last in-flight dump finish while the target JVM and JMX connection are still alive,
+            // so the sampler does not run a dump against a torn-down connection (which the Sampler would print)
+            Thread.sleep(500);
         } finally {
             if (facade != null) {
                 facade.destroy();
