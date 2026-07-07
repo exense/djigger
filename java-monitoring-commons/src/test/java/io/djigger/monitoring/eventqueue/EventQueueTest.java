@@ -1,8 +1,7 @@
 package io.djigger.monitoring.eventqueue;
 
 import io.djigger.monitoring.eventqueue.EventQueue.EventQueueConsumer;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
@@ -10,6 +9,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class EventQueueTest {
 
@@ -32,15 +35,15 @@ public class EventQueueTest {
         run(5);
 
         Thread.sleep(800);
-        Assert.assertTrue(c.isSkipAll());
+        assertTrue(c.isSkipAll());
 
         throughputOutPerMs = 1000;
         Thread.sleep(800);
-        Assert.assertFalse(c.isSkipAll());
+        assertFalse(c.isSkipAll());
 
         awaitTermination();
-        Assert.assertTrue(c.isSkipAll());
-        Assert.assertTrue(countOut.intValue() < countIn.intValue());
+        assertTrue(c.isSkipAll());
+        assertTrue(countOut.intValue() < countIn.intValue());
     }
 
     @Test
@@ -51,11 +54,11 @@ public class EventQueueTest {
         run(5);
 
         Thread.sleep(2000);
-        Assert.assertFalse(c.isSkipAll());
+        assertFalse(c.isSkipAll());
 
         awaitTermination();
-        Assert.assertTrue(c.isSkipAll());
-        Assert.assertEquals(countIn.intValue(), countOut.intValue());
+        assertTrue(c.isSkipAll());
+        assertEquals(countIn.intValue(), countOut.intValue());
     }
 
     private void run(int nThreads) throws InterruptedException {

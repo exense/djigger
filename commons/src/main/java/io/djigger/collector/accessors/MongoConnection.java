@@ -26,8 +26,10 @@ public class MongoConnection {
     private static int MAX_RETRIES = 60;
 
     public MongoDatabase connect(String host, int port, String user, String password) {
-        String databaseName = "djigger";
+        return connect(host, port, user, password, "djigger");
+    }
 
+    public MongoDatabase connect(String host, int port, String user, String password, String databaseName) {
         com.mongodb.MongoClientSettings.Builder settingsBuilder = com.mongodb.MongoClientSettings.builder()
                 .applyToClusterSettings(builder -> builder
                         .hosts(List.of(new ServerAddress(host, port)))

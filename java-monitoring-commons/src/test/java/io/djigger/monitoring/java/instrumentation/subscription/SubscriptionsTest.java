@@ -2,11 +2,12 @@ package io.djigger.monitoring.java.instrumentation.subscription;
 
 import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
 import io.djigger.monitoring.java.model.StackTraceElement;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SubscriptionsTest {
 
@@ -22,7 +23,7 @@ public class SubscriptionsTest {
         StackTraceElement[] els2 = new StackTraceElement[]{el2};
         subscription.remove(new RealNodePathSubscription(els2, false));
 
-        Assert.assertEquals(0, subscription.size());
+        assertEquals(0, subscription.size());
 
     }
 }

@@ -1,36 +1,37 @@
 package io.djigger.test.e2e;
 
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtField;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
-import java.net.Socket;
+import java.io.ObjectOutputStream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+
+/**
+ * Verifies that a {@link TestClass} instance survives a Java serialization round-trip.
+ * This used to rely on an external socket server ({@code TestSerialization}) and swallowed
+ * all exceptions, so it never actually asserted anything. It is now self-contained.
+ */
 public class TestSerializationClient {
 
     @Test
-    public void test() throws IOException, ClassNotFoundException {
+    public void test() throws Exception {
+        TestClass original = new TestClass("djigger");
 
-        try {
-            ClassPool pool = ClassPool.getDefault();
-            CtClass c = pool.get("io.djigger.test.e2e.TestClass");
-            c.addField(new CtField(pool.get("java.lang.String"), "testField", c));
-            c.toClass().getDeclaredFields();
-
-            Socket socket = new Socket("localhost", 1111);
-            ObjectInputStream o = new ObjectInputStream(socket.getInputStream());
-
-            Object o2 = o.readObject();
-
-            if (o2 instanceof TestClass) {
-                System.out.println(((TestClass) o2).att1);
-            }
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try (ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+            oos.writeObject(original);
         }
+
+        Object deserialized;
+        try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()))) {
+            deserialized = ois.readObject();
+        }
+
+        assertInstanceOf(TestClass.class, deserialized);
+        assertEquals("djigger", ((TestClass) deserialized).att1);
     }
 }
