@@ -1,0 +1,101 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>io.djigger</groupId>
+		<artifactId>parent</artifactId>
+		<version>0.0.0</version>
+		<relativePath>../parent</relativePath>
+	</parent>
+	<artifactId>djigger-integration-tests</artifactId>
+
+	<description>
+		End-to-end integration tests (collector, agent, JMX connectivity, REST service).
+		These tests launch child JVMs and may connect to a MongoDB server; they run in the
+		integration-test/verify phase via the failsafe plugin, not during the regular unit-test build.
+	</description>
+
+	<properties>
+		<!-- no production sources to document -->
+		<maven.javadoc.skip>true</maven.javadoc.skip>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>io.djigger</groupId>
+			<artifactId>collector</artifactId>
+			<version>${project.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.djigger</groupId>
+			<artifactId>client</artifactId>
+			<version>${project.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<!-- Declared so the reactor builds the agent before this module and so the agent jar can be copied below. -->
+		<dependency>
+			<groupId>io.djigger</groupId>
+			<artifactId>java-agent</artifactId>
+			<version>${project.version}</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<!-- Copy the shaded agent jar to a stable path so the agent e2e test can pass it via -javaagent. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>2.10</version>
+				<executions>
+					<execution>
+						<id>copy-agent</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+						<configuration>
+							<artifactItems>
+								<artifactItem>
+									<groupId>io.djigger</groupId>
+									<artifactId>java-agent</artifactId>
+									<version>${project.version}</version>
+									<type>jar</type>
+									<outputDirectory>${project.build.directory}</outputDirectory>
+									<destFileName>agent.jar</destFileName>
+								</artifactItem>
+							</artifactItems>
+							<overWriteSnapshots>true</overWriteSnapshots>
+							<overWriteReleases>true</overWriteReleases>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>3.2.5</version>
+				<configuration>
+					<!--
+						Pass the real classpath to the forked test JVM (not a manifest-only booter jar) so that
+						the integration tests can hand the same classpath to the child JVMs they launch.
+					-->
+					<useManifestOnlyJar>false</useManifestOnlyJar>
+					<systemPropertyVariables>
+						<agent.jar>${project.build.directory}/agent.jar</agent.jar>
+					</systemPropertyVariables>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>

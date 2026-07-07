@@ -12,3 +12,5 @@ collector.jar
 .idea/
 *.iml
 dependency-reduced-pom.xml
+# Claude Code local settings
+.claude/settings.local.json

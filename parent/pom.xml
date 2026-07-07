@@ -57,6 +57,7 @@
 		<module>../java-monitoring-collector</module>
 		<module>../java-monitoring-commons</module>
 		<module>../distribution</module>
+		<module>../djigger-integration-tests</module>
 	</modules>
 
 	<dependencies>

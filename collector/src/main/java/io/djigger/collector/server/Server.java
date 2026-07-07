@@ -64,24 +64,82 @@ public class Server {
 
     private ServiceServer serviceServer;
 
+    /**
+     * Standalone entry point: reads the configuration from the {@code collectorConfig} system property,
+     * starts the collector and the web service, and blocks on the web service (as a daemon would).
+     */
     public void start() throws Exception {
+        String collConfigFilename = System.getProperty("collectorConfig");
+
+        CollectorConfig config = Configurator.parseCollectorConfiguration(collConfigFilename);
+        ConnectionsConfig cc = Configurator.parseConnectionsConfiguration(config.getConnectionFiles());
+
+        startCollector(config, cc);
+
+        int servicePort = config.getServicePort() != null ? Integer.parseInt(config.getServicePort()) : 80;
+        String listenAddress = config.getServiceListenAddress() != null ? config.getServiceListenAddress() : "0.0.0.0";
+        startServiceServer(servicePort, listenAddress);
+        serviceServer.join();
+    }
+
+    /**
+     * Connects to the database, initializes the accessors and connects to the configured targets. Does not
+     * start the web service and does not block; call {@link #stop()} to release the resources afterwards.
+     */
+    public void startCollector(CollectorConfig config, ConnectionsConfig cc) throws Exception {
         try {
-
-            String collConfigFilename = System.getProperty("collectorConfig");
-
-            CollectorConfig config = Configurator.parseCollectorConfiguration(collConfigFilename);
-            ConnectionsConfig cc = Configurator.parseConnectionsConfiguration(config.getConnectionFiles());
-
             initAccessors(config);
-
             processGroup(null, cc.getConnectionGroup());
-
-            serviceServer = new ServiceServer(this);
-            serviceServer.start(config.getServicePort() != null ? Integer.parseInt(config.getServicePort()) : 80,
-                config.getServiceListenAddress() != null ? config.getServiceListenAddress() : "0.0.0.0");
         } catch (Exception e) {
             logger.error("A fatal error occurred while starting collector.", e);
             throw e;
+        }
+    }
+
+    /**
+     * Starts the embedded web service on the given address/port. Non-blocking. Passing port {@code 0}
+     * binds an ephemeral port, which can then be retrieved via {@link #getServicePort()}.
+     */
+    public void startServiceServer(int port, String listenAddress) throws Exception {
+        serviceServer = new ServiceServer(this);
+        serviceServer.start(port, listenAddress);
+    }
+
+    /**
+     * @return the port the web service is actually listening on, or -1 if it is not running.
+     */
+    public int getServicePort() {
+        return serviceServer != null ? serviceServer.getLocalPort() : -1;
+    }
+
+    /**
+     * Releases all resources: disconnects from the targets, stops the web service and closes the database
+     * connection. Safe to call even if only part of the collector was started.
+     */
+    public void stop() {
+        synchronized (clients) {
+            for (ClientConnection client : clients) {
+                try {
+                    client.getFacade().destroy();
+                } catch (Exception e) {
+                    logger.warn("Error while destroying facade", e);
+                }
+            }
+            clients.clear();
+        }
+        if (serviceServer != null) {
+            try {
+                serviceServer.stop();
+            } catch (Exception e) {
+                logger.warn("Error while stopping the service server", e);
+            }
+        }
+        if (mongodbConnection != null) {
+            try {
+                mongodbConnection.close();
+            } catch (Exception e) {
+                logger.warn("Error while closing the mongo connection", e);
+            }
         }
     }
 
@@ -137,7 +195,12 @@ public class Server {
                 port = Integer.parseInt(connectionParams.getPort());
             }
 
-            mongodbConnection.connect(connectionParams.getHost(), port, connectionParams.getUser(), connectionParams.getPassword());
+            String database = connectionParams.getDatabase();
+            if (database != null && !database.trim().isEmpty()) {
+                mongodbConnection.connect(connectionParams.getHost(), port, connectionParams.getUser(), connectionParams.getPassword(), database);
+            } else {
+                mongodbConnection.connect(connectionParams.getHost(), port, connectionParams.getUser(), connectionParams.getPassword());
+            }
 
 
             Long ttl = config.getDataTTL();
