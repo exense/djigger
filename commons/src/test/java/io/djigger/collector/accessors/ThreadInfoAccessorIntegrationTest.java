@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -44,6 +45,49 @@ public class ThreadInfoAccessorIntegrationTest extends AbstractMongoIntegrationT
             }
         }
         assertTrue(ttlIndexPresent, "expected a TTL index on the 'timestamp' field");
+    }
+
+    @Test
+    public void createIndexesIsIdempotentWhenTtlIndexAlreadyExists() {
+        // The TTL index was already created with 3600s in @BeforeEach. Calling createIndexesIfNeeded again
+        // exercises the "index already exists" branch that reads expireAfterSeconds - the branch that used to
+        // throw ClassCastException on MongoDB 7 (Integer vs Long). It must be a no-op here.
+        accessor.createIndexesIfNeeded(3600L);
+        assertEquals(3600L, ttlSecondsOf("threaddumps", "timestamp"));
+    }
+
+    @Test
+    public void updatesTtlWhenValueChanges() {
+        accessor.createIndexesIfNeeded(7200L);
+        assertEquals(7200L, ttlSecondsOf("threaddumps", "timestamp"));
+    }
+
+    @Test
+    public void dropsTtlWhenCleared() {
+        accessor.createIndexesIfNeeded(null);
+        assertNull(ttlSecondsOf("threaddumps", "timestamp"), "the TTL should have been removed");
+        assertTrue(hasIndexOn("threaddumps", "timestamp"), "a plain index on timestamp should remain");
+    }
+
+    private Long ttlSecondsOf(String collection, String field) {
+        for (Document index : db.getCollection(collection).listIndexes()) {
+            Object key = index.get("key");
+            if (key instanceof Document && ((Document) key).containsKey(field)) {
+                Object value = index.get("expireAfterSeconds");
+                return value instanceof Number ? ((Number) value).longValue() : null;
+            }
+        }
+        return null;
+    }
+
+    private boolean hasIndexOn(String collection, String field) {
+        for (Document index : db.getCollection(collection).listIndexes()) {
+            Object key = index.get("key");
+            if (key instanceof Document && ((Document) key).containsKey(field)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Test
