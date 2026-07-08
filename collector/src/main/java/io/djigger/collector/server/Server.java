@@ -64,6 +64,8 @@ public class Server {
 
     private ServiceServer serviceServer;
 
+    private volatile boolean stopping = false;
+
     /**
      * Standalone entry point: reads the configuration from the {@code collectorConfig} system property,
      * starts the collector and the web service, and blocks on the web service (as a daemon would).
@@ -117,6 +119,25 @@ public class Server {
      * connection. Safe to call even if only part of the collector was started.
      */
     public void stop() {
+        // stop accepting/persisting incoming data first, so shutdown never interrupts an in-flight store
+        stopping = true;
+        synchronized (clients) {
+            // first stop sampling so that the targets stop sending data...
+            for (ClientConnection client : clients) {
+                try {
+                    client.getFacade().setSampling(false);
+                } catch (Exception e) {
+                    logger.warn("Error while stopping sampling on facade", e);
+                }
+            }
+        }
+        // ...then give any store operation already in progress a moment to complete (new incoming data is
+        // ignored from here on because of the 'stopping' flag) before we disconnect and close the database.
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         synchronized (clients) {
             for (ClientConnection client : clients) {
                 try {
@@ -227,8 +248,14 @@ public class Server {
 
             @Override
             public void threadInfosReceived(List<ThreadInfo> threaddumps) {
+                if (stopping) {
+                    return;
+                }
                 try {
                     for (ThreadInfo dump : threaddumps) {
+                        if (stopping) {
+                            break;
+                        }
                         dump.setAttributes(attributes);
                         // enrich with the runtime ID. TODO: support agent side RuntimeID?
                         dump.getGlobalId().setRuntimeId(client.getConnectionId());
@@ -241,6 +268,9 @@ public class Server {
 
             @Override
             public void instrumentationSamplesReceived(List<InstrumentationEvent> samples) {
+                if (stopping) {
+                    return;
+                }
                 List<TaggedInstrumentationEvent> taggedEvents = new LinkedList<>();
 
                 for (InstrumentationEvent event : samples) {
@@ -268,6 +298,9 @@ public class Server {
 
             @Override
             public void metricsReceived(List<Metric<?>> metrics) {
+                if (stopping) {
+                    return;
+                }
                 List<TaggedMetric> taggedMetrics = new ArrayList<>();
                 for (Metric<?> metric : metrics) {
                     taggedMetrics.add(new TaggedMetric(attributes, metric));

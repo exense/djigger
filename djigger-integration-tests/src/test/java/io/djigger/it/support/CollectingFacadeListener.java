@@ -16,6 +16,7 @@ public class CollectingFacadeListener implements FacadeListener {
 
     public final List<ThreadInfo> threadInfos = new CopyOnWriteArrayList<>();
     public final List<InstrumentationEvent> instrumentationEvents = new CopyOnWriteArrayList<>();
+    public final List<InstrumentationError> instrumentationErrors = new CopyOnWriteArrayList<>();
     public final List<Metric<?>> metrics = new CopyOnWriteArrayList<>();
     public volatile boolean connectionEstablished;
     public volatile boolean connectionClosed;
@@ -32,6 +33,7 @@ public class CollectingFacadeListener implements FacadeListener {
 
     @Override
     public void instrumentationErrorReceived(InstrumentationError error) {
+        instrumentationErrors.add(error);
     }
 
     @Override

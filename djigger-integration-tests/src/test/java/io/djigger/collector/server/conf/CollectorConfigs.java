@@ -1,6 +1,11 @@
 package io.djigger.collector.server.conf;
 
+import io.djigger.client.mbeans.MetricCollectionConfiguration;
+import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -32,6 +37,12 @@ public final class CollectorConfigs {
      * {@code localhost:agentPort}, sampling thread dumps at the given interval.
      */
     public static ConnectionsConfig singleAgentConnection(int agentPort, int samplingRateMs) {
+        return singleAgentConnection(agentPort, samplingRateMs, null, null);
+    }
+
+    public static ConnectionsConfig singleAgentConnection(int agentPort, int samplingRateMs,
+                                                          List<InstrumentSubscription> subscriptions,
+                                                          MetricCollectionConfiguration metrics) {
         Connection connection = new Connection();
         connection.setConnectionClass("io.djigger.client.AgentFacade");
 
@@ -45,8 +56,9 @@ public final class CollectorConfigs {
         connection.setSamplingParameters(sampling);
 
         connection.setAttributes(new HashMap<>());
-        connection.setSubscriptions(new java.util.ArrayList<>());
-        connection.setSubscriptionFiles(new java.util.ArrayList<>());
+        connection.setSubscriptions(subscriptions != null ? subscriptions : new ArrayList<>());
+        connection.setSubscriptionFiles(new ArrayList<>());
+        connection.setMetrics(metrics);
 
         ConnectionGroup group = new ConnectionGroup();
         group.addGroup(connection);

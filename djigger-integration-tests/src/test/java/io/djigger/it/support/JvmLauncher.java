@@ -15,9 +15,27 @@ public final class JvmLauncher {
     private JvmLauncher() {
     }
 
+    /** Launches the main class using the current JVM's full classpath. */
     public static Process launch(Class<?> mainClass, List<String> jvmArgs, List<String> appArgs) throws IOException {
+        return launch(mainClass, System.getProperty("java.class.path"), jvmArgs, appArgs);
+    }
+
+    /**
+     * The filesystem location a class was loaded from, usable as a minimal classpath. Used to launch an
+     * agent target with only its own code on the classpath - just like a real monitored application, whose
+     * classpath does not contain djigger's (unshaded) jars, so instrumented classes resolve djigger types
+     * exclusively from the shaded {@code -javaagent} jar.
+     */
+    public static String codeSourceOf(Class<?> clazz) {
+        try {
+            return new File(clazz.getProtectionDomain().getCodeSource().getLocation().toURI()).getAbsolutePath();
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to resolve the code source of " + clazz.getName(), e);
+        }
+    }
+
+    public static Process launch(Class<?> mainClass, String classpath, List<String> jvmArgs, List<String> appArgs) throws IOException {
         String javaBin = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
-        String classpath = System.getProperty("java.class.path");
 
         List<String> command = new ArrayList<>();
         command.add(javaBin);

@@ -1,33 +1,42 @@
 package io.djigger.it;
 
 import com.mongodb.client.MongoDatabase;
+import io.djigger.client.mbeans.MetricCollectionConfiguration;
 import io.djigger.collector.accessors.MongoConnection;
 import io.djigger.collector.server.Server;
 import io.djigger.collector.server.conf.CollectorConfig;
 import io.djigger.collector.server.conf.CollectorConfigs;
 import io.djigger.collector.server.conf.ConnectionsConfig;
+import io.djigger.it.support.Await;
 import io.djigger.it.support.JvmLauncher;
 import io.djigger.it.support.SampleApp;
+import io.djigger.monitoring.java.instrumentation.InstrumentSubscription;
+import io.djigger.monitoring.java.instrumentation.subscription.SimpleSubscription;
+import io.djigger.monitoring.java.mbeans.MBeanCollectorConfiguration;
+import org.bson.Document;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static com.mongodb.client.model.Filters.eq;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * Full end-to-end test: a target JVM ({@link SampleApp}) runs with the djigger agent attached; a collector
- * is started programmatically, connects to the agent, samples thread dumps and stores them into MongoDB.
- * The test then verifies that thread dumps land in the database.
+ * Full end-to-end test of the agent's instrumentation and MBean-metric capabilities: a target JVM runs
+ * {@link SampleApp} with the djigger agent attached; a collector connects with an instrumentation
+ * subscription on {@code SampleApp.businessMethod} and an MBean metric-collection configuration. The test
+ * verifies that instrumentation events for the method and the collected metric are stored into MongoDB.
  *
- * <p>Runs against the same central test MongoDB as the unit integration tests (overridable via {@code -Dmongo.*}).
- * It is skipped when the agent jar or the database is not available.
+ * <p>Runs against the same central test MongoDB as the other integration tests (overridable via {@code -Dmongo.*})
+ * and is skipped when the agent jar or the database is not available.
  */
 @Tag("integration")
-public class AgentToCollectorIT {
+public class AgentInstrumentationIT {
 
     private static final String MONGO_HOST = System.getProperty("mongo.host", "central-mongodb.stepcloud-test.ch");
     private static final int MONGO_PORT = Integer.getInteger("mongo.port", 27017);
@@ -36,13 +45,13 @@ public class AgentToCollectorIT {
     private static final String MONGO_PASSWORD = System.getProperty("mongo.password", "5dB(rs+4YRJe");
 
     @Test
-    public void agentThreadDumpsAreStoredByTheCollector() throws Exception {
+    public void agentInstrumentationAndMetricsAreStoredByTheCollector() throws Exception {
         File agentJar = locateAgentJar();
         assumeTrue(agentJar != null && agentJar.isFile(),
-                "agent jar not found (property agent.jar) - skipping agent e2e test");
+                "agent jar not found (property agent.jar) - skipping agent instrumentation test");
 
         MongoConnection probe = tryConnect();
-        assumeTrue(probe != null, "MongoDB not reachable - skipping agent e2e test");
+        assumeTrue(probe != null, "MongoDB not reachable - skipping agent instrumentation test");
 
         int agentPort = JvmLauncher.findFreePort();
         Process targetApp = null;
@@ -50,23 +59,34 @@ public class AgentToCollectorIT {
         try {
             dropDjiggerCollections(probe.getDb());
 
-            // start the target application with the djigger agent listening on agentPort
             List<String> jvmArgs = Collections.singletonList("-javaagent:" + agentJar.getAbsolutePath() + "=port:" + agentPort);
             targetApp = JvmLauncher.launch(SampleApp.class, JvmLauncher.codeSourceOf(SampleApp.class), jvmArgs, Collections.emptyList());
 
-            // start the collector: connect to the agent, sample every 200ms and store to MongoDB
+            // instrument SampleApp.businessMethod and collect the java.lang:type=Memory MBean
+            List<InstrumentSubscription> subscriptions = new ArrayList<>();
+            subscriptions.add(new SimpleSubscription("io.djigger.it.support.SampleApp", "businessMethod", true));
+
+            MBeanCollectorConfiguration mbeans = new MBeanCollectorConfiguration();
+            mbeans.addMBeanAttribute("java.lang:type=Memory");
+            MetricCollectionConfiguration metrics = new MetricCollectionConfiguration();
+            metrics.setmBeans(mbeans);
+
             CollectorConfig config = CollectorConfigs.collectorConfig(
                     MONGO_HOST, MONGO_PORT, MONGO_USER, MONGO_PASSWORD, MONGO_DB, 3600L);
-            ConnectionsConfig connections = CollectorConfigs.singleAgentConnection(agentPort, 200);
+            ConnectionsConfig connections = CollectorConfigs.singleAgentConnection(agentPort, 200, subscriptions, metrics);
             collector.startCollector(config, connections);
 
-            // the collector facade reconnects on a timer (first attempt ~10s), so allow a generous timeout
-            boolean stored = waitUntil(() -> probe.getDb().getCollection("threaddumps").countDocuments() > 0, 60_000);
-            long count = probe.getDb().getCollection("threaddumps").countDocuments();
-            assertTrue(stored, "expected the collector to store thread dumps sampled from the agent, but found " + count);
+            MongoDatabase db = probe.getDb();
+            boolean instrumentationStored = Await.until(
+                    () -> db.getCollection("instrumentation").countDocuments(eq("method", "businessMethod")) > 0, 60_000);
+            assertTrue(instrumentationStored,
+                    "expected instrumentation events for SampleApp.businessMethod to be stored by the collector");
+
+            boolean metricsStored = Await.until(
+                    () -> db.getCollection("metrics").countDocuments(eq("name", "java.lang/type=Memory")) > 0, 60_000);
+            assertTrue(metricsStored, "expected the java.lang:type=Memory metric to be stored by the collector");
         } finally {
-            // Stop the collector while the agent is still alive: Server.stop() first tells the agent to stop
-            // sampling and lets in-flight writes drain, so shutdown does not interrupt an ongoing Mongo write.
+            // Stop the collector while the agent is still alive so Server.stop() can drain in-flight writes.
             collector.stop();
             JvmLauncher.stop(targetApp);
             try {
@@ -90,7 +110,7 @@ public class AgentToCollectorIT {
         try {
             MongoConnection connection = new MongoConnection();
             MongoDatabase db = connection.connect(MONGO_HOST, MONGO_PORT, emptyToNull(MONGO_USER), emptyToNull(MONGO_PASSWORD), MONGO_DB);
-            db.runCommand(new org.bson.Document("ping", 1));
+            db.runCommand(new Document("ping", 1));
             return connection;
         } catch (RuntimeException e) {
             return null;
@@ -101,21 +121,6 @@ public class AgentToCollectorIT {
         for (String name : new String[]{"threaddumps", "stacktraces", "instrumentation", "metrics"}) {
             db.getCollection(name).drop();
         }
-    }
-
-    private interface Condition {
-        boolean met();
-    }
-
-    private static boolean waitUntil(Condition condition, long timeoutMs) throws InterruptedException {
-        long deadline = System.currentTimeMillis() + timeoutMs;
-        while (System.currentTimeMillis() < deadline) {
-            if (condition.met()) {
-                return true;
-            }
-            Thread.sleep(250);
-        }
-        return condition.met();
     }
 
     private static String emptyToNull(String s) {
