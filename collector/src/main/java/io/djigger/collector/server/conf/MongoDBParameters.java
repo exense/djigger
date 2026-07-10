@@ -33,6 +33,9 @@ public class MongoDBParameters {
     String collection;
 
     @XStreamAsAttribute
+    String database;
+
+    @XStreamAsAttribute
     String user;
 
     @XStreamAsAttribute
@@ -60,6 +63,14 @@ public class MongoDBParameters {
 
     public void setCollection(String collection) {
         this.collection = collection;
+    }
+
+    public String getDatabase() {
+        return database;
+    }
+
+    public void setDatabase(String database) {
+        this.database = database;
     }
 
     public String getUser() {

@@ -48,7 +48,8 @@ public class AbstractAccessor {
             }
         } else {
             if (ttl != null && ttl > 0) {
-                if (!ttlIndex.containsKey("expireAfterSeconds") || !ttlIndex.getLong("expireAfterSeconds").equals(ttl)) {
+                Long currentTtl = getExpireAfterSeconds(ttlIndex);
+                if (currentTtl == null || !currentTtl.equals(ttl)) {
                     dropIndex(collection, ttlIndex);
                     createTimestampIndexWithTTL(collection, attribute, ttl);
                 }
@@ -78,6 +79,16 @@ public class AbstractAccessor {
 
     private void createTimestampIndexWithOptions(MongoCollection<Document> collection, String attribute, IndexOptions options) {
         collection.createIndex(new Document(attribute, 1), options);
+    }
+
+    /**
+     * Reads the {@code expireAfterSeconds} value of an index as a {@link Long}, tolerating whichever numeric
+     * BSON type the server uses. MongoDB may return it as an Int32 (e.g. MongoDB 7), which would make the
+     * direct {@code Document.getLong(...)} cast fail with a ClassCastException.
+     */
+    private static Long getExpireAfterSeconds(Document index) {
+        Object value = index.get("expireAfterSeconds");
+        return (value instanceof Number) ? ((Number) value).longValue() : null;
     }
 
     private Document getIndex(MongoCollection<Document> collection, String indexName) {

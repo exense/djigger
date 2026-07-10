@@ -1,7 +1,9 @@
 package io.djigger.ql;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class OQLTest {
 
@@ -9,45 +11,45 @@ public class OQLTest {
     public void test() {
         Filter<String> filter = OQLFilterBuilder.getFilter("a and b", buildFilterFactory());
 
-        Assert.assertFalse(filter.isValid("a"));
-        Assert.assertFalse(filter.isValid("b"));
-        Assert.assertTrue(filter.isValid("ab"));
+        assertFalse(filter.isValid("a"));
+        assertFalse(filter.isValid("b"));
+        assertTrue(filter.isValid("ab"));
 
         filter = OQLFilterBuilder.getFilter("a or b", buildFilterFactory());
 
-        Assert.assertTrue(filter.isValid("a"));
-        Assert.assertTrue(filter.isValid("b"));
-        Assert.assertTrue(filter.isValid("ab"));
+        assertTrue(filter.isValid("a"));
+        assertTrue(filter.isValid("b"));
+        assertTrue(filter.isValid("ab"));
 
         filter = OQLFilterBuilder.getFilter("a or b and c", buildFilterFactory());
 
-        Assert.assertTrue(filter.isValid("a"));
-        Assert.assertFalse(filter.isValid("b"));
-        Assert.assertFalse(filter.isValid("c"));
-        Assert.assertTrue(filter.isValid("bc"));
+        assertTrue(filter.isValid("a"));
+        assertFalse(filter.isValid("b"));
+        assertFalse(filter.isValid("c"));
+        assertTrue(filter.isValid("bc"));
 
         filter = OQLFilterBuilder.getFilter("not a", buildFilterFactory());
 
-        Assert.assertFalse(filter.isValid("a"));
-        Assert.assertTrue(filter.isValid("b"));
+        assertFalse(filter.isValid("a"));
+        assertTrue(filter.isValid("b"));
 
         filter = OQLFilterBuilder.getFilter("a and (b and c)", buildFilterFactory());
 
-        Assert.assertFalse(filter.isValid("a"));
-        Assert.assertFalse(filter.isValid("b"));
-        Assert.assertFalse(filter.isValid("c"));
-        Assert.assertFalse(filter.isValid("bc"));
-        Assert.assertTrue(filter.isValid("abc"));
+        assertFalse(filter.isValid("a"));
+        assertFalse(filter.isValid("b"));
+        assertFalse(filter.isValid("c"));
+        assertFalse(filter.isValid("bc"));
+        assertTrue(filter.isValid("abc"));
 
         filter = OQLFilterBuilder.getFilter("\"a\"", buildFilterFactory());
 
-        Assert.assertTrue(filter.isValid("a"));
-        Assert.assertFalse(filter.isValid("b"));
+        assertTrue(filter.isValid("a"));
+        assertFalse(filter.isValid("b"));
 
         filter = OQLFilterBuilder.getFilter("\"or\"", buildFilterFactory());
 
-        Assert.assertTrue(filter.isValid("or"));
-        Assert.assertFalse(filter.isValid("ro"));
+        assertTrue(filter.isValid("or"));
+        assertFalse(filter.isValid("ro"));
     }
 
     private FilterFactory<String> buildFilterFactory() {

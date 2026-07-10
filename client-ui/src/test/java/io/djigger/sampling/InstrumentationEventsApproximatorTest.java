@@ -23,8 +23,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.djigger.aggregation.Thread;
 import io.djigger.aggregation.Thread.RealNodePathWrapper;
@@ -54,7 +55,7 @@ public class InstrumentationEventsApproximatorTest {
             }
         });
         a.generateApproximatedEvents(threads);
-        Assert.assertEquals(6, events.size());
+        assertEquals(6, events.size());
     }
 
     @Test
@@ -71,7 +72,7 @@ public class InstrumentationEventsApproximatorTest {
             }
         });
         a.generateApproximatedEvents(threads);
-        Assert.assertEquals(5, events.size());
+        assertEquals(5, events.size());
     }
 
     @Test
@@ -88,7 +89,7 @@ public class InstrumentationEventsApproximatorTest {
             }
         });
         a.generateApproximatedEvents(threads);
-        Assert.assertEquals(2, events.size());
+        assertEquals(2, events.size());
     }
 
     @Test
@@ -105,7 +106,7 @@ public class InstrumentationEventsApproximatorTest {
             }
         });
         a.generateApproximatedEvents(threads);
-        Assert.assertEquals(4, events.size());
+        assertEquals(4, events.size());
     }
 
     @Test
@@ -122,7 +123,7 @@ public class InstrumentationEventsApproximatorTest {
             }
         });
         a.generateApproximatedEvents(threads);
-        Assert.assertEquals(5, events.size());
+        assertEquals(5, events.size());
     }
 
     @Test
@@ -139,7 +140,7 @@ public class InstrumentationEventsApproximatorTest {
             }
         });
         a.generateApproximatedEvents(threads);
-        Assert.assertEquals(7, events.size());
+        assertEquals(7, events.size());
     }
 
     @Test
@@ -155,7 +156,7 @@ public class InstrumentationEventsApproximatorTest {
             }
         });
         a.generateApproximatedEvents(threads);
-        Assert.assertEquals(6, events.size());
+        assertEquals(6, events.size());
     }
 
 

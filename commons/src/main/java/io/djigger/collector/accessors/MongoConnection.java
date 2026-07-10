@@ -1,56 +1,59 @@
 package io.djigger.collector.accessors;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
-import com.mongodb.MongoClientOptions.Builder;
 import com.mongodb.MongoCredential;
-import com.mongodb.MongoSocketOpenException;
-import com.mongodb.MongoTimeoutException;
+import com.mongodb.MongoException;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 
 
 public class MongoConnection {
-	
+
     private static final Logger logger = LoggerFactory.getLogger(MongoConnection.class);
 
     private MongoClient mongoClient;
 
     private MongoDatabase db;
-    
+
     private static int MAX_RETRIES = 60;
 
     public MongoDatabase connect(String host, int port, String user, String password) {
-        Builder o = MongoClientOptions.builder().serverSelectionTimeout(3000);
+        return connect(host, port, user, password, "djigger");
+    }
 
-        String databaseName = "djigger";
+    public MongoDatabase connect(String host, int port, String user, String password, String databaseName) {
+        com.mongodb.MongoClientSettings.Builder settingsBuilder = com.mongodb.MongoClientSettings.builder()
+                .applyToClusterSettings(builder -> builder
+                        .hosts(List.of(new ServerAddress(host, port)))
+                        .serverSelectionTimeout(3000, TimeUnit.MILLISECONDS));
 
-        List<MongoCredential> credentials = new ArrayList<>();
         if (user != null && password != null && !user.trim().isEmpty() && !password.trim().isEmpty()) {
-            credentials.add(MongoCredential.createCredential(user, databaseName, password.toCharArray()));
+            settingsBuilder.credential(MongoCredential.createCredential(user, databaseName, password.toCharArray()));
         }
 
-        mongoClient = new MongoClient(new ServerAddress(host, port), credentials, o.build());
+        mongoClient = MongoClients.create(settingsBuilder.build());
+        db = mongoClient.getDatabase(databaseName);
 
-        // call this method to check if the connection succeeded as the mongo client lazy loads the connection
+        // the mongo client lazy loads the connection, ping the server to check that the connection succeeded
         boolean isConnected = false;
         int tries = 0;
         while (!isConnected && tries < MAX_RETRIES) {
 	        try {
 	        	tries++;
-	        	mongoClient.getAddress();
+	        	db.runCommand(new Document("ping", 1));
 	        	isConnected = true;
-	        } catch (MongoSocketOpenException | MongoTimeoutException e) {
+	        } catch (MongoException e) {
 	        	logger.warn("Unable to establish a connection to the mongo DB, retrying in 10 seconds...");
 	        }
         }
-        db = mongoClient.getDatabase(databaseName);
         return db;
     }
 

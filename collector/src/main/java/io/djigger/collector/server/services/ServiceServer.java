@@ -39,18 +39,43 @@ public class ServiceServer {
     private String serverListenAddress;
     private int serverPort;
 
+    private Server webServer;
+
     public ServiceServer(io.djigger.collector.server.Server collectorServer) {
         super();
         this.collectorServer = collectorServer;
     }
 
+    /**
+     * Starts the embedded web server. This method returns as soon as the server is started; call
+     * {@link #join()} to block on it (as the standalone collector does) or {@link #stop()} to shut it down.
+     */
     public void start(int serverPort, String serverListenAddress) throws Exception {
         this.serverPort = serverPort;
         this.serverListenAddress = serverListenAddress;
 
-        Server webServer = configureServer();
+        webServer = configureServer();
         webServer.start();
-        webServer.join();
+    }
+
+    /**
+     * @return the port the embedded web server is actually listening on (useful when started on an
+     * ephemeral port, i.e. port 0).
+     */
+    public int getLocalPort() {
+        return ((org.eclipse.jetty.server.ServerConnector) webServer.getConnectors()[0]).getLocalPort();
+    }
+
+    public void join() throws InterruptedException {
+        if (webServer != null) {
+            webServer.join();
+        }
+    }
+
+    public void stop() throws Exception {
+        if (webServer != null) {
+            webServer.stop();
+        }
     }
 
     private Server configureServer() {
