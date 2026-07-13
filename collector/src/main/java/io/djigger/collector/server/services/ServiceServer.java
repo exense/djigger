@@ -19,14 +19,14 @@
  *******************************************************************************/
 package io.djigger.collector.server.services;
 
-import org.eclipse.jetty.server.Handler;
+import java.net.InetSocketAddress;
+
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.ServletHolder;
+import org.eclipse.jetty.ee10.webapp.WebAppContext;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
-import java.net.InetSocketAddress;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.util.resource.Resource;
-import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.util.resource.ResourceFactory;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -94,21 +94,25 @@ public class ServiceServer {
         ServletHolder sh = new ServletHolder(servletContainer);
         Server server = new Server(new InetSocketAddress(serverListenAddress, serverPort));
 
-        ServletContextHandler restContext = new ServletContextHandler(ServletContextHandler.SESSIONS);
+        ServletContextHandler restContext = new ServletContextHandler();
         restContext.setContextPath("/rest");
         restContext.addServlet(sh, "/*");
 
+        // Jetty 12: static content is served from a base Resource obtained via a ResourceFactory
+        // (Resource.newClassPathResource / setResourceBase(String) were removed).
         WebAppContext webContext = new WebAppContext();
         webContext.setServer(server);
         webContext.setContextPath("/djigger");
-        webContext.setResourceBase(Resource.newClassPathResource("webapp").getURI().toString());
+        webContext.setBaseResource(ResourceFactory.of(webContext).newClassLoaderResource("webapp"));
 
         WebAppContext rootContext = new WebAppContext();
         rootContext.setContextPath("/");
-        rootContext.setResourceBase(Resource.newClassPathResource("webroot").getURI().toString());
+        rootContext.setBaseResource(ResourceFactory.of(rootContext).newClassLoaderResource("webroot"));
 
         ContextHandlerCollection contexts = new ContextHandlerCollection();
-        contexts.setHandlers(new Handler[]{restContext, webContext, rootContext});
+        contexts.addHandler(restContext);
+        contexts.addHandler(webContext);
+        contexts.addHandler(rootContext);
         server.setHandler(contexts);
 
         return server;

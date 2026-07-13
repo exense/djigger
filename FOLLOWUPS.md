@@ -5,23 +5,27 @@ Follow-ups identified while upgrading the MongoDB stack and adding integration t
 
 ## A. Library upgrades
 
-- [ ] **Jetty 9.4 → 12.** Currently pinned at `9.4.57.v20241219` (last 9.4.x, on the EOL track).
-  This is a *major* migration, not a bump: Jetty 12 uses the `org.eclipse.jetty.ee10.*` module layout,
-  the **Jakarta** Servlet namespace (`javax.servlet` → `jakarta.servlet`), and **requires Java 17**.
-  Blast radius is small (only `ServiceServer.java`). Must be done together with Jersey (below).
+- [x] **Jetty 9.4 → 12.** Done: `12.1.11` (EE10 modules `jetty-ee10-servlet`/`jetty-ee10-webapp` +
+  version-aligned `jetty-server`). `ServiceServer.java` migrated to the EE10 `ServletContextHandler`/
+  `WebAppContext` and the `ResourceFactory`/`setBaseResource` static-content API. The collector is now
+  built at **Java 17** (`client`/`client-ui` stay 11, agent stays 8). Jetty 12.1.x also has a **Java 17**
+  minimum (per the official 12.1 docs) and still ships the EE10 modules, so it's preferred over 12.0.x
+  for the longer support runway; the bump from 12.0.37 → 12.1.11 required no code changes. Guarded by
+  `RestServiceIT` + `WebStaticContentIT`.
 
   > **Support-policy decision (2026-07):** the collector moves to **Java 17**; `client`/`client-ui`
   > stay at Java 11 and the agent stays at Java 8 bytecode. **Target applications must run on a JVM ≥ 17**
   > (attach/agent). Applications *compiled* for Java 8+ bytecode remain supported as long as they run on
   > a JVM ≥ 17 (same-version attach). We therefore do **not** support attaching to Java-8-*runtime*
   > targets and do not add a cross-version (17→8) attach test.
-- [ ] **Jersey 2.47 → 3.1.x.** Coupled to the Jakarta move (`javax.ws.rs` → `jakarta.ws.rs`). Affects
-  `Services.java` and the `jersey-container-servlet-core` / `jersey-media-json-jackson` / `jersey-hk2`
-  dependencies. Do as one work package with Jetty 12.
-- [ ] **Remaining Dependabot PRs.** The non-blocking bumps not folded into the Mongo work (logback
-  1.2.x, slf4j 1.7.x, and smaller transitive updates). Sweep once Jetty/Jersey lands.
-
-> A detailed migration plan for section A is tracked separately (see the DJIG-16 plan / chat).
+- [x] **Jersey 2.47 → 3.1.x.** Done: `3.1.12` (Jakarta EE 10). `Services.java` moved from `javax.ws.rs`/
+  `javax.servlet`/`javax.inject` to the `jakarta.*` namespaces; `javax.xml.bind:jaxb-api:2.1` replaced by
+  `jakarta.xml.bind-api:4.0.5`.
+- [x] **SLF4J / Logback.** Done as part of the Jetty 12 work (not deferred): Jetty 12 pulls SLF4J 2.x, so
+  `slf4j-api`/`log4j-over-slf4j` → `2.0.17` and `logback-classic` → `1.5.18` (SLF4J-1.7-era logback would
+  silently stop binding). Collector logging verified working (logback 1.5.18 loads `logback.xml`).
+- [ ] **Remaining Dependabot PRs.** Sweep the smaller transitive bumps once this lands. `djigger-demo`
+  (not in the reactor, no sources) still declares dead Jetty 9.4 deps — drop them opportunistically.
 
 ## B. Test coverage gaps
 
