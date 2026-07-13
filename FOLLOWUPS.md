@@ -24,22 +24,43 @@ Follow-ups identified while upgrading the MongoDB stack and adding integration t
 - [x] **SLF4J / Logback.** Done as part of the Jetty 12 work (not deferred): Jetty 12 pulls SLF4J 2.x, so
   `slf4j-api`/`log4j-over-slf4j` → `2.0.17` and `logback-classic` → `1.5.18` (SLF4J-1.7-era logback would
   silently stop binding). Collector logging verified working (logback 1.5.18 loads `logback.xml`).
-- [ ] **Remaining Dependabot PRs.** Sweep the smaller transitive bumps once this lands. `djigger-demo`
-  (not in the reactor, no sources) still declares dead Jetty 9.4 deps — drop them opportunistically.
+- [ ] **Remaining Dependabot PRs.** Sweep the smaller transitive bumps once this lands.
 
 ## B. Test coverage gaps
 
-- [x] **`ProcessAttachFacade` — untested.** Covered by `ProcessAttachIT`: launches a child JVM, attaches
+These gaps are now closed (kept here for the record):
+
+- [x] **`ProcessAttachFacade`.** Covered by `ProcessAttachIT`: launches a child JVM, attaches
   by PID, loads the agent, samples thread dumps and instruments `SampleApp.businessMethod`. Same-version
   attach (target runs on the build JVM ≥ 17); skips gracefully where the environment forbids JVM attach.
-- [x] **`JstackLogTailFacade` — untested.** Covered by `JstackLogTailIT`: tails a jstack-format file and
+- [x] **`JstackLogTailFacade`.** Covered by `JstackLogTailIT`: tails a jstack-format file and
   asserts the parsed `ThreadInfo` (thread name, state, and `SampleApp.businessMethod` stack frame).
-- [x] **Web static content — untested.** Covered by `WebStaticContentIT` (GET `/djigger/index.html`),
-  added to give the upcoming Jetty-12 `ResourceFactory`/`setBaseResource` change an automated oracle
+- [x] **Web static content.** Covered by `WebStaticContentIT` (GET `/djigger/index.html`),
+  added to give the Jetty 12 `ResourceFactory`/`setBaseResource` change an automated oracle
   (previously only `/rest` was covered, by `RestServiceIT`).
+- [x] **Instrumentation tracers (SQL / HTTP client / servlet).** The bytecode tracers had no automated
+  coverage — only the manual, source-less `djigger-demo` launch configs. Migrated the demo workloads into
+  `djigger-integration-tests` as automated ITs: `SqlTracerIT` (`SQLStatementTracer`/
+  `SQLPreparedStatementTracer` against HSQLDB), `HttpClientTracerIT` (`HttpClientTracer` — asserts the
+  injected `djigger` header reaches a JDK `HttpServer`), `ServletTracerIT` (`ServletTracer` on a
+  `jakarta.servlet.Servlet`). The standalone `djigger-demo` project was deleted. The KB "demo" pages
+  (`.../distributed_transactions_tracing/#demo`, `.../object_content_capture/#demo`) link to an old
+  commit, so they keep working; update them to point at the ITs when convenient.
 
 ## C. Product / robustness
 
+- [x] **`ServletTracer` → jakarta.** Migrated from `javax.servlet` to `jakarta.servlet` (matches the
+  Jetty EE10 direction). Also fixed a latent bug: the injected code referenced the request by the source
+  parameter name `arg0`, which only compiled when the servlet's first parameter happened to be named
+  `arg0`; now uses javassist's `$1`, so it works for any servlet. Covered by `ServletTracerIT`.
+- [ ] **`ServletTracer` doesn't match on *retransformation*.** `isRelatedToClass(CtClass)` resolves
+  interfaces via javassist and matches at **class-load** time, but silently returns false when a servlet
+  class is **already loaded** at the time the subscription is applied (pre-existing behaviour, not caused
+  by the jakarta migration). So a servlet loaded before the tracer is subscribed is not instrumented until
+  reloaded. `ServletTracerIT` works around this with a load-after-subscribe handshake; the underlying
+  matching should be made robust (e.g. resolve via `subtypeOf`, like the SQL tracers, or handle the
+  retransform path). Note `addInstrumentation` is asynchronous agent-side, so any fix needs a settling
+  window before relying on the subscription being active.
 - [ ] **JVM shutdown hook for graceful stop.** `Server.stop()` is now graceful (the `stopping` flag +
   drain), but `main()`/`start()` don't register a shutdown hook to call it — so a real `Ctrl-C` on the
   standalone collector doesn't get the clean path the integration tests do. Small, high-value wire-up.
