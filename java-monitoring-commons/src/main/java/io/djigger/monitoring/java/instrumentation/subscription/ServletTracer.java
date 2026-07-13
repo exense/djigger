@@ -43,7 +43,7 @@ public class ServletTracer extends InstrumentSubscription implements Transformin
 
         try {
             for (CtClass interface_ : classname.getInterfaces()) {
-                if (interface_.getName().equals("javax.servlet.Servlet")) {
+                if (interface_.getName().equals("jakarta.servlet.Servlet")) {
                     return true;
                 }
             }
@@ -77,8 +77,10 @@ public class ServletTracer extends InstrumentSubscription implements Transformin
 
     @Override
     public void transform(CtClass clazz, CtMethod method) throws CannotCompileException {
-        method.insertBefore("if(arg0 instanceof javax.servlet.http.HttpServletRequest) {" +
-            "String tr = ((javax.servlet.http.HttpServletRequest) $1).getHeader(\"djigger\");" +
+        // Use javassist's $1 (first parameter) rather than a source-level parameter name: the injected
+        // code must compile regardless of how the instrumented servlet named its ServletRequest argument.
+        method.insertBefore("if($1 instanceof jakarta.servlet.http.HttpServletRequest) {" +
+            "String tr = ((jakarta.servlet.http.HttpServletRequest) $1).getHeader(\"djigger\");" +
             "io.djigger.agent.InstrumentationEventCollector.applyTracer(tr);" +
             "}");
         TimeMeasureTransformer.transform(clazz, method, this, false);
