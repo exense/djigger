@@ -34,6 +34,19 @@ public final class JvmLauncher {
         }
     }
 
+    /**
+     * Builds a minimal classpath from the code sources of the given classes (order-preserving, de-duplicated).
+     * Used to launch a monitored target with only its own code and its workload libraries - and crucially
+     * <em>without</em> djigger's unshaded jars, which would collide with the shaded agent (see the module README).
+     */
+    public static String classpathOf(Class<?>... classes) {
+        java.util.LinkedHashSet<String> entries = new java.util.LinkedHashSet<>();
+        for (Class<?> clazz : classes) {
+            entries.add(codeSourceOf(clazz));
+        }
+        return String.join(File.pathSeparator, entries);
+    }
+
     public static Process launch(Class<?> mainClass, String classpath, List<String> jvmArgs, List<String> appArgs) throws IOException {
         String javaBin = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
 

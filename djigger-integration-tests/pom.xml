@@ -40,6 +40,27 @@
 			<version>${project.version}</version>
 			<scope>test</scope>
 		</dependency>
+		<!-- Sample workload for the SQL tracer IT: an in-memory JDBC driver for the target JVM to exercise. -->
+		<dependency>
+			<groupId>org.hsqldb</groupId>
+			<artifactId>hsqldb</artifactId>
+			<version>2.7.4</version>
+			<scope>test</scope>
+		</dependency>
+		<!-- Sample workload for the HTTP client tracer IT (brings httpcore/commons-logging transitively). -->
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.14</version>
+			<scope>test</scope>
+		</dependency>
+		<!-- Servlet API for the servlet tracer IT workload (jakarta namespace, matching the collector's Jetty EE10). -->
+		<dependency>
+			<groupId>jakarta.servlet</groupId>
+			<artifactId>jakarta.servlet-api</artifactId>
+			<version>6.0.0</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
