@@ -44,7 +44,12 @@
 
 	<build>
 		<plugins>
-			<!-- Copy the shaded agent jar to a stable path so the agent e2e test can pass it via -javaagent. -->
+			<!--
+				Copy the shaded agent jar to two stable locations:
+				  - target/agent.jar          : passed via -javaagent by the agent e2e tests (-Dagent.jar).
+				  - target/test-classes/agent.jar : a classpath resource named "agent.jar", which
+				    ProcessAttachFacade loads (getResourceAsStream("agent.jar")) to attach it dynamically.
+			-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
@@ -64,6 +69,14 @@
 									<version>${project.version}</version>
 									<type>jar</type>
 									<outputDirectory>${project.build.directory}</outputDirectory>
+									<destFileName>agent.jar</destFileName>
+								</artifactItem>
+								<artifactItem>
+									<groupId>io.djigger</groupId>
+									<artifactId>java-agent</artifactId>
+									<version>${project.version}</version>
+									<type>jar</type>
+									<outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
 									<destFileName>agent.jar</destFileName>
 								</artifactItem>
 							</artifactItems>
